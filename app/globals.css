@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Backgrounds */
+  --bg-base:        #0a0a0a;
+  --bg-surface:     #111111;
+  --bg-card:        #161616;
+  --bg-card-hover:  #1c1c1c;
+
+  /* Borders */
+  --border:         #2a2a2a;
+  --border-gold:    rgba(212, 175, 55, 0.3);
+  --border-gold-strong: rgba(212, 175, 55, 0.6);
+
+  /* Gold palette */
+  --gold:           #d4af37;
+  --gold-light:     #f0d060;
+  --gold-dark:      #8b6914;
+  --gold-muted:     rgba(212, 175, 55, 0.15);
+
+  /* Purple palette (eventos especiales) */
+  --purple:         #8a2be2;
+  --purple-light:   #b060ff;
+  --purple-muted:   rgba(138, 43, 226, 0.2);
+
+  /* Reinos */
+  --syrtis:         #4CAF50;
+  --ignis:          #F44336;
+  --alsius:         #2196F3;
+
+  /* Text */
+  --text-primary:   #e8e8e8;
+  --text-secondary: #a0a0a0;
+  --text-muted:     #606060;
+
+  /* Fonts */
+  --font-display:   'Cinzel', serif;
+  --font-body:      'Crimson Pro', Georgia, serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-surface); }
+::-webkit-scrollbar-thumb { background: var(--border-gold); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+
+/* Selection */
+::selection {
+  background: var(--gold-muted);
+  color: var(--gold-light);
+}
+
+/* Utilities */
+.font-display { font-family: var(--font-display); }
+.font-body    { font-family: var(--font-body); }
+
+.text-gold        { color: var(--gold); }
+.text-gold-light  { color: var(--gold-light); }
+.text-purple      { color: var(--purple-light); }
+.text-syrtis      { color: var(--syrtis); }
+.text-ignis       { color: var(--ignis); }
+.text-alsius      { color: var(--alsius); }
+
+/* Card glassmorphism base */
+.card-glass {
+  background: rgba(22, 22, 22, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border-gold);
+  border-radius: 12px;
+}
+
+/* Gold shimmer animation */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.gold-shimmer {
+  background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Live pulse */
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #F44336;
+  animation: pulse-red 1.4s ease-in-out infinite;
+}
+
+/* Bento grid */
+.bento-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 640px) {
+  .bento-grid { grid-template-columns: 1fr; }
+}
+
+/* Hover lift effect */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(212, 175, 55, 0.12);
+}
