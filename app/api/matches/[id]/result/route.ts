@@ -42,7 +42,7 @@ export async function POST(
   const { data: ganadores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', ganador_id)
   const { data: perdedores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', perdedor_id)
 
-  const allUpdates: Promise<any>[] = []
+  const allUpdates: PromiseLike<any>[] = []
   const historyInserts: any[] = []
 
   const processPlayer = (member: any, gano: boolean, opponentAvgMmr: number) => {
@@ -51,7 +51,6 @@ export async function POST(
     const k = p.partidas_jugadas >= ELO_VETERAN_THRESHOLD ? ELO_K_VETERAN : ELO_K_DEFAULT
     const esperado = calcularEsperado(p.mmr_global, opponentAvgMmr)
     const nuevoMmr = Math.max(100, calcularNuevoMMR(p.mmr_global, gano, esperado, k))
-    const delta = nuevoMmr - p.mmr_global
     const nuevasPartidas = p.partidas_jugadas + 1
     const nuevasGanadas = p.partidas_ganadas + (gano ? 1 : 0)
     const nuevoWinrate = Math.round((nuevasGanadas / nuevasPartidas) * 100)
