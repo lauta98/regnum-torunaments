@@ -79,15 +79,12 @@ export default async function TorneosPage({
               const inscritos = t.registros?.[0]?.count ?? 0
               return (
                 <Link key={t.id} href={`/brackets/${t.id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{
+                  <div className="card-hover" style={{
                     background: 'var(--bg-card)',
                     border: `1px solid ${t.destacado ? 'rgba(212,175,55,0.5)' : 'var(--border)'}`,
                     borderRadius: 14, overflow: 'hidden',
-                    transition: 'border-color 0.2s, transform 0.2s',
-                  }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = fc; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = t.destacado ? 'rgba(212,175,55,0.5)' : 'var(--border)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
-                  >
+                    ['--hover-color' as string]: fc,
+                  }}>
                     {/* Header band */}
                     <div style={{ height: 4, background: `linear-gradient(90deg, ${fc}, ${fc}88)` }} />
 

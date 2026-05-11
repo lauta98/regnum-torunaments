@@ -140,3 +140,20 @@ body {
   transform: translateY(-2px);
   box-shadow: 0 8px 32px rgba(212, 175, 55, 0.12);
 }
+
+/* Row hover (rankings table) */
+.row-hover {
+  transition: background 0.15s;
+}
+.row-hover:hover {
+  background: var(--bg-card-hover);
+}
+
+/* Card hover with dynamic border color via --hover-color CSS var */
+.card-hover {
+  transition: border-color 0.2s, transform 0.2s;
+}
+.card-hover:hover {
+  border-color: var(--hover-color) !important;
+  transform: translateY(-2px);
+}

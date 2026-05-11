@@ -133,14 +133,11 @@ export default async function RankingsPage({
             const globalRank = from + i + 1
             return (
               <Link key={p.id} href={`/jugadores/${p.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{
+                <div className="row-hover" style={{
                   display: 'grid', gridTemplateColumns: '56px 1fr 110px 120px 90px 90px 90px',
                   padding: '13px 20px', borderBottom: i < players.length - 1 ? '1px solid var(--border)' : 'none',
-                  alignItems: 'center', transition: 'background 0.15s', cursor: 'pointer',
-                }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--bg-card-hover)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
+                  alignItems: 'center', cursor: 'pointer',
+                }}>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: globalRank <= 3 ? 18 : 14, color: globalRank <= 3 ? 'var(--gold)' : 'var(--text-muted)' }}>
                     {MEDAL[globalRank] ?? globalRank}
                   </div>

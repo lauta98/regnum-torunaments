@@ -97,14 +97,11 @@ export default async function JugadoresPage({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 14 }}>
             {players.map((p: any, i: number) => (
               <Link key={p.id} href={`/jugadores/${p.id}`} style={{ textDecoration: 'none' }}>
-                <div style={{
+                <div className="card-hover" style={{
                   background: 'var(--bg-card)', border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '20px 16px', textAlign: 'center',
-                  transition: 'border-color 0.2s, transform 0.2s', cursor: 'pointer',
-                }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = REINO_COLOR[p.reino as Reino]; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)' }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)' }}
-                >
+                  borderRadius: 12, padding: '20px 16px', textAlign: 'center', cursor: 'pointer',
+                  ['--hover-color' as string]: REINO_COLOR[p.reino as Reino],
+                }}>
                   <div style={{ width: 56, height: 56, borderRadius: '50%', background: `${REINO_COLOR[p.reino as Reino]}22`, border: `2px solid ${REINO_COLOR[p.reino as Reino]}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, margin: '0 auto 12px' }}>
                     {CLASE_ICON[p.clase_principal]}
                   </div>
