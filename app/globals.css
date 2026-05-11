@@ -2,22 +2,28 @@
 @import "tailwindcss";
 
 :root {
-  /* Backgrounds */
-  --bg-base:        #0a0a0a;
-  --bg-surface:     #111111;
-  --bg-card:        #161616;
-  --bg-card-hover:  #1c1c1c;
+  /* Backgrounds — Gaming Pro 2026 */
+  --bg-base:        #050505;
+  --bg-surface:     #0c0c0c;
+  --bg-card:        #121212;
+  --bg-card-hover:  #1a1a1a;
 
   /* Borders */
-  --border:         #2a2a2a;
-  --border-gold:    rgba(212, 175, 55, 0.3);
-  --border-gold-strong: rgba(212, 175, 55, 0.6);
+  --border:              #2a2a2a;
+  --border-gold:         rgba(212, 175, 55, 0.25);
+  --border-gold-strong:  rgba(212, 175, 55, 0.55);
 
   /* Gold palette */
   --gold:           #d4af37;
   --gold-light:     #f0d060;
   --gold-dark:      #8b6914;
-  --gold-muted:     rgba(212, 175, 55, 0.15);
+  --gold-muted:     rgba(212, 175, 55, 0.12);
+
+  /* Neon accents */
+  --neon-cyan:           #00d4ff;
+  --neon-purple:         #b060ff;
+  --neon-cyan-muted:     rgba(0, 212, 255, 0.08);
+  --neon-purple-muted:   rgba(176, 96, 255, 0.08);
 
   /* Purple palette (eventos especiales) */
   --purple:         #8a2be2;
@@ -25,18 +31,27 @@
   --purple-muted:   rgba(138, 43, 226, 0.2);
 
   /* Reinos */
-  --syrtis:         #4CAF50;
-  --ignis:          #F44336;
-  --alsius:         #2196F3;
+  --syrtis: #4CAF50;
+  --ignis:  #F44336;
+  --alsius: #2196F3;
 
   /* Text */
   --text-primary:   #e8e8e8;
-  --text-secondary: #a0a0a0;
-  --text-muted:     #606060;
+  --text-secondary: #909090;
+  --text-muted:     #505050;
 
   /* Fonts */
-  --font-display:   'Cinzel', serif;
-  --font-body:      'Crimson Pro', Georgia, serif;
+  --font-display: 'Cinzel', serif;
+  --font-body:    'Crimson Pro', Georgia, serif;
+
+  /* Tier colors */
+  --tier-legendary: #ff6b35;
+  --tier-diamond:   #00d4ff;
+  --tier-platinum:  #b060ff;
+  --tier-gold:      #d4af37;
+  --tier-silver:    #9e9e9e;
+  --tier-bronze:    #8d6e63;
+  --tier-iron:      #606060;
 }
 
 * {
@@ -51,6 +66,11 @@ html {
 
 body {
   background-color: var(--bg-base);
+  /* Subtle ambient kingdom atmosphere */
+  background-image:
+    radial-gradient(ellipse 70% 50% at 10% 20%, rgba(76,  175,  80, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 80%, rgba(244,  67,  54, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 60% at 50% 50%, rgba( 33, 150, 243, 0.02) 0%, transparent 70%);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 16px;
@@ -74,28 +94,53 @@ body {
 .font-display { font-family: var(--font-display); }
 .font-body    { font-family: var(--font-body); }
 
-.text-gold        { color: var(--gold); }
-.text-gold-light  { color: var(--gold-light); }
-.text-purple      { color: var(--purple-light); }
-.text-syrtis      { color: var(--syrtis); }
-.text-ignis       { color: var(--ignis); }
-.text-alsius      { color: var(--alsius); }
+.text-gold         { color: var(--gold); }
+.text-gold-light   { color: var(--gold-light); }
+.text-purple       { color: var(--purple-light); }
+.text-neon-cyan    { color: var(--neon-cyan); }
+.text-neon-purple  { color: var(--neon-purple); }
+.text-syrtis       { color: var(--syrtis); }
+.text-ignis        { color: var(--ignis); }
+.text-alsius       { color: var(--alsius); }
 
-/* Card glassmorphism base */
+/* ─── Glassmorphism ─────────────────────────────────────────── */
 .card-glass {
-  background: rgba(22, 22, 22, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--border-gold);
+  background: rgba(18, 18, 18, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 12px;
 }
 
-/* Gold shimmer animation */
+.glass {
+  background: rgba(12, 12, 12, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 12px;
+}
+
+/* ─── Kingdom glow utilities ────────────────────────────────── */
+.glow-syrtis { box-shadow: 0 0 28px rgba( 76, 175,  80, 0.18), 0 0 60px rgba( 76, 175,  80, 0.06); }
+.glow-ignis  { box-shadow: 0 0 28px rgba(244,  67,  54, 0.18), 0 0 60px rgba(244,  67,  54, 0.06); }
+.glow-alsius { box-shadow: 0 0 28px rgba( 33, 150, 243, 0.18), 0 0 60px rgba( 33, 150, 243, 0.06); }
+.glow-gold   { box-shadow: 0 0 28px rgba(212, 175,  55, 0.14), 0 0 60px rgba(212, 175,  55, 0.05); }
+
+/* ─── Neon border effects ───────────────────────────────────── */
+.neon-border-cyan {
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.1), inset 0 0 14px rgba(0, 212, 255, 0.02);
+}
+.neon-border-purple {
+  border: 1px solid rgba(176, 96, 255, 0.3);
+  box-shadow: 0 0 14px rgba(176, 96, 255, 0.1), inset 0 0 14px rgba(176, 96, 255, 0.02);
+}
+
+/* ─── Animations ────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -200% center; }
   100% { background-position:  200% center; }
 }
-
 .gold-shimmer {
   background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
   background-size: 200% auto;
@@ -105,7 +150,6 @@ body {
   background-clip: text;
 }
 
-/* Live pulse */
 @keyframes pulse-red {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.4; }
@@ -118,21 +162,25 @@ body {
   animation: pulse-red 1.4s ease-in-out infinite;
 }
 
-/* Bento grid */
+/* Gold pulse for primary CTA buttons */
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0   rgba(212, 175, 55, 0.55); }
+  50%       { box-shadow: 0 0 0 12px rgba(212, 175, 55, 0); }
+}
+.pulse-cta {
+  animation: pulse-gold 2.5s ease-in-out infinite;
+}
+
+/* ─── Layout ────────────────────────────────────────────────── */
 .bento-grid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(4, 1fr);
 }
+@media (max-width: 1024px) { .bento-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .bento-grid { grid-template-columns: 1fr; } }
 
-@media (max-width: 1024px) {
-  .bento-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 640px) {
-  .bento-grid { grid-template-columns: 1fr; }
-}
-
-/* Hover lift effect */
+/* ─── Hover utilities ───────────────────────────────────────── */
 .hover-lift {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -141,19 +189,32 @@ body {
   box-shadow: 0 8px 32px rgba(212, 175, 55, 0.12);
 }
 
-/* Row hover (rankings table) */
-.row-hover {
-  transition: background 0.15s;
-}
-.row-hover:hover {
-  background: var(--bg-card-hover);
-}
+.row-hover { transition: background 0.15s; }
+.row-hover:hover { background: var(--bg-card-hover); }
 
-/* Card hover with dynamic border color via --hover-color CSS var */
-.card-hover {
-  transition: border-color 0.2s, transform 0.2s;
-}
+.card-hover { transition: border-color 0.2s, transform 0.2s; }
 .card-hover:hover {
   border-color: var(--hover-color) !important;
   transform: translateY(-2px);
 }
+
+/* ─── Tier system ───────────────────────────────────────────── */
+.tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: var(--font-display);
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.tier-legendary { color: var(--tier-legendary); background: rgba(255, 107,  53, 0.10); border: 1px solid rgba(255, 107,  53, 0.35); }
+.tier-diamond   { color: var(--tier-diamond);   background: rgba(  0, 212, 255, 0.10); border: 1px solid rgba(  0, 212, 255, 0.35); }
+.tier-platinum  { color: var(--tier-platinum);  background: rgba(176,  96, 255, 0.10); border: 1px solid rgba(176,  96, 255, 0.35); }
+.tier-gold      { color: var(--tier-gold);      background: rgba(212, 175,  55, 0.10); border: 1px solid rgba(212, 175,  55, 0.35); }
+.tier-silver    { color: var(--tier-silver);    background: rgba(158, 158, 158, 0.10); border: 1px solid rgba(158, 158, 158, 0.35); }
+.tier-bronze    { color: var(--tier-bronze);    background: rgba(141, 110,  99, 0.10); border: 1px solid rgba(141, 110,  99, 0.35); }
+.tier-iron      { color: var(--tier-iron);      background: rgba(112, 112, 112, 0.08); border: 1px solid rgba(112, 112, 112, 0.30); }

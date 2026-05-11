@@ -56,10 +56,32 @@ export const REINOS: Reino[] = ['Syrtis', 'Ignis', 'Alsius']
 
 export const FORMATS: TournamentFormat[] = ['1v1', '2v2', '3v3', '7v7']
 
-export const ELO_K_DEFAULT = 32
-export const ELO_K_VETERAN = 16
+export const ELO_K_DEFAULT         = 32
+export const ELO_K_VETERAN         = 16
+export const ELO_K_CALIBRATION     = 50   // first 10 games (calibration phase)
 export const ELO_VETERAN_THRESHOLD = 50
-export const MMR_INITIAL = 1200
+export const ELO_CALIBRATION_GAMES = 10
+export const MMR_INITIAL           = 1200
+
+export const WINSTREAK_BONUS     = 1.2  // ×1.2 MMR gained after this many consecutive wins
+export const WINSTREAK_THRESHOLD = 3
+
+// ─── Tier system ────────────────────────────────────────────────────────────
+export const MMR_TIERS = [
+  { name: 'Legendario', min: 1800, color: '#ff6b35', cssClass: 'tier-legendary', icon: '🔥' },
+  { name: 'Diamante',   min: 1500, color: '#00d4ff', cssClass: 'tier-diamond',   icon: '💎' },
+  { name: 'Platino',    min: 1350, color: '#b060ff', cssClass: 'tier-platinum',  icon: '⬡'  },
+  { name: 'Oro',        min: 1200, color: '#d4af37', cssClass: 'tier-gold',      icon: '⭐' },
+  { name: 'Plata',      min: 1050, color: '#9e9e9e', cssClass: 'tier-silver',    icon: '🥈' },
+  { name: 'Bronce',     min: 900,  color: '#8d6e63', cssClass: 'tier-bronze',    icon: '🥉' },
+  { name: 'Hierro',     min: 0,    color: '#606060', cssClass: 'tier-iron',      icon: '⚒️' },
+] as const
+
+export type Tier = typeof MMR_TIERS[number]
+
+export function getTier(mmr: number): Tier {
+  return (MMR_TIERS.find(t => mmr >= t.min) ?? MMR_TIERS[MMR_TIERS.length - 1]) as Tier
+}
 
 export function calcularEsperado(rA: number, rB: number): number {
   return 1 / (1 + Math.pow(10, (rB - rA) / 400))

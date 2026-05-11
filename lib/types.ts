@@ -37,6 +37,7 @@ export interface Player {
   mmr_global: number
   winrate: number
   partidas_jugadas: number
+  winstreak?: number
   user?: User
 }
 

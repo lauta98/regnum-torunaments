@@ -39,7 +39,7 @@ export default async function HomePage() {
               Estadísticas, rankings y rivalidades PvP de Champions of Regnum. Compite, escala posiciones y deja tu nombre marcado en la historia de los torneos.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <Link href="/rankings" style={{ background: 'var(--gold)', color: '#000', padding: '12px 24px', borderRadius: 8, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 1, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Link href="/rankings" className="pulse-cta" style={{ background: 'var(--gold)', color: '#000', padding: '12px 24px', borderRadius: 8, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 1, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 📊 VER RANKINGS
               </Link>
               <Link href="/jugadores" style={{ background: 'transparent', color: 'var(--text-primary)', padding: '12px 24px', borderRadius: 8, border: '1px solid var(--border-gold)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 1, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
