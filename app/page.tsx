@@ -1,12 +1,12 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
-
-export const dynamic = 'force-dynamic'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
 import FeaturedEvent from '@/components/FeaturedEvent'
 import UpcomingEvents from '@/components/UpcomingEvents'
 import Link from 'next/link'
+
+export const dynamic = 'force-dynamic'
 
 export default async function HomePage() {
   const supabase = await createServerSupabase()
