@@ -1,5 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
+
+export const dynamic = 'force-dynamic'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
 import FeaturedEvent from '@/components/FeaturedEvent'
@@ -11,8 +13,8 @@ export default async function HomePage() {
 
   const [{ data: players }, { data: torneos }, { data: featured }, { count: totalJugadores }, { count: totalTorneos }] = await Promise.all([
     supabase.from('players').select('*').order('mmr_global', { ascending: false }).limit(10),
-    supabase.from('tournaments').select('id, nombre, formato, estado, fecha_inicio, max_equipos, destacado, registros:tournament_registrations(count)').in('estado', ['live', 'inscripciones']).order('destacado', { ascending: false }).order('fecha_inicio', { ascending: true }).limit(5),
-    supabase.from('tournaments').select('id, nombre, descripcion, formato, estado, fecha_inicio, max_equipos, premio, registros:tournament_registrations(count)').eq('destacado', true).in('estado', ['live', 'inscripciones']).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('tournaments').select('id, nombre, formato, estado, fecha_inicio, max_equipos, destacado, registros:tournament_registrations(count)').in('estado', ['live', 'inscripciones', 'finalizado']).order('destacado', { ascending: false }).order('fecha_inicio', { ascending: true }).limit(5),
+    supabase.from('tournaments').select('id, nombre, descripcion, formato, estado, fecha_inicio, max_equipos, premio, registros:tournament_registrations(count)').eq('destacado', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('players').select('*', { count: 'exact', head: true }),
     supabase.from('tournaments').select('*', { count: 'exact', head: true }),
   ])

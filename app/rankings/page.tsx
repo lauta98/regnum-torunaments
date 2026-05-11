@@ -3,6 +3,8 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { REINO_COLOR, REINOS, CLASES } from '@/lib/constants'
+
+export const dynamic = 'force-dynamic'
 import type { Reino, Clase } from '@/lib/types'
 
 export const metadata: Metadata = { title: 'Rankings' }

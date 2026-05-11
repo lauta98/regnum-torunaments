@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { REINO_COLOR, FORMAT_COLOR, FORMAT_LABEL, REINOS, CLASES } from '@/lib/constants'
 import type { Reino, TournamentFormat } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'IA Stats' }
 
 export default async function IAStatsPage() {

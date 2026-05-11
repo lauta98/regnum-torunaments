@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Brackets' }
 
 export default async function BracketsPage() {

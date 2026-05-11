@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo \"\" > \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\RPG-Marketplace\\\\rpg-marketplace-v2\\\\.claude\\\\worktrees\\\\interesting-hofstadter-88c4a6\\\\.claude\\\\launch.json\")",
+      "Bash(git init *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git branch *)",
+      "Bash(git push *)",
+      "Bash(git rm *)",
+      "Bash(git commit -m 'fix: rename middleware.ts to proxy.ts for Next.js 16 compatibility *)",
+      "Bash(npm run *)",
+      "Bash(git commit -m 'fix: proxy export name + PromiseLike type for Supabase builder *)",
+      "WebFetch(domain:regnum-torunaments.vercel.app)",
+      "WebFetch(domain:challonge.com)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\app\\\\api\\\\debug\")",
+      "Bash(Out-Null)",
+      "Bash(Write-Output \"ok\")",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\app\\\\api\\\\debug\")"
+    ]
+  }
+}

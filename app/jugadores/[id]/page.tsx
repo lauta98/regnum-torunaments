@@ -6,6 +6,8 @@ import type { Metadata } from 'next'
 import { REINO_COLOR, FORMAT_LABEL, FORMAT_COLOR, MATCH_STATUS_STYLE } from '@/lib/constants'
 import type { Reino, TournamentFormat, MatchStatus } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const supabase = await createServerSupabase()

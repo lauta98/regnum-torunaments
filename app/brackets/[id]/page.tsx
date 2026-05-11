@@ -7,6 +7,8 @@ import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE, MATCH_STATUS_STYLE } from '@/
 import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/types'
 import BracketActions from './BracketActions'
 
+export const dynamic = 'force-dynamic'
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const supabase = await createServerSupabase()

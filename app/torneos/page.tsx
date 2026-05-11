@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE, FORMATS } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 
+export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Torneos' }
 
 const ESTADOS: TournamentStatus[] = ['live', 'inscripciones', 'finalizado', 'draft']
