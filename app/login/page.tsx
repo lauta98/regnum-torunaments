@@ -1,7 +1,8 @@
 'use client'
 import { signInWithDiscord } from '@/lib/auth'
+import dynamic from 'next/dynamic'
 
-export default function LoginPage() {
+function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
@@ -70,3 +71,5 @@ export default function LoginPage() {
     </div>
   )
 }
+
+export default dynamic(() => Promise.resolve(LoginPage), { ssr: false })

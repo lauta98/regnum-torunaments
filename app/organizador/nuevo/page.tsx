@@ -5,8 +5,9 @@ import { createClient } from '@/lib/supabase'
 import { FORMATS, FORMAT_LABEL, FORMAT_COLOR } from '@/lib/constants'
 import type { TournamentFormat } from '@/lib/types'
 import Header from '@/components/Header'
+import dynamic from 'next/dynamic'
 
-export default function NuevoTorneoPage() {
+function NuevoTorneoPage() {
   const router = useRouter()
   const [form, setForm] = useState({
     nombre: '',
@@ -181,3 +182,5 @@ export default function NuevoTorneoPage() {
     </>
   )
 }
+
+export default dynamic(() => Promise.resolve(NuevoTorneoPage), { ssr: false })

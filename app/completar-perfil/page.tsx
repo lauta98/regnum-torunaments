@@ -4,12 +4,13 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { REINOS, CLASES, REINO_COLOR } from '@/lib/constants'
 import type { Reino, Clase } from '@/lib/types'
+import dynamic from 'next/dynamic'
 
 const CLASE_ICON: Record<Clase, string> = {
   Bárbaro: '⚔️', Caballero: '🛡️', Conjurador: '✨', Brujo: '🔮', Tirador: '🏹', Cazador: '🐺',
 }
 
-export default function CompletarPerfilPage() {
+function CompletarPerfilPage() {
   const router = useRouter()
   const [nickname, setNickname] = useState('')
   const [reino, setReino]       = useState<Reino>('Syrtis')
@@ -181,3 +182,5 @@ export default function CompletarPerfilPage() {
     </div>
   )
 }
+
+export default dynamic(() => Promise.resolve(CompletarPerfilPage), { ssr: false })
