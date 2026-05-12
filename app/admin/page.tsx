@@ -6,6 +6,7 @@ import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canAdmin, isSuperAdmin } from '@/lib/r
 import type { UserRole } from '@/lib/types'
 import RoleManager from './RoleManager'
 import VerificarPersonaje from './VerificarPersonaje'
+import ResolverReclamo from './ResolverReclamo'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Panel Administrador' }
@@ -34,6 +35,14 @@ export default async function AdminPage() {
     .from('nickname_reports')
     .select('*, personaje:personajes(id, nickname_juego, verificado, player:players(id, discord_username)), reporter:players(discord_username)')
     .eq('estado', 'pendiente')
+    .eq('tipo', 'reporte')
+    .order('created_at', { ascending: false })
+
+  const { data: reclamos } = await supabase
+    .from('nickname_reports')
+    .select('*, personaje:personajes(id, nickname_juego, player:players(id, discord_username)), claimer:players!claimer_id(id, discord_username)')
+    .eq('estado', 'pendiente')
+    .eq('tipo', 'reclamo')
     .order('created_at', { ascending: false })
 
   const { data: allTournaments } = await supabase
@@ -233,6 +242,53 @@ export default async function AdminPage() {
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
                     Dueño: <span style={{ color: 'var(--text-secondary)' }}>{r.personaje?.player?.discord_username ?? '—'}</span>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Reclamos de personaje ───────────────────── */}
+        {(reclamos?.length ?? 0) > 0 && (
+          <div style={{ marginTop: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>RECLAMOS DE PERSONAJE</div>
+              <span style={{ background: 'rgba(255,165,0,0.15)', color: '#FFA500', border: '1px solid rgba(255,165,0,0.35)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+                {reclamos!.length} pendiente{reclamos!.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: 12, overflow: 'hidden' }}>
+              {reclamos!.map((r: any, i: number) => (
+                <div key={r.id} style={{ padding: '16px 20px', borderBottom: i < reclamos!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'grid', gridTemplateColumns: '1fr 1fr 120px', alignItems: 'start', gap: 16 }}>
+
+                  {/* Info del personaje reclamado */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(255,165,0,0.6)', letterSpacing: 1 }}>PERSONAJE RECLAMADO</span>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>
+                      {r.personaje?.nickname_juego}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
+                      Dueño actual: <span style={{ color: 'var(--text-secondary)' }}>{r.personaje?.player?.discord_username ?? '—'}</span>
+                    </div>
+                  </div>
+
+                  {/* Info del reclamante y motivo */}
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(255,165,0,0.6)', letterSpacing: 1 }}>RECLAMANTE</span>
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#FFA500', marginBottom: 6 }}>
+                      {r.claimer?.discord_username ?? '—'}
+                    </div>
+                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
+                      {r.motivo}
+                    </p>
+                  </div>
+
+                  {/* Acciones */}
+                  <ResolverReclamo reclamoId={r.id} />
                 </div>
               ))}
             </div>

@@ -7,7 +7,7 @@ import { REINO_COLOR, getTier } from '@/lib/constants'
 import type { Reino, UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
 import AgregarPersonaje from './AgregarPersonaje'
-import ReportarNickname from './ReportarNickname'
+import ReclamarNickname from './ReclamarNickname'
 
 export const dynamic = 'force-dynamic'
 
@@ -163,8 +163,8 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: p.winstreak > 0 ? '#4CAF50' : 'var(--text-muted)' }}>
                       {p.winstreak > 0 ? `🔥 ${p.winstreak}` : '—'}
                     </div>
-                    {/* Reportar */}
-                    {!isOwner && <ReportarNickname personajeId={p.id} nickname={p.nickname_juego} />}
+                    {/* Reclamar */}
+                    {!isOwner && <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />}
                   </div>
                 )
               })}

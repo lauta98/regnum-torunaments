@@ -64,7 +64,13 @@ CREATE TABLE public.nickname_reports (
   created_at   timestamptz NOT NULL DEFAULT now()
 );
 
--- ── 6. RLS ────────────────────────────────────────────
+-- ── 6. COLUMNAS EXTRA EN NICKNAME_REPORTS ────────────
+-- tipo: 'reporte' (nickname inapropiado) | 'reclamo' (reclamar titularidad)
+ALTER TABLE public.nickname_reports
+  ADD COLUMN IF NOT EXISTS tipo       text NOT NULL DEFAULT 'reporte',
+  ADD COLUMN IF NOT EXISTS claimer_id uuid REFERENCES public.players(id) ON DELETE SET NULL;
+
+-- ── 7. RLS ────────────────────────────────────────────
 ALTER TABLE public.personajes       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.nickname_reports ENABLE ROW LEVEL SECURITY;
 

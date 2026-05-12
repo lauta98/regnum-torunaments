@@ -27,7 +27,13 @@
       "Bash(copy \"68678-Loading screen realm shields ignis.png\" \"public\\\\shield-ignis.png\")",
       "Bash(copy \"68679-Loading screen realm shields syrtis.png\" \"public\\\\shield-syrtis.png\")",
       "Bash(node migrate-data.mjs)",
-      "Bash(del \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\migrate-data.mjs\")"
+      "Bash(del \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\migrate-data.mjs\")",
+      "Bash(git commit -m 'fix: remove duplicate border prop in VerificarPersonaje *)",
+      "Bash(git commit -m 'fix: cast player.role to UserRole in Header *)",
+      "Bash(git commit -m 'fix: add force-dynamic to eventos page to prevent prerender error *)",
+      "Bash(git commit -m 'fix: disable SSR on eventos page to prevent prerender error *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)"
     ]
   }
 }
