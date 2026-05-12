@@ -1,6 +1,6 @@
 'use client'
 import Link from 'next/link'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { signInWithDiscord, signOut } from '@/lib/auth'
@@ -68,21 +68,12 @@ const NAV = [
 
 export default function Header() {
   const pathname = usePathname()
-  const searchParams = useSearchParams()
   const [player, setPlayer] = useState<any>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
 
-  // Active check que soporta query params (ej: /jugadores?vista=ranking)
   const isActive = (href: string) => {
-    const [hrefPath, hrefQuery] = href.split('?')
-    const pathMatch = pathname === hrefPath || (hrefPath !== '/' && pathname.startsWith(hrefPath + '/'))
-    if (!pathMatch) return false
-    if (!hrefQuery) return true
-    const hrefParams = new URLSearchParams(hrefQuery)
-    for (const [key, value] of hrefParams) {
-      if (searchParams.get(key) !== value) return false
-    }
-    return true
+    const hrefPath = href.split('?')[0]
+    return pathname === hrefPath || (hrefPath !== '/' && pathname.startsWith(hrefPath + '/'))
   }
 
   useEffect(() => {
