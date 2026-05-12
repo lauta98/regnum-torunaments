@@ -1,5 +1,4 @@
 'use client'
-export const dynamic = 'force-dynamic'
 import { useState, useEffect } from 'react'
 import Header from '@/components/Header'
 import Link from 'next/link'
@@ -175,7 +174,7 @@ function PlayerModal({ highlight, onClose }: { highlight: Highlight; onClose: ()
 }
 
 /* ─── Page ──────────────────────────────────────────────────── */
-export default function HighlightsPage() {
+export function HighlightsPage() {
   const [selected, setSelected] = useState<Highlight | null>(null)
 
   const lives = HIGHLIGHTS.filter(h => h.tipo === 'twitch_live')
@@ -258,3 +257,6 @@ export default function HighlightsPage() {
     </>
   )
 }
+
+import dynamic from 'next/dynamic'
+export default dynamic(() => Promise.resolve(HighlightsPage), { ssr: false })
