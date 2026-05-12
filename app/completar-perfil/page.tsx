@@ -11,11 +11,11 @@ const CLASE_ICON: Record<Clase, string> = {
 
 export default function CompletarPerfilPage() {
   const router = useRouter()
-  const [nickname, setNickname]   = useState('')
-  const [reino, setReino]         = useState<Reino>('Syrtis')
-  const [clase, setClase]         = useState<Clase>('Bárbaro')
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState('')
+  const [nickname, setNickname] = useState('')
+  const [reino, setReino]       = useState<Reino>('Syrtis')
+  const [clase, setClase]       = useState<Clase>('Bárbaro')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,20 +26,68 @@ export default function CompletarPerfilPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    const { error: err } = await supabase.from('players').upsert({
-      user_id:         user.id,
-      nickname_juego:  nickname.trim().toUpperCase(),
-      reino,
-      clase_principal: clase,
-      discord_username: user.user_metadata?.full_name,
-      discord_avatar:   user.user_metadata?.avatar_url,
-    }, { onConflict: 'user_id' })
+    // 1. Verificar disponibilidad del nickname (case-insensitive)
+    const { data: taken } = await supabase
+      .from('personajes')
+      .select('id')
+      .ilike('nickname_juego', nickname.trim())
+      .single()
 
-    if (err) {
-      setError(err.message.includes('unique') ? 'Ese nickname ya está en uso.' : err.message)
+    if (taken) {
+      setError('Ese nickname ya está en uso.')
+      setLoading(false)
+      return
+    }
+
+    // 2. Obtener o crear el registro de cuenta (players)
+    let playerId: string
+    const { data: existing } = await supabase
+      .from('players')
+      .select('id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (existing) {
+      playerId = existing.id
+      // Actualizar avatar por si cambió
+      await supabase.from('players').update({
+        discord_username: user.user_metadata?.full_name,
+        discord_avatar:   user.user_metadata?.avatar_url,
+      }).eq('id', playerId)
+    } else {
+      const { data: created, error: createErr } = await supabase
+        .from('players')
+        .insert({
+          user_id:          user.id,
+          discord_username: user.user_metadata?.full_name,
+          discord_avatar:   user.user_metadata?.avatar_url,
+        })
+        .select('id')
+        .single()
+
+      if (createErr || !created) {
+        setError('Error creando tu cuenta. Intentá de nuevo.')
+        setLoading(false)
+        return
+      }
+      playerId = created.id
+    }
+
+    // 3. Crear el personaje
+    const { error: personajeErr } = await supabase.from('personajes').insert({
+      player_id:     playerId,
+      nickname_juego: nickname.trim(),
+      reino,
+      clase,
+    })
+
+    if (personajeErr) {
+      setError(personajeErr.message.includes('unique')
+        ? 'Ese nickname ya está en uso.'
+        : personajeErr.message)
       setLoading(false)
     } else {
-      router.push('/')
+      router.push(`/jugadores/${playerId}`)
     }
   }
 
@@ -59,11 +107,11 @@ export default function CompletarPerfilPage() {
         background: 'var(--bg-card)', border: '1px solid var(--border-gold)',
         borderRadius: 16, padding: '40px 48px', width: '100%', maxWidth: 480,
       }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)', marginBottom: 8, letterSpacing: 1 }}>
-          Completar Perfil
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)', marginBottom: 6, letterSpacing: 1 }}>
+          Tu primer personaje
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 28 }}>
-          Configurá tu personaje en Champions of Regnum.
+        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 28 }}>
+          Registrá tu personaje principal en Champions of Regnum. Podrás agregar más desde tu perfil.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
@@ -72,7 +120,8 @@ export default function CompletarPerfilPage() {
               NICKNAME EN EL JUEGO
             </label>
             <input
-              style={inputStyle} value={nickname} maxLength={24} placeholder="Tu nombre en Regnum"
+              style={inputStyle} value={nickname} maxLength={24}
+              placeholder="Tu nombre exacto en Regnum"
               onChange={e => setNickname(e.target.value)}
             />
           </div>
@@ -96,7 +145,7 @@ export default function CompletarPerfilPage() {
 
           <div>
             <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 10 }}>
-              CLASE PRINCIPAL
+              CLASE
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {CLASES.map(c => (

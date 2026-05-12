@@ -26,29 +26,46 @@ export async function GET(request: NextRequest) {
     const { data: { user }, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error && user) {
-      // Verificar si ya tiene perfil creado
-      const { data: existing } = await supabase
+      const meta = user.user_metadata
+      const discordUsername = meta?.full_name || meta?.name
+
+      // 1. Buscar perfil ya vinculado a este user_id
+      const { data: byUserId } = await supabase
         .from('players')
         .select('id')
         .eq('user_id', user.id)
         .single()
 
-      if (!existing) {
-        // Primer login: guardar metadata de Discord
-        const meta = user.user_metadata
-        await supabase.from('players').upsert({
-          user_id:         user.id,
-          nickname_juego:  meta?.full_name || meta?.name || 'Jugador',
-          discord_username: meta?.full_name,
-          discord_avatar:  meta?.avatar_url,
-          reino:           'Syrtis',
-          clase_principal: 'Bárbaro',
-        }, { onConflict: 'user_id', ignoreDuplicates: true })
-
-        return NextResponse.redirect(`${origin}/completar-perfil`)
+      if (byUserId) {
+        // Ya tiene perfil vinculado → ir al inicio
+        return NextResponse.redirect(`${origin}${next}`)
       }
 
-      return NextResponse.redirect(`${origin}${next}`)
+      // 2. Buscar perfil migrado con el mismo discord_username (sin user_id aún)
+      if (discordUsername) {
+        const { data: byDiscord } = await supabase
+          .from('players')
+          .select('id')
+          .eq('discord_username', discordUsername)
+          .is('user_id', null)
+          .single()
+
+        if (byDiscord) {
+          // Auto-vincular: asociar este Discord al perfil existente
+          await supabase
+            .from('players')
+            .update({
+              user_id:        user.id,
+              discord_avatar: meta?.avatar_url,
+            })
+            .eq('id', byDiscord.id)
+
+          return NextResponse.redirect(`${origin}${next}`)
+        }
+      }
+
+      // 3. Primer login sin perfil previo → completar perfil
+      return NextResponse.redirect(`${origin}/completar-perfil`)
     }
   }
 

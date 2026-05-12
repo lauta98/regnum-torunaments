@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE, MATCH_STATUS_STYLE } from '@/lib/constants'
+import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/types'
 import BracketActions from './BracketActions'
 
@@ -16,42 +16,71 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: data?.nombre ?? 'Bracket' }
 }
 
-export default async function BracketPage({ params }: { params: Promise<{ id: string }> }) {
+const FMT_LABEL: Record<string, string> = {
+  '1v1': '1VS1', '2v2': '2VS2', '3v3': '3VS3', '7v7': 'Clanes',
+}
+
+/* ── Icons ─────────────────────────────────────────── */
+const IconBracket = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/>
+    <line x1="16" y1="16" x2="20" y2="20"/>
+  </svg>
+)
+const IconList = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+  </svg>
+)
+const IconPeople = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+  </svg>
+)
+
+export default async function BracketPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ tab?: string }>
+}) {
   const { id } = await params
+  const sp = await searchParams
+  const tab = sp.tab ?? 'llave'
+
   const supabase = await createServerSupabase()
 
   const { data: torneo } = await supabase
     .from('tournaments')
-    .select('*, creator:players(nickname_juego), registros:tournament_registrations(count)')
-    .eq('id', id)
-    .single()
+    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count)')
+    .eq('id', id).single()
 
   if (!torneo) notFound()
 
   const { data: matches } = await supabase
     .from('matches')
-    .select(`
-      *,
-      equipo_a:teams!matches_equipo_a_id_fkey(id, nombre),
-      equipo_b:teams!matches_equipo_b_id_fkey(id, nombre),
-      ganador:teams!matches_ganador_id_fkey(id, nombre)
-    `)
+    .select('*, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre), ganador:teams!matches_ganador_id_fkey(id, nombre)')
     .eq('torneo_id', id)
     .order('ronda_numero', { ascending: true })
     .order('posicion', { ascending: true })
 
+  const { data: inscritos } = await supabase
+    .from('tournament_registrations')
+    .select('seed, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(nickname_juego, reino))')
+    .eq('tournament_id', id)
+    .order('seed', { ascending: true })
+
   const { data: { user } } = await supabase.auth.getUser()
   let isOrganizer = false
   if (user) {
-    const { data: player } = await supabase
-      .from('players')
-      .select('id, role')
-      .eq('user_id', user.id)
-      .single()
+    const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
     isOrganizer = !!(player && ['organizer', 'admin'].includes(player.role))
   }
 
-  // Group matches by round
+  // Group by round
   const rounds: Map<number, any[]> = new Map()
   matches?.forEach((m: any) => {
     if (!rounds.has(m.ronda_numero)) rounds.set(m.ronda_numero, [])
@@ -61,178 +90,293 @@ export default async function BracketPage({ params }: { params: Promise<{ id: st
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
-  const inscritos = torneo.registros?.[0]?.count ?? 0
-
+  const inscrCount = torneo.registros?.[0]?.count ?? 0
   const completedMatches = matches?.filter((m: any) => m.estado === 'jugado').length ?? 0
-  const totalMatches = matches?.length ?? 0
+  const totalMatchCount = matches?.length ?? 0
+
+  const sidebarItems = [
+    { id: 'llave',        label: 'Llave',        icon: <IconBracket /> },
+    { id: 'posiciones',   label: 'Posiciones',   icon: <IconList /> },
+    { id: 'participantes',label: 'Participantes', icon: <IconPeople /> },
+  ]
 
   return (
     <>
       <Header />
-      <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px', flex: 1 }}>
+      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Breadcrumb */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
-          <Link href="/brackets" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Brackets</Link>
-          <span>›</span>
-          <span style={{ color: 'var(--text-primary)' }}>{torneo.nombre}</span>
+        {/* Top meta bar */}
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 0', display: 'flex', alignItems: 'center', gap: 20, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+          <Link href="/brackets" style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
+            ← Brackets
+          </Link>
+          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
+          <span>👥 {inscrCount} {torneo.formato === '7v7' ? 'clanes' : 'equipos'}</span>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
+            {FMT_LABEL[torneo.formato] ?? torneo.formato}
+          </span>
+          <span>📅 {new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          {torneo.creator && (
+            <span>👤 Organizado por <span style={{ color: 'var(--gold)' }}>{torneo.creator.nickname_juego}</span></span>
+          )}
         </div>
 
-        {/* Header card */}
-        <div style={{
-          background: 'var(--bg-card)', border: `1px solid ${fc}44`,
-          borderRadius: 14, overflow: 'hidden', marginBottom: 32,
-        }}>
-          <div style={{ height: 4, background: `linear-gradient(90deg, ${fc}, ${fc}55)` }} />
-          <div style={{ padding: '24px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
-            <div>
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
-                <span style={{ background: `${fc}22`, color: fc, border: `1px solid ${fc}33`, padding: '3px 10px', borderRadius: 20, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 1 }}>
-                  {FORMAT_LABEL[torneo.formato as TournamentFormat]}
+        {/* Two-column layout: sidebar + content */}
+        <div style={{ display: 'flex', flex: 1, gap: 0 }}>
+
+          {/* Sidebar */}
+          <aside style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '20px 0' }}>
+            {/* Tournament title in sidebar */}
+            <div style={{ padding: '0 16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+                <span style={{ background: `${fc}18`, color: fc, border: `1px solid ${fc}33`, padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5 }}>
+                  {FMT_LABEL[torneo.formato] ?? torneo.formato}
                 </span>
-                <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: 20, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 1 }}>
-                  {torneo.estado === 'live' && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#F44336', marginRight: 5 }} />}
+                <span style={{ background: st.bg, color: st.color, padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {torneo.estado === 'live' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F44336', display: 'inline-block' }} />}
                   {st.label}
                 </span>
               </div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 24, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 6 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                 {torneo.nombre}
-              </h1>
-              {torneo.descripcion && <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 600 }}>{torneo.descripcion}</p>}
-            </div>
-            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-              {[
-                { label: 'EQUIPOS', value: `${inscritos}/${torneo.max_equipos}` },
-                { label: 'PARTIDOS', value: `${completedMatches}/${totalMatches}` },
-                { label: 'FECHA', value: new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }) },
-                ...(torneo.premio ? [{ label: 'PREMIO', value: torneo.premio }] : []),
-              ].map(({ label, value }) => (
-                <div key={label} style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 4 }}>{label}</div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--gold)' }}>{value}</div>
+              </div>
+              <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--gold)' }}>{inscrCount}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>EQUIPOS</div>
                 </div>
-              ))}
+                <div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--gold)' }}>{completedMatches}/{totalMatchCount}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>PARTIDOS</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
-        {/* Bracket */}
-        {roundEntries.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '60px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 12 }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
-            <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
-            <p style={{ fontSize: 13, marginTop: 6 }}>Las llaves se generarán cuando el torneo comience.</p>
-          </div>
-        ) : (
-          <div style={{ overflowX: 'auto', paddingBottom: 16 }}>
-            <div style={{ display: 'flex', gap: 0, minWidth: roundEntries.length * 260 }}>
-              {roundEntries.map(([roundNum, roundMatches], colIdx) => {
-                const isLast = colIdx === roundEntries.length - 1
-                const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
-                return (
-                  <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column', position: 'relative' }}>
-                    {/* Round label */}
-                    <div style={{ padding: '10px 12px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--gold)', letterSpacing: 2, textAlign: 'center', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
-                      {roundName.toUpperCase()}
-                    </div>
-                    {/* Matches */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '16px 8px', gap: 16 }}>
-                      {roundMatches.map((match: any) => (
-                        <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} isLast={isLast} />
+            {/* Nav items */}
+            {sidebarItems.map(({ id, label, icon }) => (
+              <Link key={id} href={`/brackets/${torneo.id}?tab=${id}`} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                textDecoration: 'none', borderRadius: 8, margin: '2px 8px',
+                background: tab === id ? 'rgba(212,175,55,0.1)' : 'transparent',
+                color: tab === id ? 'var(--gold)' : 'var(--text-muted)',
+                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: tab === id ? 700 : 400,
+                transition: 'all 0.15s',
+                borderLeft: tab === id ? '3px solid var(--gold)' : '3px solid transparent',
+              }}>
+                <span style={{ color: tab === id ? 'var(--gold)' : 'var(--text-muted)', display: 'flex' }}>{icon}</span>
+                {label}
+              </Link>
+            ))}
+          </aside>
+
+          {/* Main content */}
+          <main style={{ flex: 1, padding: '24px 28px', overflowX: 'auto', minWidth: 0 }}>
+
+            {/* ── TAB: LLAVE ───────────────────────────────── */}
+            {tab === 'llave' && (
+              roundEntries.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                  <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
+                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  {/* Round headers */}
+                  <div style={{ display: 'flex', gap: 0, minWidth: roundEntries.length * 240 }}>
+                    {roundEntries.map(([roundNum, roundMatches], colIdx) => {
+                      const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
+                      return (
+                        <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                          {/* Round label */}
+                          <div style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600 }}>
+                            {roundName}
+                          </div>
+                          {/* Matches */}
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
+                            {roundMatches.map((match: any) => (
+                              <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* ── TAB: POSICIONES ─────────────────────────── */}
+            {tab === 'posiciones' && (
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
+                  Tabla de Posiciones
+                </div>
+                {torneo.formato !== '7v7' ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
+                    Las posiciones están disponibles para torneos Round Robin.
+                  </div>
+                ) : (() => {
+                  // Calcular standings para round robin
+                  type StandRow = { nombre: string; W: number; L: number; D: number; pts: number }
+                  const standings: Record<string, StandRow> = {}
+                  matches?.forEach((m: any) => {
+                    const na = m.equipo_a?.nombre
+                    const nb = m.equipo_b?.nombre
+                    if (!na || !nb) return
+                    if (!standings[na]) standings[na] = { nombre: na, W: 0, L: 0, D: 0, pts: 0 }
+                    if (!standings[nb]) standings[nb] = { nombre: nb, W: 0, L: 0, D: 0, pts: 0 }
+                    if (m.estado !== 'jugado') return
+                    if (!m.ganador_id) {
+                      // Draw
+                      standings[na].D++; standings[na].pts++
+                      standings[nb].D++; standings[nb].pts++
+                    } else if (m.ganador_id === m.equipo_a_id) {
+                      standings[na].W++; standings[na].pts += 2
+                      standings[nb].L++
+                    } else {
+                      standings[nb].W++; standings[nb].pts += 2
+                      standings[na].L++
+                    }
+                  })
+                  const rows = Object.values(standings).sort((a, b) => b.pts - a.pts || b.W - a.W)
+                  return (
+                    <div style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                        {['#', 'EQUIPO', 'G', 'E', 'P', 'PTS'].map(c => (
+                          <div key={c} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{c}</div>
+                        ))}
+                      </div>
+                      {rows.map((r, i) => (
+                        <div key={r.nombre} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '12px 20px', borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: i < 3 ? 'var(--gold)' : 'var(--text-muted)', fontWeight: 700 }}>{i + 1}</div>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{r.nombre}</div>
+                          <div style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600 }}>{r.W}</div>
+                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.D}</div>
+                          <div style={{ fontSize: 12, color: '#f87171' }}>{r.L}</div>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{r.pts}</div>
+                        </div>
                       ))}
                     </div>
+                  )
+                })()}
+              </div>
+            )}
+
+            {/* ── TAB: PARTICIPANTES ──────────────────────── */}
+            {tab === 'participantes' && (
+              <div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
+                  {torneo.formato === '7v7' ? 'Clanes participantes' : 'Equipos participantes'} ({inscritos?.length ?? 0})
+                </div>
+                {!inscritos?.length ? (
+                  <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay participantes inscritos.</div>
+                ) : (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                    {inscritos.map((r: any, i: number) => {
+                      const team = r.team
+                      if (!team) return null
+                      return (
+                        <div key={team.id} style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px' }}>
+                          {r.seed && <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>SEED #{r.seed}</div>}
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{team.nombre}</div>
+                          {team.capitan && (
+                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span></div>
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
+                )}
+              </div>
+            )}
 
-        {/* Inscribed teams */}
-        <InscritosSection torneoId={id} />
-
-      </main>
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>
+          </main>
+        </div>
+      </div>
+      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
         CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
       </footer>
     </>
   )
 }
 
-function MatchCard({ match, isOrganizer, fc, isLast }: { match: any; isOrganizer: boolean; fc: string; isLast: boolean }) {
-  const mst = MATCH_STATUS_STYLE[match.estado as MatchStatus]
+/* ── Match Card ─────────────────────────────────────────────── */
+function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolean; fc: string }) {
   const teamA = match.equipo_a
   const teamB = match.equipo_b
   const ganadorId = match.ganador_id
+  const isPlayed = match.estado === 'jugado'
+
+  // Parse score
+  const [scoreA, scoreB] = match.resultado?.split('-').map(Number) ?? [null, null]
 
   return (
-    <div style={{ position: 'relative' }}>
-      <div style={{
-        background: 'var(--bg-card)',
-        border: `1px solid ${match.estado === 'jugado' ? fc + '55' : 'var(--border)'}`,
-        borderRadius: 10, overflow: 'hidden',
-      }}>
-        {/* Status bar */}
-        <div style={{ height: 2, background: match.estado === 'jugado' ? fc : match.estado === 'live' ? '#F44336' : 'var(--border)' }} />
+    <div style={{
+      background: '#0f0f0f',
+      border: `1px solid ${isPlayed ? fc + '44' : 'rgba(255,255,255,0.08)'}`,
+      borderRadius: 10, overflow: 'hidden',
+      transition: 'border-color 0.2s',
+    }}>
+      {/* Top accent */}
+      <div style={{ height: 2, background: isPlayed ? `linear-gradient(90deg, ${fc}, ${fc}44)` : 'rgba(255,255,255,0.06)' }} />
 
-        {/* Team A */}
-        <TeamSlot team={teamA} isWinner={ganadorId === teamA?.id} isLoser={!!ganadorId && ganadorId !== teamA?.id} />
-        <div style={{ height: 1, background: 'var(--border)' }} />
-        {/* Team B */}
-        <TeamSlot team={teamB} isWinner={ganadorId === teamB?.id} isLoser={!!ganadorId && ganadorId !== teamB?.id} />
+      {/* Team A */}
+      <TeamRow
+        seed={match.posicion}
+        team={teamA}
+        score={scoreA}
+        isWinner={!!ganadorId && ganadorId === teamA?.id}
+        isLoser={!!ganadorId && ganadorId !== teamA?.id}
+        borderBottom
+      />
+      {/* Team B */}
+      <TeamRow
+        team={teamB}
+        score={scoreB}
+        isWinner={!!ganadorId && ganadorId === teamB?.id}
+        isLoser={!!ganadorId && ganadorId !== teamB?.id}
+      />
 
-        {/* Status */}
-        <div style={{ padding: '4px 10px', background: 'var(--bg-surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: mst.color, letterSpacing: 1 }}>{mst.label.toUpperCase()}</span>
+      {/* Footer */}
+      {(isOrganizer || isPlayed) && (
+        <div style={{ padding: '4px 10px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
+            {isPlayed ? 'JUGADO' : 'PENDIENTE'}
+          </span>
           {isOrganizer && match.estado !== 'jugado' && teamA && teamB && (
             <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} />
           )}
         </div>
-      </div>
+      )}
     </div>
   )
 }
 
-function TeamSlot({ team, isWinner, isLoser }: { team: any; isWinner: boolean; isLoser: boolean }) {
-  const color = isWinner ? '#4CAF50' : isLoser ? 'var(--text-muted)' : 'var(--text-primary)'
+function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean }) {
+  const nameColor = isWinner ? 'var(--text-primary)' : isLoser ? 'var(--text-muted)' : 'var(--text-secondary)'
+  const scoreBg = isWinner ? 'rgba(212,175,55,0.2)' : isLoser ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)'
+  const scoreColor = isWinner ? 'var(--gold)' : 'var(--text-muted)'
+
   return (
-    <div style={{ padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8, background: isWinner ? 'rgba(76,175,80,0.05)' : 'transparent' }}>
-      {isWinner && <span style={{ fontSize: 12 }}>🏆</span>}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color, flex: 1 }}>
-        {team ? team.nombre : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>TBD</span>}
+    <div style={{
+      padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8,
+      background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
+      borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
+    }}>
+      {/* Seed */}
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 14, textAlign: 'center', flexShrink: 0 }}>
+        {seed ?? ''}
       </span>
-    </div>
-  )
-}
-
-async function InscritosSection({ torneoId }: { torneoId: string }) {
-  const supabase = await createServerSupabase()
-  const { data: inscritos } = await supabase
-    .from('tournament_registrations')
-    .select('team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(nickname_juego, reino))')
-    .eq('tournament_id', torneoId)
-
-  if (!inscritos?.length) return null
-
-  return (
-    <div style={{ marginTop: 32 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
-        EQUIPOS INSCRITOS ({inscritos.length})
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-        {inscritos.map((r: any) => {
-          const team = r.team
-          if (!team) return null
-          return (
-            <div key={team.id} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 10, padding: '12px 14px' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>{team.nombre}</div>
-              {team.capitan && (
-                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cap: {team.capitan.nickname_juego}</div>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {/* Team name */}
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>TBD</span>}
+      </span>
+      {/* Score */}
+      {score !== null && score !== undefined && !isNaN(score) && (
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: scoreColor, background: scoreBg, width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, flexShrink: 0 }}>
+          {score}
+        </span>
+      )}
     </div>
   )
 }

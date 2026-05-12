@@ -20,25 +20,46 @@ export type TournamentStatus =
 
 export type MatchStatus = 'pendiente' | 'jugado' | 'disputa'
 
-export interface User {
+export type ReportStatus = 'pendiente' | 'resuelto' | 'rechazado'
+
+/* ── Cuenta Discord (1 por usuario) ─────────────────── */
+export interface Player {
   id: string
-  discord_id: string
-  discord_username: string
+  user_id: string | null
+  discord_username: string | null
   discord_avatar: string | null
   role: UserRole
   created_at: string
+  personajes?: Personaje[]
 }
 
-export interface Player {
-  user_id: string
+/* ── Personaje en juego (N por jugador) ─────────────── */
+export interface Personaje {
+  id: string
+  player_id: string
   nickname_juego: string
   reino: Reino
-  clase_principal: Clase
-  mmr_global: number
+  clase: Clase
+  mmr: number
   winrate: number
   partidas_jugadas: number
-  winstreak?: number
-  user?: User
+  partidas_ganadas: number
+  winstreak: number
+  verificado: boolean
+  created_at: string
+  player?: Player
+}
+
+/* ── Reporte de nickname ─────────────────────────────── */
+export interface NicknameReport {
+  id: string
+  reporter_id: string | null
+  personaje_id: string
+  motivo: string
+  estado: ReportStatus
+  created_at: string
+  reporter?: Player
+  personaje?: Personaje
 }
 
 export interface Team {
@@ -49,7 +70,16 @@ export interface Team {
   tipo: TournamentFormat
   created_at: string
   capitan?: Player
-  members?: Player[]
+  members?: TeamMember[]
+}
+
+export interface TeamMember {
+  team_id: string
+  player_id: string
+  personaje_id: string | null
+  joined_at: string
+  player?: Player
+  personaje?: Personaje
 }
 
 export interface Tournament {
@@ -58,13 +88,14 @@ export interface Tournament {
   nombre: string
   descripcion: string | null
   formato: TournamentFormat
+  clase_requerida: Clase | null
   estado: TournamentStatus
   fecha_inicio: string
   imagen_url: string | null
   max_equipos: number
   premio: string | null
   created_at: string
-  creator?: User
+  creator?: Player
   equipos_inscritos?: number
 }
 
@@ -83,15 +114,16 @@ export interface Match {
   ganador?: Team
 }
 
-export interface Highlight {
+export interface MmrHistory {
   id: string
-  titulo: string
-  descripcion: string | null
-  video_url: string
-  thumbnail_url: string | null
-  jugador_id: string
+  personaje_id: string
+  match_id: string | null
   torneo_id: string | null
-  likes: number
+  mmr_antes: number
+  mmr_despues: number
+  delta: number | null
+  gano: boolean
   created_at: string
-  jugador?: Player
+  personaje?: Personaje
+  torneo?: Tournament
 }

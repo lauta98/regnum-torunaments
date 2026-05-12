@@ -2,68 +2,113 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE, FORMATS } from '@/lib/constants'
+import { FORMAT_COLOR, STATUS_STYLE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Torneos' }
 
-const ESTADOS: TournamentStatus[] = ['live', 'inscripciones', 'finalizado', 'draft']
+// Formato labels con override para 7v7
+const FMT_LABEL: Record<string, string> = {
+  '1v1': '1VS1', '2v2': '2VS2', '3v3': '3VS3', '7v7': 'Clanes',
+}
+const FMT_COLOR: Record<string, string> = {
+  '1v1': '#8a2be2', '2v2': '#d4af37', '3v3': '#2196F3', '7v7': '#F44336',
+}
+// Subclases para filtrar torneos 1v1 (busca en descripcion)
+const SUBCLASES_1V1 = [
+  { label: 'Brujos',    q: 'Brujos' },
+  { label: 'Tiradores', q: 'Tiradores' },
+  { label: 'Mixto',     q: 'Mixto' },
+]
+
+function Pill({ href, active, color, children }: { href: string; active: boolean; color?: string; children: React.ReactNode }) {
+  const c = color ?? 'rgba(212,175,55,1)'
+  return (
+    <Link href={href} style={{
+      padding: '7px 18px', borderRadius: 8, textDecoration: 'none',
+      fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5,
+      border: `1px solid ${active ? c : 'rgba(255,255,255,0.1)'}`,
+      background: active ? `${c}18` : 'transparent',
+      color: active ? c : 'var(--text-muted)',
+      transition: 'all 0.15s', whiteSpace: 'nowrap',
+    }}>
+      {children}
+    </Link>
+  )
+}
 
 export default async function TorneosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ formato?: string; estado?: string }>
+  searchParams: Promise<{ formato?: string; sub?: string }>
 }) {
   const params = await searchParams
   const supabase = await createServerSupabase()
 
   let query = supabase
     .from('tournaments')
-    .select(`
-      *,
-      creator:players(nickname_juego, discord_avatar),
-      registros:tournament_registrations(count)
-    `)
+    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count)')
     .order('destacado', { ascending: false })
     .order('created_at', { ascending: false })
 
   if (params.formato) query = query.eq('formato', params.formato as TournamentFormat)
-  if (params.estado)  query = query.eq('estado',  params.estado)
+  // Subclase: busca en descripcion
+  if (params.sub) query = query.ilike('descripcion', `%${params.sub}%`)
 
   const { data: tourneys } = await query
+
+  const fmtBase = params.formato ? `?formato=${params.formato}` : ''
+  const fmtNoSub = params.formato ? `?formato=${params.formato}` : '/torneos'
 
   return (
     <>
       <Header />
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px', flex: 1 }}>
 
-        {/* Page title */}
+        {/* Page header */}
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 900, color: 'var(--gold)', letterSpacing: 2 }}>
-            TORNEOS
-          </h1>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12 }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 1 }}>
+              Torneos
+            </h1>
+            {tourneys && (
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--text-muted)' }}>
+                {tourneys.length} torneos
+              </span>
+            )}
+          </div>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
             Todos los torneos de Champions of Regnum
           </p>
         </div>
 
-        {/* Filters */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 28, flexWrap: 'wrap' }}>
-          <Link href="/torneos" style={filterPill(!params.formato && !params.estado, false)}>
-            Todos
-          </Link>
-          {FORMATS.map(f => (
-            <Link key={f} href={`/torneos?formato=${f}`} style={filterPill(params.formato === f, true, FORMAT_COLOR[f])}>
-              {FORMAT_LABEL[f]}
-            </Link>
+        {/* Formato filters */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: params.formato === '1v1' ? 12 : 24, flexWrap: 'wrap' }}>
+          <Pill href="/torneos" active={!params.formato}>Todos</Pill>
+          {(['1v1', '2v2', '3v3', '7v7'] as const).map(f => (
+            <Pill key={f} href={`/torneos?formato=${f}`} active={params.formato === f} color={FMT_COLOR[f]}>
+              {FMT_LABEL[f]}
+            </Pill>
           ))}
-          {ESTADOS.map(e => (
-            <Link key={e} href={`/torneos?estado=${e}`} style={filterPill(params.estado === e, false, STATUS_STYLE[e].color)}>
-              {STATUS_STYLE[e].label}
-            </Link>
-          ))}
+          <div style={{ flex: 1 }} />
+          <Pill href="/torneos?estado=finalizado" active={false} color="var(--text-muted)">
+            Solo Finalizados
+          </Pill>
         </div>
+
+        {/* Subclase filters (solo si formato=1v1) */}
+        {params.formato === '1v1' && (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', paddingLeft: 4 }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, alignSelf: 'center', marginRight: 4 }}>SUBCLASE:</span>
+            <Pill href={fmtNoSub} active={!params.sub} color={FMT_COLOR['1v1']}>Todas</Pill>
+            {SUBCLASES_1V1.map(({ label, q }) => (
+              <Pill key={q} href={`/torneos?formato=1v1&sub=${q}`} active={params.sub === q} color={FMT_COLOR['1v1']}>
+                {label}
+              </Pill>
+            ))}
+          </div>
+        )}
 
         {/* Grid */}
         {!tourneys?.length ? (
@@ -72,95 +117,98 @@ export default async function TorneosPage({
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 16 }}>No hay torneos con esos filtros.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-            {tourneys.map((t: any) => {
-              const st = STATUS_STYLE[t.estado as TournamentStatus]
-              const fc = FORMAT_COLOR[t.formato as TournamentFormat]
-              const inscritos = t.registros?.[0]?.count ?? 0
-              return (
-                <Link key={t.id} href={`/brackets/${t.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="card-hover" style={{
-                    background: 'var(--bg-card)',
-                    border: `1px solid ${t.destacado ? 'rgba(212,175,55,0.5)' : 'var(--border)'}`,
-                    borderRadius: 14, overflow: 'hidden',
-                    ['--hover-color' as string]: fc,
-                  }}>
-                    {/* Header band */}
-                    <div style={{ height: 4, background: `linear-gradient(90deg, ${fc}, ${fc}88)` }} />
-
-                    <div style={{ padding: '20px 22px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                        <span style={{
-                          background: `${fc}22`, color: fc, border: `1px solid ${fc}44`,
-                          padding: '3px 10px', borderRadius: 20,
-                          fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 1,
-                        }}>{FORMAT_LABEL[t.formato as TournamentFormat]}</span>
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          {t.estado === 'live' && <span className="live-dot" />}
-                          <span style={{
-                            background: st.bg, color: st.color,
-                            padding: '3px 10px', borderRadius: 20,
-                            fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 1,
-                          }}>{st.label}</span>
-                        </div>
-                      </div>
-
-                      <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.2 }}>
-                        {t.nombre}
-                      </h2>
-
-                      {t.descripcion && (
-                        <p style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5,
-                          overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                          {t.descripcion}
-                        </p>
-                      )}
-
-                      <div style={{ display: 'flex', gap: 16, fontSize: 12, color: 'var(--text-muted)', marginBottom: 14 }}>
-                        <span>📅 {new Date(t.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short' })}</span>
-                        <span>👥 {inscritos}/{t.max_equipos}</span>
-                        {t.premio && <span>🏆 {t.premio}</span>}
-                      </div>
-
-                      {t.creator && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-                          <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', overflow: 'hidden', flexShrink: 0 }}>
-                            {t.creator.discord_avatar
-                              ? <img src={t.creator.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                              : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', fontSize: 10, color: 'var(--gold)' }}>{t.creator.nickname_juego?.[0]}</span>
-                            }
-                          </div>
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>por <span style={{ color: 'var(--text-secondary)' }}>{t.creator.nickname_juego}</span></span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 16 }}>
+            {tourneys.map((t: any) => <TorneoCard key={t.id} torneo={t} />)}
           </div>
         )}
+
       </main>
-      <PageFooter />
+      <Footer />
     </>
   )
 }
 
-function filterPill(active: boolean, colored: boolean, color?: string): React.CSSProperties {
-  return {
-    padding: '6px 16px', borderRadius: 20, textDecoration: 'none',
-    fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: 1,
-    border: `1px solid ${active ? (color || 'var(--gold)') : 'var(--border)'}`,
-    background: active ? `${color || 'var(--gold)'}22` : 'transparent',
-    color: active ? (color || 'var(--gold)') : 'var(--text-muted)',
-    transition: 'all 0.15s',
-  }
+function TorneoCard({ torneo: t }: { torneo: any }) {
+  const st = STATUS_STYLE[t.estado as TournamentStatus]
+  const fc = FMT_COLOR[t.formato] ?? '#d4af37'
+  const fmtLabel = FMT_LABEL[t.formato] ?? t.formato
+  const inscritos = t.registros?.[0]?.count ?? 0
+
+  return (
+    <Link href={`/brackets/${t.id}`} style={{ textDecoration: 'none' }}>
+      <div className="card-hover" style={{
+        background: t.destacado
+          ? 'linear-gradient(145deg, #120f00 0%, #0d0d0d 50%, #0a0d00 100%)'
+          : '#0a0a0a',
+        border: `1px solid ${t.destacado ? 'rgba(212,175,55,0.35)' : `${fc}22`}`,
+        borderRadius: 14, overflow: 'hidden',
+        boxShadow: t.destacado
+          ? '0 0 32px rgba(212,175,55,0.08), inset 0 0 60px rgba(0,0,0,0.3)'
+          : `inset 0 0 40px rgba(0,0,0,0.2)`,
+        ['--hover-color' as string]: fc,
+      } as React.CSSProperties}
+      >
+        {/* Top accent bar con glow */}
+        <div style={{ height: 3, background: `linear-gradient(90deg, ${fc}cc, ${fc}55, ${fc}11)`, boxShadow: `0 0 8px ${fc}44` }} />
+
+        <div style={{ padding: '20px 22px' }}>
+          {/* Badges row */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
+              <span style={{ background: `${fc}18`, color: fc, border: `1px solid ${fc}33`, padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5 }}>
+                {fmtLabel}
+              </span>
+              {t.destacado && (
+                <span style={{ background: 'rgba(212,175,55,0.12)', color: 'var(--gold)', border: '1px solid rgba(212,175,55,0.3)', padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5 }}>
+                  Destacado
+                </span>
+              )}
+            </div>
+            <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 5 }}>
+              {t.estado === 'live' && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#F44336' }} />}
+              {st.label}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.35, letterSpacing: 0.5 }}>
+            {t.nombre}
+          </h2>
+
+          {t.descripcion && (
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5,
+              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+              {t.descripcion}
+            </p>
+          )}
+
+          {/* Meta */}
+          <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-muted)', marginBottom: t.creator ? 14 : 0 }}>
+            <span>📅 {new Date(t.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+            <span>👥 {inscritos}/{t.max_equipos}</span>
+            {t.premio && <span>🎁 {t.premio}</span>}
+          </div>
+
+          {/* Creator */}
+          {t.creator && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 12 }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {t.creator.discord_avatar
+                  ? <img src={t.creator.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  : <span style={{ fontSize: 9, color: 'var(--gold)' }}>{t.creator.nickname_juego?.[0]}</span>}
+              </div>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>por <span style={{ color: 'var(--text-secondary)' }}>{t.creator.nickname_juego}</span></span>
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
 }
 
-function PageFooter() {
+function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>
+    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
       CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
     </footer>
   )

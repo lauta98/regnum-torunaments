@@ -17,7 +17,17 @@
       "Bash(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\app\\\\api\\\\debug\")",
       "Bash(Out-Null)",
       "Bash(Write-Output \"ok\")",
-      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\app\\\\api\\\\debug\")"
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\app\\\\api\\\\debug\")",
+      "Bash(node -e ' *)",
+      "mcp__Claude_in_Chrome__navigate",
+      "mcp__Claude_in_Chrome__javascript_tool",
+      "mcp__Claude_in_Chrome__computer",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "Bash(copy \"68677-Loading screen realm shields alsius.png\" \"public\\\\shield-alsius.png\")",
+      "Bash(copy \"68678-Loading screen realm shields ignis.png\" \"public\\\\shield-ignis.png\")",
+      "Bash(copy \"68679-Loading screen realm shields syrtis.png\" \"public\\\\shield-syrtis.png\")",
+      "Bash(node migrate-data.mjs)",
+      "Bash(del \"C:\\\\Users\\\\USUARIO\\\\OneDrive\\\\Escritorio\\\\Proyectos\\\\Regnum\\\\Regnum Tournaments\\\\migrate-data.mjs\")"
     ]
   }
 }

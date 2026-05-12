@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus } from '@/lib/types'
+import { canOrganize, canAdmin } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,15 +23,21 @@ export default async function OrganizadorPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!player || !['organizer', 'admin'].includes(player.role)) {
+  if (!player || !canOrganize(player.role)) {
     redirect('/')
   }
 
-  const { data: torneos } = await supabase
+  // El admin ve TODOS los torneos; el organizador solo los suyos
+  const tourneysQuery = supabase
     .from('tournaments')
     .select('*, registros:tournament_registrations(count), partidos:matches(count)')
-    .eq('creator_id', player.id)
     .order('created_at', { ascending: false })
+
+  if (!canAdmin(player.role)) {
+    tourneysQuery.eq('creator_id', player.id)
+  }
+
+  const { data: torneos } = await tourneysQuery
 
   const stats = {
     total: torneos?.length ?? 0,
