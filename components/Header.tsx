@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase'
 import { signInWithDiscord, signOut } from '@/lib/auth'
 import { REINO_COLOR } from '@/lib/constants'
-import type { Reino } from '@/lib/types'
+import type { Reino, UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canOrganize, canAdmin } from '@/lib/roles'
 
 /* ── Icons ─────────────────────────────────────────────────────── */
@@ -175,13 +175,13 @@ export default function Header() {
                 {/* Rol badge */}
                 <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{
-                    background: ROLE_BG[player.role] ?? 'rgba(255,255,255,0.05)',
-                    color: ROLE_COLOR[player.role] ?? 'var(--text-muted)',
-                    border: `1px solid ${ROLE_COLOR[player.role] ?? 'transparent'}55`,
+                    background: ROLE_BG[player.role as UserRole] ?? 'rgba(255,255,255,0.05)',
+                    color: ROLE_COLOR[player.role as UserRole] ?? 'var(--text-muted)',
+                    border: `1px solid ${ROLE_COLOR[player.role as UserRole] ?? 'transparent'}55`,
                     padding: '2px 8px', borderRadius: 4,
                     fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5,
                   }}>
-                    {ROLE_LABEL[player.role] ?? player.role}
+                    {ROLE_LABEL[player.role as UserRole] ?? player.role}
                   </span>
                 </div>
 
