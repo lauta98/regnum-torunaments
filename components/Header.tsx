@@ -42,16 +42,6 @@ const IconPerson = () => (
     <circle cx="12" cy="7" r="4"/>
   </svg>
 )
-const IconVideo = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-  </svg>
-)
-const IconStar = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-  </svg>
-)
 const IconDiscord = () => (
   <svg width="16" height="13" viewBox="0 0 71 55" fill="currentColor">
     <path d="M60.1 4.9A58.5 58.5 0 0 0 45.6.7a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.6 37.6 0 0 0 25.5.8a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.8 4.9a.2.2 0 0 0-.1.1C1.6 18.7-.9 32.1.3 45.3a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1c1.4-1.9 2.6-3.9 3.6-5.9a.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4 30 30 0 0 0 .6-.5.2.2 0 0 1 .2 0c11.5 5.2 23.9 5.2 35.3 0a.2.2 0 0 1 .2 0l.6.5a.2.2 0 0 1 0 .4 36.2 36.2 0 0 1-5.5 2.6.2.2 0 0 0-.1.3c1 2 2.3 4 3.6 5.9a.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C72.9 30 70 16.7 60.2 5a.2.2 0 0 0-.1-.1Z"/>
@@ -61,9 +51,8 @@ const IconDiscord = () => (
 const NAV = [
   { label: 'Inicio',      href: '/',          icon: <IconHome /> },
   { label: 'Torneos',     href: '/torneos',   icon: <IconTrophy /> },
+  { label: 'Comercio',    href: '/market',    icon: <IconSwords /> },
   { label: 'Ranking',     href: '/jugadores', icon: <IconChart /> },
-  { label: 'Highlights',  href: '/eventos',   icon: <IconVideo /> },
-  { label: 'IA Stats',    href: '/ia-stats',  icon: <IconStar /> },
 ]
 
 export default function Header() {

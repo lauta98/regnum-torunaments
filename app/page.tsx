@@ -2,9 +2,6 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
-import FeaturedEvent from '@/components/FeaturedEvent'
-import UpcomingEvents from '@/components/UpcomingEvents'
-import HighlightsSection from '@/components/HighlightsSection'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -34,27 +31,14 @@ export default async function HomePage() {
 
   const [
     { data: personajes },
-    { data: torneos },
-    { data: featured },
     { count: totalJugadores },
     { count: totalTorneos },
     { count: totalMatches },
-    { data: highlights },
   ] = await Promise.all([
     supabase.from('personajes').select('*, player:players(id, discord_username, role)').order('mmr', { ascending: false }).limit(10),
-    supabase.from('tournaments')
-      .select('id, nombre, formato, estado, fecha_inicio, max_equipos, destacado, registros:tournament_registrations(count)')
-      .in('estado', ['live', 'inscripciones', 'finalizado'])
-      .order('destacado', { ascending: false })
-      .order('fecha_inicio', { ascending: false })
-      .limit(6),
-    supabase.from('tournaments')
-      .select('id, nombre, descripcion, formato, estado, fecha_inicio, max_equipos, premio, registros:tournament_registrations(count)')
-      .eq('destacado', true).order('created_at', { ascending: false }).limit(1).maybeSingle(),
     supabase.from('personajes').select('*', { count: 'exact', head: true }),
     supabase.from('tournaments').select('*', { count: 'exact', head: true }),
     supabase.from('matches').select('*', { count: 'exact', head: true }),
-    supabase.from('highlights').select('id, titulo, video_url, thumbnail_url, likes, jugador:players(nickname_juego)').order('likes', { ascending: false }).limit(3),
   ])
 
   const btnOutline = {
@@ -72,8 +56,8 @@ export default async function HomePage() {
       <Header />
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px', flex: 1 }}>
 
-        {/* ── Hero + Featured ─────────────────────────────────── */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: 20, marginBottom: 20 }}>
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section style={{ marginBottom: 20 }}>
 
           {/* Hero */}
           <div style={{
@@ -116,7 +100,7 @@ export default async function HomePage() {
 
             {/* CTA buttons */}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link href="/rankings" style={{ ...btnOutline, color: 'var(--gold)', borderColor: 'rgba(212,175,55,0.35)' }}>
+              <Link href="/jugadores" style={{ ...btnOutline, color: 'var(--gold)', borderColor: 'rgba(212,175,55,0.35)' }}>
                 <IconChart /> Ver Rankings
               </Link>
               <Link href="/jugadores" style={btnOutline}>
@@ -149,9 +133,6 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
-
-          {/* Featured Event */}
-          <FeaturedEvent tournament={featured ?? null} />
         </section>
 
         {/* ── Stats Bar ───────────────────────────────────────── */}
@@ -163,11 +144,9 @@ export default async function HomePage() {
           />
         </section>
 
-        {/* ── 3-Column: Leaderboard | Highlights | Events ─────── */}
-        <section style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 300px', gap: 20 }}>
+        {/* ── Leaderboard ──────────────────────────────────────── */}
+        <section>
           <Leaderboard personajes={personajes ?? []} />
-          <HighlightsSection highlights={highlights ?? []} />
-          <UpcomingEvents tournaments={torneos ?? []} />
         </section>
 
       </main>
