@@ -91,7 +91,7 @@ export default async function HomePage() {
               <div style={{
                 fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700,
                 color: 'var(--text-primary)', letterSpacing: 3, marginTop: 4,
-              }}>Tournament Stats</div>
+              }}>Community</div>
             </div>
 
             <p style={{ fontSize: 14, color: 'var(--text-secondary)', maxWidth: 400, marginBottom: 28, lineHeight: 1.7 }}>
@@ -152,7 +152,7 @@ export default async function HomePage() {
       </main>
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+        CoR © 2026 — Torneos y Comercio de la comunidad de Champions of Regnum
       </footer>
     </>
   )

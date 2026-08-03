@@ -103,7 +103,7 @@ export default function Header() {
           }}>⚔️</div>
           <div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: 0.5 }}>CoR</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase' }}>STATS</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase' }}>COMMUNITY</div>
           </div>
         </Link>
 
