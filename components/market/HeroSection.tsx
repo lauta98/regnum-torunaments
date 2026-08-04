@@ -1,4 +1,5 @@
 'use client'
+import Link from 'next/link'
 import { useLanguage } from '@/lib/market/i18n'
 
 export default function HeroSection() {
@@ -12,6 +13,15 @@ export default function HeroSection() {
       <p className="home-hero-sub" style={{ color: 'var(--text-muted)', fontSize: 15, fontStyle: 'italic' }}>
         {t('hero.subtitle')}
       </p>
+      <Link href="/market/nuevo" style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16,
+        background: 'linear-gradient(135deg, #1a5c35, #2E7D52)',
+        color: '#fff', padding: '11px 26px', borderRadius: 8,
+        fontFamily: "'Cinzel',serif", fontSize: 12, letterSpacing: 1, fontWeight: 700,
+        textDecoration: 'none', boxShadow: '0 2px 12px rgba(46,125,82,0.3)', position: 'relative', zIndex: 1,
+      }}>
+        🗡 Publicar un artículo
+      </Link>
       <div className="home-hero-line" style={{ width: 120, height: 1, background: 'linear-gradient(90deg, transparent, var(--gold), transparent)', margin: '14px auto 0' }} />
 
       {/* Trust strip */}
