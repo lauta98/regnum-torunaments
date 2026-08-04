@@ -39,7 +39,7 @@ export async function proxy(request: NextRequest) {
       .single()
 
     if (!player || !['organizer', 'admin'].includes(player.role)) {
-      return NextResponse.redirect(new URL('/', request.url))
+      return NextResponse.redirect(new URL('/?error=organizador', request.url))
     }
   }
 

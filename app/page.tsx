@@ -21,7 +21,12 @@ const IconTrophy = () => (
   </svg>
 )
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
+  const { error } = await searchParams
   const supabase = await createServerSupabase()
 
   const [
@@ -51,6 +56,16 @@ export default async function HomePage() {
       <Header />
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px', flex: 1 }}>
 
+        {error === 'organizador' && (
+          <div style={{
+            background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.3)',
+            borderRadius: 10, padding: '12px 18px', marginBottom: 20,
+            color: '#f87171', fontSize: 13, fontFamily: 'var(--font-display)',
+          }}>
+            Todavía no tenés permisos de organizador para crear torneos — pedile a un admin que te los otorgue.
+          </div>
+        )}
+
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section style={{ marginBottom: 20 }}>
 
@@ -64,18 +79,6 @@ export default async function HomePage() {
           }}>
             {/* Ambient glow */}
             <div style={{ position: 'absolute', bottom: -60, right: -60, width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(212,175,55,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-            {/* Season badge */}
-            <div style={{ marginBottom: 24 }}>
-              <span style={{
-                background: 'rgba(255,107,53,0.12)', color: '#ff6b35',
-                border: '1px solid rgba(255,107,53,0.3)',
-                padding: '5px 14px', borderRadius: 20,
-                fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, letterSpacing: 1,
-              }}>
-                Temporada 1 en curso
-              </span>
-            </div>
 
             {/* Title */}
             <div style={{ marginBottom: 20 }}>

@@ -56,7 +56,7 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
       {/* Header */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 0.5 }}>
-          Top Personajes de la Temporada
+          Top Personajes
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <select style={selectStyle} value={filterReino} onChange={e => setFilterReino(e.target.value as Reino | '')}>

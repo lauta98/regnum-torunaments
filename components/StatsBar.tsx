@@ -28,15 +28,6 @@ const IconSwords = () => (
     <line x1="8" y1="8" x2="4" y2="4"/>
   </svg>
 )
-const IconCalendar = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-    <line x1="16" y1="2" x2="16" y2="6"/>
-    <line x1="8" y1="2" x2="8" y2="6"/>
-    <line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-)
-
 interface StatsBarProps {
   totalTorneos: number
   totalJugadores: number
@@ -48,11 +39,10 @@ export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }:
     { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: '#d4af37' },
     { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: '#4CAF50' },
     { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: '#F44336' },
-    { icon: <IconCalendar />, label: 'Temporadas Activas',    value: '1',                                    delta: 'en curso',     color: '#ff6b35' },
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
       {stats.map(({ icon, label, value, delta, color }) => (
         <div key={label} style={{
           background: '#0f0f0f',
