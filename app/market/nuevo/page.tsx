@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Spinner from '@/components/market/Spinner'
 import { useCurrency } from '@/lib/market/CurrencyContext'
-import Header from '@/components/Header'
 
 function generateShortId(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyz0123456789'
@@ -2590,11 +2589,8 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
 
 export default function NuevoPage() {
   return (
-    <>
-      <Header />
-      <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</div>}>
-        <NuevoPageContent />
-      </Suspense>
-    </>
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Cargando...</div>}>
+      <NuevoPageContent />
+    </Suspense>
   )
 }

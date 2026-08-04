@@ -1,5 +1,4 @@
 import { createServerSupabase } from '@/lib/supabase-server'
-import Header from '@/components/Header'
 import ListingsGrid from '@/components/market/ListingsGrid'
 import FilterBar from '@/components/market/FilterBar'
 import FeaturedCarousel from '@/components/market/FeaturedCarousel'
@@ -111,7 +110,6 @@ export default async function MarketPage({
 
   return (
     <>
-      <Header />
       <div>
         <HeroSection />
         <div style={{ padding: '0 20px 40px' }}>

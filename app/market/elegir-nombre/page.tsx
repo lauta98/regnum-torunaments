@@ -2,7 +2,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import Header from '@/components/Header'
 
 // Limpia el username de Discord para que cumpla el formato del marketplace
 function sanitizeDiscordUsername(raw: string): string {
@@ -119,8 +118,6 @@ export default function ElegirNombrePage() {
   const statusText = checking ? 'Verificando...' : available === true ? '✓ Disponible' : available === false ? '✗ En uso' : ''
 
   return (
-    <>
-    <Header />
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '70vh', padding: '40px 20px' }}>
       <div style={{
         background: 'var(--dark-card)', border: '1px solid var(--dark-border-gold)',
@@ -206,6 +203,5 @@ export default function ElegirNombrePage() {
         </p>
       </div>
     </div>
-    </>
   )
 }

@@ -3,7 +3,6 @@ export const dynamic = 'force-dynamic'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import Header from '@/components/Header'
 import SellerCard from '@/components/market/SellerCard'
 import BotonComprar from '@/components/market/BotonComprar'
 import ViewCounter from '@/components/market/ViewCounter'
@@ -217,7 +216,6 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   return (
     <>
-    <Header />
     <div style={{ padding: '20px 16px 48px', maxWidth: 980, margin: '0 auto' }}>
 
       {/* Back */}
