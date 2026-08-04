@@ -135,6 +135,8 @@ create table if not exists public.personajes (
 create unique index if not exists personajes_nickname_lower_idx on public.personajes (lower(nickname_juego));
 
 alter table public.team_members
+  add column if not exists personaje_id uuid;
+alter table public.team_members
   drop constraint if exists team_members_personaje_id_fkey;
 alter table public.team_members
   add constraint team_members_personaje_id_fkey foreign key (personaje_id) references public.personajes(id) on delete set null;
@@ -176,6 +178,26 @@ alter table public.mmr_history             enable row level security;
 alter table public.highlights              enable row level security;
 alter table public.personajes              enable row level security;
 alter table public.nickname_reports        enable row level security;
+
+drop policy if exists "players_read_all"    on public.players;
+drop policy if exists "tourns_read_all"     on public.tournaments;
+drop policy if exists "teams_read_all"      on public.teams;
+drop policy if exists "members_read_all"    on public.team_members;
+drop policy if exists "regs_read_all"       on public.tournament_registrations;
+drop policy if exists "matches_read_all"    on public.matches;
+drop policy if exists "mmr_read_all"        on public.mmr_history;
+drop policy if exists "highs_read_all"      on public.highlights;
+drop policy if exists "personajes_read_all" on public.personajes;
+drop policy if exists "reports_read_all"    on public.nickname_reports;
+drop policy if exists "players_insert_own"  on public.players;
+drop policy if exists "players_update_own"  on public.players;
+drop policy if exists "tourns_insert_org"   on public.tournaments;
+drop policy if exists "tourns_update_creator" on public.tournaments;
+drop policy if exists "matches_update_org"  on public.matches;
+drop policy if exists "personajes_manage_own" on public.personajes;
+drop policy if exists "reports_insert_auth" on public.nickname_reports;
+drop policy if exists "service_all_personajes" on public.personajes;
+drop policy if exists "service_all_reports" on public.nickname_reports;
 
 create policy "players_read_all"  on public.players  for select using (true);
 create policy "tourns_read_all"   on public.tournaments for select using (true);
