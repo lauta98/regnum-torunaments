@@ -116,13 +116,22 @@ export default async function BracketPage({
     .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, miembros: r.team?.miembros?.[0]?.count ?? 1 }))
     .filter((t: any) => t.id && t.miembros < teamSize)
 
-  // Group by round
-  const rounds: Map<number, any[]> = new Map()
+  // Group by (bracket, ronda_numero) — en eliminación doble 'main' y
+  // 'losers' pueden compartir el mismo número de ronda, así que agrupar
+  // solo por ronda_numero los mezclaría en una sola columna.
+  const BRACKET_ORDEN: Record<string, number> = { main: 0, losers: 1, grand_final: 2 }
+  const rounds: Map<string, any[]> = new Map()
   matches?.forEach((m: any) => {
-    if (!rounds.has(m.ronda_numero)) rounds.set(m.ronda_numero, [])
-    rounds.get(m.ronda_numero)!.push(m)
+    const key = `${m.bracket ?? 'main'}-${m.ronda_numero}`
+    if (!rounds.has(key)) rounds.set(key, [])
+    rounds.get(key)!.push(m)
   })
-  const roundEntries = Array.from(rounds.entries()).sort((a, b) => a[0] - b[0])
+  const roundEntries = Array.from(rounds.entries()).sort((a, b) => {
+    const [bracketA, roundNumA] = a[1][0] ? [a[1][0].bracket ?? 'main', a[1][0].ronda_numero] : ['main', 0]
+    const [bracketB, roundNumB] = b[1][0] ? [b[1][0].bracket ?? 'main', b[1][0].ronda_numero] : ['main', 0]
+    const ordenDiff = BRACKET_ORDEN[bracketA] - BRACKET_ORDEN[bracketB]
+    return ordenDiff !== 0 ? ordenDiff : roundNumA - roundNumB
+  })
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]

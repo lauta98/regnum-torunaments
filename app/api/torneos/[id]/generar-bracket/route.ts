@@ -60,6 +60,56 @@ function buildSingleElimination(teamIds: string[], ordenFijo?: string[]): SlotMa
   return rounds
 }
 
+interface LBRoundSpec { round: number; matches: number }
+
+/** Calcula cuántas rondas y partidos tiene la llave de perdedores para
+ *  un cuadro de `size` equipos (potencia de 2 exacta). Alterna rondas
+ *  "menores" (sobrevivientes de perdedores contra sí mismos, reduce a
+ *  la mitad) y "mayores" (sobrevivientes contra los que acaban de bajar
+ *  de la llave principal, misma cantidad). El total de partidos da
+ *  siempre size-2, que es el número conocido para eliminación doble. */
+function calcularRondasPerdedores(size: number): LBRoundSpec[] {
+  const R = Math.log2(size)
+  const specs: LBRoundSpec[] = []
+  let survivors = 0
+  let roundNum = 0
+  for (let wr = 1; wr <= R; wr++) {
+    const wbLosers = size / Math.pow(2, wr)
+    if (wr === 1) {
+      roundNum++
+      const m = wbLosers / 2
+      specs.push({ round: roundNum, matches: m })
+      survivors = m
+    } else {
+      roundNum++
+      specs.push({ round: roundNum, matches: survivors }) // ronda mayor: sobrevivientes vs nuevos caídos
+      if (wr < R && survivors > 1) {
+        roundNum++
+        const m = survivors / 2
+        specs.push({ round: roundNum, matches: m }) // ronda menor: sobrevivientes entre sí
+        survivors = m
+      }
+    }
+  }
+  return specs
+}
+
+/** Eliminación doble — solo admite una cantidad de equipos que sea
+ *  potencia de 2 exacta (4, 8, 16, 32), para no mezclar byes con la
+ *  llave de perdedores (ahí es donde este formato se rompe fácil).
+ *  Genera la llave principal (ronda 1 con equipos reales, el resto
+ *  vacío) + la llave de perdedores entera vacía (se llena sola a
+ *  medida que se cargan resultados) + un lugar para la gran final. */
+function buildDoubleElimination(teamIds: string[], ordenFijo?: string[]): {
+  main: SlotMatch[][]
+  losers: LBRoundSpec[]
+} {
+  const main = buildSingleElimination(teamIds, ordenFijo)
+  const size = nextPow2(teamIds.length)
+  const losers = calcularRondasPerdedores(size)
+  return { main, losers }
+}
+
 /** Round robin — método del círculo. Todos juegan contra todos una vez,
  *  repartido en fechas para minimizar partidos simultáneos por equipo. */
 function buildRoundRobin(teamIds: string[]): SlotMatch[][] {
@@ -137,9 +187,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (torneo.bracket_type === 'double_elimination') {
-    return NextResponse.json({
-      error: 'La generación automática de eliminación doble todavía no está disponible — arma el cuadro manualmente por ahora, o cambiá el torneo a eliminación simple/Round Robin.',
-    }, { status: 501 })
+    const size = nextPow2(teamIds.length)
+    if (size !== teamIds.length) {
+      return NextResponse.json({
+        error: `Eliminación doble solo admite una cantidad de equipos que sea potencia de 2 (4, 8, 16, 32...). Hoy hay ${teamIds.length} inscriptos.`,
+      }, { status: 400 })
+    }
   }
 
   // Limpiar matches vacíos de un intento anterior (ninguno jugado, ya lo validamos arriba)
@@ -147,31 +200,62 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     await supabase.from('matches').delete().eq('torneo_id', torneoId)
   }
 
-  const rounds = torneo.bracket_type === 'round_robin'
-    ? buildRoundRobin(teamIds)
-    : buildSingleElimination(teamIds, orden)
-
   const rows: any[] = []
-  rounds.forEach((roundMatches, idx) => {
-    const isFinal = torneo.bracket_type !== 'round_robin' && idx === rounds.length - 1
-    const ronda = torneo.bracket_type === 'round_robin'
-      ? `Fecha ${idx + 1}`
-      : roundName(roundMatches.length, isFinal)
-    roundMatches.forEach(m => {
-      const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
-      rows.push({
-        torneo_id: torneoId,
-        ronda,
-        ronda_numero: m.round,
-        posicion: m.posicion,
-        equipo_a_id: m.equipoA,
-        equipo_b_id: m.equipoB,
-        estado: esBye ? 'jugado' : 'pendiente',
-        ganador_id: esBye ? (m.equipoA ?? m.equipoB) : null,
-        resultado: esBye ? 'BYE' : null,
+
+  if (torneo.bracket_type === 'double_elimination') {
+    const { main, losers } = buildDoubleElimination(teamIds, orden)
+
+    main.forEach((roundMatches, idx) => {
+      const isFinal = idx === main.length - 1
+      const ronda = (isFinal ? 'Final Llave Principal' : roundName(roundMatches.length, false))
+      roundMatches.forEach(m => {
+        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        rows.push({
+          torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
+          equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,
+          estado: esBye ? 'jugado' : 'pendiente',
+          ganador_id: esBye ? (m.equipoA ?? m.equipoB) : null,
+          resultado: esBye ? 'BYE' : null,
+        })
       })
     })
-  })
+
+    losers.forEach(spec => {
+      for (let p = 1; p <= spec.matches; p++) {
+        rows.push({
+          torneo_id: torneoId, bracket: 'losers', ronda: `Perdedores — Ronda ${spec.round}`,
+          ronda_numero: spec.round, posicion: p,
+          equipo_a_id: null, equipo_b_id: null, estado: 'pendiente',
+        })
+      }
+    })
+
+    rows.push({
+      torneo_id: torneoId, bracket: 'grand_final', ronda: 'Gran Final',
+      ronda_numero: 1, posicion: 1, equipo_a_id: null, equipo_b_id: null, estado: 'pendiente',
+    })
+  } else {
+    const rounds = torneo.bracket_type === 'round_robin'
+      ? buildRoundRobin(teamIds)
+      : buildSingleElimination(teamIds, orden)
+
+    rounds.forEach((roundMatches, idx) => {
+      const isFinal = torneo.bracket_type !== 'round_robin' && idx === rounds.length - 1
+      const ronda = torneo.bracket_type === 'round_robin'
+        ? `Fecha ${idx + 1}`
+        : roundName(roundMatches.length, isFinal)
+      roundMatches.forEach(m => {
+        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        rows.push({
+          torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
+          equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,
+          estado: esBye ? 'jugado' : 'pendiente',
+          ganador_id: esBye ? (m.equipoA ?? m.equipoB) : null,
+          resultado: esBye ? 'BYE' : null,
+        })
+      })
+    })
+  }
 
   const { error: insertError } = await supabase.from('matches').insert(rows)
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
