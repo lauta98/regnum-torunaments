@@ -1,4 +1,4 @@
-import type { Reino, Clase, TournamentFormat, TournamentStatus, MatchStatus } from './types'
+import type { Reino, Clase, TournamentFormat, TournamentStatus, MatchStatus, BracketType } from './types'
 
 export const REINO_COLOR: Record<Reino, string> = {
   Syrtis: '#4CAF50',
@@ -55,6 +55,19 @@ export const CLASES: Clase[] = [
 export const REINOS: Reino[] = ['Syrtis', 'Ignis', 'Alsius']
 
 export const FORMATS: TournamentFormat[] = ['1v1', '2v2', '3v3', '7v7']
+
+// Cuántos jugadores por equipo necesita cada formato
+export const FORMAT_TEAM_SIZE: Record<TournamentFormat, number> = {
+  '1v1': 1, '2v2': 2, '3v3': 3, '7v7': 7,
+}
+
+export const BRACKET_TYPE_LABEL: Record<BracketType, string> = {
+  single_elimination: 'Eliminación simple',
+  double_elimination: 'Eliminación doble',
+  round_robin: 'Round Robin (todos contra todos)',
+}
+
+export const BRACKET_TYPES: BracketType[] = ['single_elimination', 'double_elimination', 'round_robin']
 
 export const ELO_K_DEFAULT         = 32
 export const ELO_K_VETERAN         = 16

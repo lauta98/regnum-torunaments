@@ -20,6 +20,8 @@ export type TournamentStatus =
 
 export type MatchStatus = 'pendiente' | 'jugado' | 'disputa'
 
+export type BracketType = 'single_elimination' | 'double_elimination' | 'round_robin'
+
 export type ReportStatus = 'pendiente' | 'resuelto' | 'rechazado'
 
 /* ── Cuenta Discord (1 por usuario) ─────────────────── */
@@ -89,6 +91,8 @@ export interface Tournament {
   descripcion: string | null
   formato: TournamentFormat
   clase_requerida: Clase | null
+  subclases_permitidas: Clase[] | null
+  bracket_type: BracketType
   estado: TournamentStatus
   fecha_inicio: string
   imagen_url: string | null
@@ -103,6 +107,7 @@ export interface Match {
   id: string
   torneo_id: string
   ronda: string
+  bracket: 'main' | 'losers' | 'grand_final'
   equipo_a_id: string
   equipo_b_id: string
   resultado: string | null

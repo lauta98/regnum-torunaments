@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { FORMATS, FORMAT_LABEL, FORMAT_COLOR } from '@/lib/constants'
-import type { TournamentFormat } from '@/lib/types'
+import { FORMATS, FORMAT_LABEL, FORMAT_COLOR, BRACKET_TYPES, BRACKET_TYPE_LABEL, CLASES, CLASE_LABEL } from '@/lib/constants'
+import type { TournamentFormat, BracketType, Clase } from '@/lib/types'
 import Header from '@/components/Header'
 import dynamic from 'next/dynamic'
 
@@ -13,12 +13,21 @@ function NuevoTorneoPage() {
     nombre: '',
     descripcion: '',
     formato: '1v1' as TournamentFormat,
+    bracket_type: 'single_elimination' as BracketType,
+    subclases: [] as Clase[],
     fecha_inicio: '',
     max_equipos: 8,
     premio: '',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const toggleSubclase = (c: Clase) => {
+    setForm(f => ({
+      ...f,
+      subclases: f.subclases.includes(c) ? f.subclases.filter(x => x !== c) : [...f.subclases, c],
+    }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -47,6 +56,8 @@ function NuevoTorneoPage() {
       nombre: form.nombre.trim().toUpperCase(),
       descripcion: form.descripcion.trim() || null,
       formato: form.formato,
+      bracket_type: form.bracket_type,
+      subclases_permitidas: form.subclases.length > 0 ? form.subclases : null,
       estado: 'draft',
       fecha_inicio: form.fecha_inicio,
       max_equipos: form.max_equipos,
@@ -120,6 +131,47 @@ function NuevoTorneoPage() {
                       fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
                       transition: 'all 0.15s',
                     }}>{FORMAT_LABEL[f]}</button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>TIPO DE CUADRO</label>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {BRACKET_TYPES.map(bt => {
+                  const active = form.bracket_type === bt
+                  return (
+                    <button type="button" key={bt} onClick={() => setForm(frm => ({ ...frm, bracket_type: bt }))} style={{
+                      flex: '1 1 140px', padding: '10px 8px', borderRadius: 8, cursor: 'pointer',
+                      border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                      background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
+                      color: active ? 'var(--gold)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700,
+                      transition: 'all 0.15s',
+                    }}>{BRACKET_TYPE_LABEL[bt]}</button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div>
+              <label style={labelStyle}>SUBCLASES QUE PUEDEN PARTICIPAR</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+                Ninguna seleccionada = todas las subclases pueden inscribirse.
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {CLASES.map(c => {
+                  const active = form.subclases.includes(c)
+                  return (
+                    <button type="button" key={c} onClick={() => toggleSubclase(c)} style={{
+                      padding: '8px 14px', borderRadius: 20, cursor: 'pointer',
+                      border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                      background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
+                      color: active ? 'var(--gold)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
+                      transition: 'all 0.15s',
+                    }}>{CLASE_LABEL[c]}</button>
                   )
                 })}
               </div>

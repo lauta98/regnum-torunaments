@@ -3,9 +3,11 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE } from '@/lib/constants'
+import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/types'
 import BracketActions from './BracketActions'
+import InscripcionActions from './InscripcionActions'
+import GenerarBracketButton from './GenerarBracketButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,16 +71,47 @@ export default async function BracketPage({
 
   const { data: inscritos } = await supabase
     .from('tournament_registrations')
-    .select('seed, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(nickname_juego, reino))')
+    .select('seed, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(id, nickname_juego, reino), miembros:team_members(count))')
     .eq('tournament_id', id)
     .order('seed', { ascending: true })
 
   const { data: { user } } = await supabase.auth.getUser()
   let isOrganizer = false
+  let playerId: string | null = null
+  let personajesElegibles: { id: string; nickname_juego: string; clase: string }[] = []
+  let yaInscritoTeamId: string | null = null
+
+  const teamIdsEnEsteTorneo = (inscritos ?? []).map((r: any) => r.team?.id).filter(Boolean)
+
   if (user) {
     const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
     isOrganizer = !!(player && ['organizer', 'admin'].includes(player.role))
+    if (player) {
+      playerId = player.id
+      const { data: personajes } = await supabase
+        .from('personajes')
+        .select('id, nickname_juego, clase')
+        .eq('player_id', player.id)
+      const permitidas: string[] | null = torneo.subclases_permitidas
+      personajesElegibles = (personajes ?? []).filter(
+        (p: any) => !permitidas || permitidas.length === 0 || permitidas.includes(p.clase)
+      )
+
+      if (teamIdsEnEsteTorneo.length > 0) {
+        const { data: miMembresia } = await supabase
+          .from('team_members')
+          .select('team_id')
+          .eq('player_id', player.id)
+          .in('team_id', teamIdsEnEsteTorneo)
+        yaInscritoTeamId = miMembresia?.[0]?.team_id ?? null
+      }
+    }
   }
+
+  const teamSize = FORMAT_TEAM_SIZE[torneo.formato as TournamentFormat] ?? 1
+  const equiposConCupo = (inscritos ?? [])
+    .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, miembros: r.team?.miembros?.[0]?.count ?? 1 }))
+    .filter((t: any) => t.id && t.miembros < teamSize)
 
   // Group by round
   const rounds: Map<number, any[]> = new Map()
@@ -172,13 +205,35 @@ export default async function BracketPage({
           {/* Main content */}
           <main style={{ flex: 1, padding: '24px 28px', overflowX: 'auto', minWidth: 0 }}>
 
+            {torneo.estado === 'inscripciones' && user && playerId && (
+              <InscripcionActions
+                torneoId={torneo.id}
+                formato={torneo.formato as TournamentFormat}
+                playerId={playerId}
+                personajesElegibles={personajesElegibles as any}
+                yaInscritoTeamId={yaInscritoTeamId}
+                equiposConCupo={equiposConCupo as any}
+              />
+            )}
+            {torneo.estado === 'inscripciones' && !user && (
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
+                <a href="/login" style={{ color: 'var(--gold)', fontFamily: 'var(--font-display)', fontSize: 13, textDecoration: 'none' }}>
+                  Iniciá sesión con Discord para inscribirte →
+                </a>
+              </div>
+            )}
+
             {/* ── TAB: LLAVE ───────────────────────────────── */}
             {tab === 'llave' && (
               roundEntries.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
-                  <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
-                  <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
-                </div>
+                isOrganizer && torneo.estado !== 'draft' ? (
+                  <GenerarBracketButton torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                    <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
+                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
+                  </div>
+                )
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   {/* Round headers */}
@@ -211,7 +266,7 @@ export default async function BracketPage({
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
                   Tabla de Posiciones
                 </div>
-                {torneo.formato !== '7v7' ? (
+                {torneo.bracket_type !== 'round_robin' ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
                     Las posiciones están disponibles para torneos Round Robin.
                   </div>
