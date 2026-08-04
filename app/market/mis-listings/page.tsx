@@ -127,7 +127,7 @@ function MisListingsInner() {
   }
 
   const renovar = async (id: string) => {
-    const res = await fetch('/api/bump', {
+    const res = await fetch('/api/market/bump', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listing_id: id }),
@@ -175,7 +175,7 @@ function MisListingsInner() {
 
   const iniciarCafecito = async (id: string) => {
     setCafLoading(id)
-    const res = await fetch('/api/cafecito/solicitar', {
+    const res = await fetch('/api/market/cafecito/solicitar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listing_id: id }),
