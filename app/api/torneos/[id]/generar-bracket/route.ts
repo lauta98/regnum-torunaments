@@ -32,10 +32,12 @@ function roundName(matchesEnEsaRonda: number, esFinal: boolean): string {
 }
 
 /** Eliminación simple — resuelve byes en el momento de generar, para que
- *  las rondas siguientes ya arranquen con el equipo que pasó de largo. */
-function buildSingleElimination(teamIds: string[]): SlotMatch[][] {
+ *  las rondas siguientes ya arranquen con el equipo que pasó de largo.
+ *  Si se pasa `ordenFijo`, se respeta tal cual (sorteo en vivo ya hecho
+ *  en el cliente); si no, se mezcla acá (sorteo rápido). */
+function buildSingleElimination(teamIds: string[], ordenFijo?: string[]): SlotMatch[][] {
   const size = nextPow2(teamIds.length)
-  let current: (string | null)[] = shuffle(teamIds)
+  let current: (string | null)[] = ordenFijo && ordenFijo.length === teamIds.length ? [...ordenFijo] : shuffle(teamIds)
   while (current.length < size) current.push(null) // bye
 
   const rounds: SlotMatch[][] = []
@@ -110,10 +112,28 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .from('tournament_registrations')
     .select('team_id')
     .eq('tournament_id', torneoId)
+    .eq('estado', 'activo')
 
   const teamIds = (registros ?? []).map(r => r.team_id)
   if (teamIds.length < 2) {
     return NextResponse.json({ error: 'Hacen falta al menos 2 equipos inscriptos.' }, { status: 400 })
+  }
+
+  // Orden ya determinado por el sorteo en vivo (opcional) — se valida que
+  // sea exactamente el mismo conjunto de equipos inscriptos, ni más ni menos.
+  let orden: string[] | undefined
+  try {
+    const body = await request.json()
+    if (Array.isArray(body?.orden)) orden = body.orden
+  } catch { /* sin body o body vacío, sorteo rápido normal */ }
+
+  if (orden) {
+    const setEnviado = new Set(orden)
+    const setReal = new Set(teamIds)
+    const mismosEquipos = setEnviado.size === setReal.size && [...setEnviado].every(t => setReal.has(t))
+    if (!mismosEquipos) {
+      return NextResponse.json({ error: 'El orden enviado no coincide con los equipos inscriptos.' }, { status: 400 })
+    }
   }
 
   if (torneo.bracket_type === 'double_elimination') {
@@ -129,7 +149,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const rounds = torneo.bracket_type === 'round_robin'
     ? buildRoundRobin(teamIds)
-    : buildSingleElimination(teamIds)
+    : buildSingleElimination(teamIds, orden)
 
   const rows: any[] = []
   rounds.forEach((roundMatches, idx) => {

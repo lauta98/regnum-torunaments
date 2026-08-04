@@ -9,6 +9,7 @@ import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
 import GenerarBracketButton from './GenerarBracketButton'
 import AbrirInscripcionesButton from './AbrirInscripcionesButton'
+import ExpulsarButton from './ExpulsarButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -72,7 +73,7 @@ export default async function BracketPage({
 
   const { data: inscritos } = await supabase
     .from('tournament_registrations')
-    .select('seed, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(id, nickname_juego, reino), miembros:team_members(count))')
+    .select('seed, estado, motivo_expulsion, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(id, nickname_juego, reino), miembros:team_members(count))')
     .eq('tournament_id', id)
     .order('seed', { ascending: true })
 
@@ -82,7 +83,8 @@ export default async function BracketPage({
   let personajesElegibles: { id: string; nickname_juego: string; clase: string }[] = []
   let yaInscritoTeamId: string | null = null
 
-  const teamIdsEnEsteTorneo = (inscritos ?? []).map((r: any) => r.team?.id).filter(Boolean)
+  const inscritosActivos = (inscritos ?? []).filter((r: any) => r.estado !== 'expulsado')
+  const teamIdsEnEsteTorneo = inscritosActivos.map((r: any) => r.team?.id).filter(Boolean)
 
   if (user) {
     const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
@@ -110,7 +112,7 @@ export default async function BracketPage({
   }
 
   const teamSize = FORMAT_TEAM_SIZE[torneo.formato as TournamentFormat] ?? 1
-  const equiposConCupo = (inscritos ?? [])
+  const equiposConCupo = inscritosActivos
     .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, miembros: r.team?.miembros?.[0]?.count ?? 1 }))
     .filter((t: any) => t.id && t.miembros < teamSize)
 
@@ -232,7 +234,7 @@ export default async function BracketPage({
             {tab === 'llave' && (
               roundEntries.length === 0 ? (
                 isOrganizer && torneo.estado !== 'draft' ? (
-                  <GenerarBracketButton torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} />
+                  <GenerarBracketButton torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type} />
                 ) : (
                   <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
@@ -331,16 +333,40 @@ export default async function BracketPage({
                 {!inscritos?.length ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay participantes inscritos.</div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
                     {inscritos.map((r: any, i: number) => {
                       const team = r.team
                       if (!team) return null
+                      const expulsado = r.estado === 'expulsado'
                       return (
-                        <div key={team.id} style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '14px 16px' }}>
-                          {r.seed && <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>SEED #{r.seed}</div>}
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>{team.nombre}</div>
-                          {team.capitan && (
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span></div>
+                        <div key={team.id} style={{
+                          background: '#0f0f0f',
+                          border: `1px solid ${expulsado ? 'rgba(244,67,54,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                          borderRadius: 10, padding: '14px 16px', opacity: expulsado ? 0.7 : 1,
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                            <div>
+                              {r.seed && <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>SEED #{r.seed}</div>}
+                              <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: expulsado ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 4, textDecoration: expulsado ? 'line-through' : 'none' }}>
+                                {team.nombre}
+                              </div>
+                              {team.capitan && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span></div>
+                              )}
+                            </div>
+                          </div>
+
+                          {expulsado ? (
+                            <div style={{ marginTop: 8, background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 6, padding: '6px 10px' }}>
+                              <div style={{ fontSize: 9, color: '#f87171', fontFamily: 'var(--font-display)', letterSpacing: 0.5, marginBottom: 2 }}>EXPULSADO</div>
+                              {isOrganizer && r.motivo_expulsion && (
+                                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{r.motivo_expulsion}</div>
+                              )}
+                            </div>
+                          ) : isOrganizer && (
+                            <div style={{ marginTop: 10 }}>
+                              <ExpulsarButton torneoId={torneo.id} teamId={team.id} teamNombre={team.nombre} />
+                            </div>
                           )}
                         </div>
                       )
