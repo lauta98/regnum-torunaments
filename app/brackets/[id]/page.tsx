@@ -8,6 +8,7 @@ import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/type
 import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
 import GenerarBracketButton from './GenerarBracketButton'
+import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -204,6 +205,10 @@ export default async function BracketPage({
 
           {/* Main content */}
           <main style={{ flex: 1, padding: '24px 28px', overflowX: 'auto', minWidth: 0 }}>
+
+            {torneo.estado === 'draft' && isOrganizer && (
+              <AbrirInscripcionesButton torneoId={torneo.id} />
+            )}
 
             {torneo.estado === 'inscripciones' && user && playerId && (
               <InscripcionActions
