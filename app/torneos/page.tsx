@@ -2,8 +2,9 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE } from '@/lib/constants'
-import type { TournamentFormat, TournamentStatus } from '@/lib/types'
+import { FORMAT_COLOR, STATUS_STYLE, CLASE_LABEL } from '@/lib/constants'
+import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
+import SubclaseDropdown from './SubclaseDropdown'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Torneos' }
@@ -15,12 +16,6 @@ const FMT_LABEL: Record<string, string> = {
 const FMT_COLOR: Record<string, string> = {
   '1v1': '#8a2be2', '2v2': '#d4af37', '3v3': '#2196F3', '7v7': '#F44336',
 }
-// Subclases para filtrar torneos 1v1 (busca en descripcion)
-const SUBCLASES_1V1 = [
-  { label: 'Brujos',    q: 'Brujos' },
-  { label: 'Tiradores', q: 'Tiradores' },
-  { label: 'Mixto',     q: 'Mixto' },
-]
 
 function Pill({ href, active, color, children }: { href: string; active: boolean; color?: string; children: React.ReactNode }) {
   const c = color ?? 'rgba(212,175,55,1)'
@@ -53,13 +48,18 @@ export default async function TorneosPage({
     .order('created_at', { ascending: false })
 
   if (params.formato) query = query.eq('formato', params.formato as TournamentFormat)
-  // Subclase: busca en descripcion
-  if (params.sub) query = query.ilike('descripcion', `%${params.sub}%`)
 
-  const { data: tourneys } = await query
+  const { data: tourneysDelFormato } = await query
 
-  const fmtBase = params.formato ? `?formato=${params.formato}` : ''
-  const fmtNoSub = params.formato ? `?formato=${params.formato}` : '/torneos'
+  // Subclases realmente presentes entre los torneos de este formato — el
+  // dropdown solo muestra lo que existe, no una lista fija.
+  const subclasesDisponibles = Array.from(
+    new Set((tourneysDelFormato ?? []).flatMap((t: any) => t.subclases_permitidas ?? []))
+  ) as Clase[]
+
+  const tourneys = params.sub
+    ? (tourneysDelFormato ?? []).filter((t: any) => (t.subclases_permitidas ?? []).includes(params.sub))
+    : tourneysDelFormato
 
   return (
     <>
@@ -97,16 +97,14 @@ export default async function TorneosPage({
           </Pill>
         </div>
 
-        {/* Subclase filters (solo si formato=1v1) */}
-        {params.formato === '1v1' && (
-          <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', paddingLeft: 4 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, alignSelf: 'center', marginRight: 4 }}>SUBCLASE:</span>
-            <Pill href={fmtNoSub} active={!params.sub} color={FMT_COLOR['1v1']}>Todas</Pill>
-            {SUBCLASES_1V1.map(({ label, q }) => (
-              <Pill key={q} href={`/torneos?formato=1v1&sub=${q}`} active={params.sub === q} color={FMT_COLOR['1v1']}>
-                {label}
-              </Pill>
-            ))}
+        {/* Subclase: dropdown, solo si hay más de una subclase entre estos torneos */}
+        {params.formato && subclasesDisponibles.length > 0 && (
+          <div style={{ marginBottom: 24 }}>
+            <SubclaseDropdown
+              formato={params.formato}
+              actual={params.sub}
+              opciones={subclasesDisponibles}
+            />
           </div>
         )}
 

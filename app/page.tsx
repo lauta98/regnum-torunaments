@@ -12,11 +12,6 @@ const IconChart = () => (
     <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
   </svg>
 )
-const IconPerson = () => (
-  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-  </svg>
-)
 const IconTrophy = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
@@ -102,9 +97,6 @@ export default async function HomePage() {
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <Link href="/jugadores" style={{ ...btnOutline, color: 'var(--gold)', borderColor: 'rgba(212,175,55,0.35)' }}>
                 <IconChart /> Ver Rankings
-              </Link>
-              <Link href="/jugadores" style={btnOutline}>
-                <IconPerson /> Explorar Jugadores
               </Link>
               <Link href="/organizador/nuevo" style={{ ...btnOutline, color: '#d4af37', borderColor: 'rgba(212,175,55,0.3)' }}>
                 <IconTrophy /> Crear Torneo

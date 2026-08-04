@@ -28,19 +28,6 @@ const IconSwords = () => (
     <line x1="8" y1="8" x2="4" y2="4"/>
   </svg>
 )
-const IconMedal = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="15" r="7"/>
-    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
-    <path d="M10 5.5a5 5 0 0 1 4 0"/><path d="M8.21 13.89C8.07 13.27 8 12.64 8 12a4 4 0 0 1 8 0c0 .64-.07 1.27-.21 1.89"/>
-  </svg>
-)
-const IconVideo = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="23 7 16 12 23 17 23 7"/>
-    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-  </svg>
-)
 const IconCalendar = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
@@ -61,13 +48,11 @@ export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }:
     { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: '#d4af37' },
     { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: '#4CAF50' },
     { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: '#F44336' },
-    { icon: <IconMedal />,    label: 'MVPs Entregados',       value: '—',                                    delta: 'próximamente', color: '#8a2be2' },
-    { icon: <IconVideo />,    label: 'Highlights Subidos',    value: '—',                                    delta: 'próximamente', color: '#2196F3' },
     { icon: <IconCalendar />, label: 'Temporadas Activas',    value: '1',                                    delta: 'en curso',     color: '#ff6b35' },
   ]
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
       {stats.map(({ icon, label, value, delta, color }) => (
         <div key={label} style={{
           background: '#0f0f0f',
