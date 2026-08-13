@@ -8,6 +8,7 @@ export default async function RankingPage() {
     .from('profiles')
     .select('username, avg_rating, total_reviews')
     .gte('total_reviews', 1)
+    .or('is_admin.eq.false,is_admin.is.null')
     .order('avg_rating', { ascending: false })
     .limit(20)
 
@@ -44,7 +45,7 @@ export default async function RankingPage() {
             {u.username.slice(0, 2).toUpperCase()}
           </div>
           <div style={{ flex: 1 }}>
-            <Link href={`/perfil/${u.username}`} style={{ fontFamily: "'Cinzel',serif", fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none' }}>
+            <Link href={`/market/perfil/${u.username}`} style={{ fontFamily: "'Cinzel',serif", fontSize: 13, color: 'var(--text-primary)', textDecoration: 'none' }}>
               {u.username}
             </Link>
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{u.total_reviews} reseñas</div>
