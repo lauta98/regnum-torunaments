@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { canAdmin } from '@/lib/roles'
 
@@ -35,12 +35,17 @@ export async function POST(req: Request) {
   if (reclamo.estado !== 'pendiente')
     return NextResponse.json({ error: 'El reclamo ya fue resuelto' }, { status: 409 })
 
+  // Service role para ambos updates: `personajes` solo deja a cada
+  // jugador tocar sus propios personajes, y `nickname_reports` no tiene
+  // ninguna política de UPDATE para usuarios autenticados (a propósito).
+  const serviceSupabase = createServiceSupabase()
+
   if (accion === 'transferir') {
     if (!reclamo.claimer_id)
       return NextResponse.json({ error: 'No hay reclamante asociado' }, { status: 400 })
 
     // Transferir el personaje al reclamante
-    const { error: transferErr } = await supabase
+    const { error: transferErr } = await serviceSupabase
       .from('personajes')
       .update({ player_id: reclamo.claimer_id })
       .eq('id', reclamo.personaje_id)
@@ -51,7 +56,7 @@ export async function POST(req: Request) {
 
   // Marcar el reclamo como resuelto o rechazado
   const nuevoEstado = accion === 'transferir' ? 'resuelto' : 'rechazado'
-  const { error: updateErr } = await supabase
+  const { error: updateErr } = await serviceSupabase
     .from('nickname_reports')
     .update({ estado: nuevoEstado })
     .eq('id', reclamoId)

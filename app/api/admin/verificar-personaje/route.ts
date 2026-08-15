@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { canAdmin } from '@/lib/roles'
 
 export async function POST(req: NextRequest) {
@@ -14,7 +14,9 @@ export async function POST(req: NextRequest) {
     const { personajeId, verificado } = await req.json()
     if (!personajeId || typeof verificado !== 'boolean') return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
 
-    const { error } = await supabase.from('personajes').update({ verificado }).eq('id', personajeId)
+    // Service role: la política de RLS de `personajes` solo deja a cada
+    // jugador editar sus propios personajes, no los de otros.
+    const { error } = await createServiceSupabase().from('personajes').update({ verificado }).eq('id', personajeId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     return NextResponse.json({ ok: true })

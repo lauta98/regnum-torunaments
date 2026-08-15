@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { canAdmin, isSuperAdmin } from '@/lib/roles'
 import type { UserRole } from '@/lib/types'
 
@@ -59,7 +59,10 @@ export async function POST(req: NextRequest) {
     }
 
     /* ── 5. Aplicar cambio ──────────────────────────────────── */
-    const { error } = await supabase
+    // Con service role: la política de RLS de `players` solo deja a cada
+    // usuario editar su propia fila, así que un admin cambiándole el rol
+    // a OTRO jugador necesita saltear RLS acá.
+    const { error } = await createServiceSupabase()
       .from('players')
       .update({ role: newRole })
       .eq('id', targetId)
