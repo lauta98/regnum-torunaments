@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calcularEsperado, calcularNuevoMMR, ELO_K_DEFAULT, ELO_K_VETERAN, ELO_VETERAN_THRESHOLD } from '@/lib/constants'
 
@@ -22,6 +22,13 @@ export async function POST(
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   }
 
+  // A partir de acá, todas las escrituras van con service role: las
+  // políticas de RLS de `players`/`mmr_history` solo dejan a cada
+  // usuario tocar su propia fila, no las de otros jugadores del
+  // partido — sin esto, el MMR de todos menos el que llama a la API
+  // se quedaba sin actualizar en silencio (sin tirar error).
+  const svc = createServiceSupabase()
+
   const body = await request.json()
   const { ganador_id, walkover, score_ganador, score_perdedor, editar } = body as {
     ganador_id: string
@@ -43,7 +50,7 @@ export async function POST(
     }
   }
 
-  const { data: match } = await supabase
+  const { data: match } = await svc
     .from('matches')
     .select('*, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre)')
     .eq('id', id)
@@ -64,7 +71,7 @@ export async function POST(
     return NextResponse.json({ error: 'ganador_id no corresponde a ninguno de los dos equipos de este partido' }, { status: 400 })
   }
 
-  const { data: torneo } = await supabase.from('tournaments').select('bracket_type').eq('id', match.torneo_id).single()
+  const { data: torneo } = await svc.from('tournaments').select('bracket_type').eq('id', match.torneo_id).single()
   const bracketType = torneo?.bracket_type ?? 'single_elimination'
 
   const perdedor_id = ganador_id === match.equipo_a_id ? match.equipo_b_id : match.equipo_a_id
@@ -88,7 +95,8 @@ export async function POST(
     if (mismoGanador) {
       // Solo cambió el marcador (ej. corregir un typo) — el MMR no
       // depende del margen, así que no hace falta tocar nada más.
-      await supabase.from('matches').update({ resultado }).eq('id', id)
+      const { error } = await svc.from('matches').update({ resultado }).eq('id', id)
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       return NextResponse.json({ ok: true })
     }
 
@@ -98,7 +106,7 @@ export async function POST(
     // ese resultado (y los que dependan de él).
     let nextMatch: any = null
     if (bracketType !== 'round_robin') {
-      const { data } = await supabase
+      const { data } = await svc
         .from('matches').select('id, estado')
         .eq('torneo_id', match.torneo_id).eq('bracket', 'main')
         .eq('ronda_numero', match.ronda_numero + 1).eq('posicion', Math.ceil(match.posicion / 2))
@@ -112,42 +120,44 @@ export async function POST(
     }
 
     // Revertir el MMR que se había aplicado con el resultado anterior
-    const { data: historial } = await supabase.from('mmr_history').select('*').eq('match_id', id)
+    const { data: historial } = await svc.from('mmr_history').select('*').eq('match_id', id)
     for (const h of historial ?? []) {
-      const { data: p } = await supabase.from('players').select('partidas_jugadas, partidas_ganadas').eq('id', h.player_id).single()
+      const { data: p } = await svc.from('players').select('partidas_jugadas, partidas_ganadas').eq('id', h.player_id).single()
       if (!p) continue
       const partidas = Math.max(0, p.partidas_jugadas - 1)
       const ganadas = Math.max(0, p.partidas_ganadas - (h.gano ? 1 : 0))
-      await supabase.from('players').update({
+      await svc.from('players').update({
         mmr_global: h.mmr_antes,
         partidas_jugadas: partidas,
         partidas_ganadas: ganadas,
         winrate: partidas > 0 ? Math.round((ganadas / partidas) * 100) : 0,
       }).eq('id', h.player_id)
     }
-    await supabase.from('mmr_history').delete().eq('match_id', id)
+    await svc.from('mmr_history').delete().eq('match_id', id)
 
     // Aplicar el MMR del resultado corregido, y guardar el partido
-    await aplicarMmrYGuardar(supabase, id, match, ganador_id, perdedor_id, resultado)
+    const guardarError = await aplicarMmrYGuardar(svc, id, match, ganador_id, perdedor_id, resultado)
+    if (guardarError) return NextResponse.json({ error: guardarError }, { status: 500 })
 
     // Reemplazar al equipo que había avanzado por el ganador correcto
     if (nextMatch) {
       const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
-      await supabase.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
+      await svc.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
     }
 
     return NextResponse.json({ ok: true })
   }
 
   /* ── Carga normal de un resultado nuevo ───────────────────────── */
-  await aplicarMmrYGuardar(supabase, id, match, ganador_id, perdedor_id, resultado)
+  const guardarError = await aplicarMmrYGuardar(svc, id, match, ganador_id, perdedor_id, resultado)
+  if (guardarError) return NextResponse.json({ error: guardarError }, { status: 500 })
 
   if (bracketType === 'double_elimination') {
-    await avanzarEliminacionDoble(supabase, match, ganador_id, perdedor_id)
+    await avanzarEliminacionDoble(svc, match, ganador_id, perdedor_id)
   } else if (bracketType !== 'round_robin') {
     // Eliminación simple: el ganador avanza a la ronda siguiente. Round
     // Robin no tiene avance — cada partido es independiente.
-    const { data: nextMatch } = await supabase
+    const { data: nextMatch } = await svc
       .from('matches')
       .select('id, equipo_a_id, equipo_b_id')
       .eq('torneo_id', match.torneo_id)
@@ -158,7 +168,7 @@ export async function POST(
 
     if (nextMatch) {
       const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
-      await supabase.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
+      await svc.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
     }
   }
 
@@ -166,8 +176,10 @@ export async function POST(
 }
 
 /** Aplica el delta de MMR a los jugadores de ambos equipos y guarda el
- *  resultado del partido. Compartido entre la carga normal y la edición. */
-async function aplicarMmrYGuardar(supabase: any, matchId: string, match: any, ganador_id: string, perdedor_id: string, resultado: string) {
+ *  resultado del partido. Compartido entre la carga normal y la edición.
+ *  Devuelve un mensaje de error si la escritura del partido falla, o
+ *  null si salió todo bien. */
+async function aplicarMmrYGuardar(supabase: any, matchId: string, match: any, ganador_id: string, perdedor_id: string, resultado: string): Promise<string | null> {
   const { data: ganadores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', ganador_id)
   const { data: perdedores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', perdedor_id)
 
@@ -214,11 +226,15 @@ async function aplicarMmrYGuardar(supabase: any, matchId: string, match: any, ga
   ganadores?.forEach((m: any) => processPlayer(m, true, avgMmrPerdedores))
   perdedores?.forEach((m: any) => processPlayer(m, false, avgMmrGanadores))
 
-  await Promise.all([
+  const matchUpdate = supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado }).eq('id', matchId)
+
+  const results = await Promise.all([
     ...allUpdates,
     supabase.from('mmr_history').insert(historyInserts),
-    supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado }).eq('id', matchId),
+    matchUpdate,
   ])
+
+  return results[results.length - 1]?.error?.message ?? null
 }
 
 /**

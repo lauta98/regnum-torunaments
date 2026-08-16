@@ -37,16 +37,21 @@ export default function BracketActions({
 
   const submit = async (body: Record<string, unknown>) => {
     setLoading(true); setError('')
-    const res = await fetch(`/api/matches/${matchId}/result`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...body, editar: isPlayed }),
-    })
-    if (res.ok) {
-      window.location.reload()
-    } else {
-      const d = await res.json()
-      setError(d.error ?? 'Error al guardar resultado')
+    try {
+      const res = await fetch(`/api/matches/${matchId}/result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...body, editar: isPlayed }),
+      })
+      if (res.ok) {
+        window.location.reload()
+        return
+      }
+      const d = await res.json().catch(() => null)
+      setError(d?.error ?? `Error al guardar resultado (${res.status})`)
+    } catch {
+      setError('No se pudo conectar con el servidor — probá de nuevo')
+    } finally {
       setLoading(false)
     }
   }
@@ -88,9 +93,15 @@ export default function BracketActions({
       <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '4px 0' }}>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)' }}>GANÓ POR ABANDONO:</span>
-          <button onClick={() => submitWalkover(teamA.id)} disabled={loading} title={teamA.nombre} style={chipStyle}>{truncar(teamA.nombre)}</button>
-          <button onClick={() => submitWalkover(teamB.id)} disabled={loading} title={teamB.nombre} style={chipStyle}>{truncar(teamB.nombre)}</button>
-          <button onClick={() => setView('score')} disabled={loading} style={ghostChipStyle}>✕</button>
+          {loading ? (
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)' }}>Guardando…</span>
+          ) : (
+            <>
+              <button onClick={() => submitWalkover(teamA.id)} disabled={loading} title={teamA.nombre} style={chipStyle}>{truncar(teamA.nombre)}</button>
+              <button onClick={() => submitWalkover(teamB.id)} disabled={loading} title={teamB.nombre} style={chipStyle}>{truncar(teamB.nombre)}</button>
+              <button onClick={() => setView('score')} disabled={loading} style={ghostChipStyle}>✕</button>
+            </>
+          )}
         </div>
         {error && <span style={{ fontSize: 10, color: '#f87171' }}>{error}</span>}
       </div>
@@ -118,9 +129,15 @@ export default function BracketActions({
           style={numInputStyle} aria-label={`Puntos de ${teamB.nombre}`}
         />
         <span title={teamB.nombre} style={teamLabelStyle}>{truncar(teamB.nombre)}</span>
-        <button onClick={submitScore} disabled={loading} style={chipStyle}>✓</button>
-        <button onClick={() => setView('ko')} disabled={loading} style={{ ...chipStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>KO</button>
-        <button onClick={reset} disabled={loading} style={ghostChipStyle}>✕</button>
+        {loading ? (
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)' }}>Guardando…</span>
+        ) : (
+          <>
+            <button onClick={submitScore} disabled={loading} style={chipStyle}>✓</button>
+            <button onClick={() => setView('ko')} disabled={loading} style={{ ...chipStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>KO</button>
+            <button onClick={reset} disabled={loading} style={ghostChipStyle}>✕</button>
+          </>
+        )}
       </div>
       {error && <span style={{ fontSize: 10, color: '#f87171' }}>{error}</span>}
     </div>
