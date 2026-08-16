@@ -9,16 +9,27 @@ export default function BracketActions({
   matchId,
   teamA,
   teamB,
+  isPlayed,
+  resultadoActual,
 }: {
   matchId: string
   teamA: { id: string; nombre: string }
   teamB: { id: string; nombre: string }
+  isPlayed?: boolean
+  resultadoActual?: string | null
 }) {
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'closed' | 'score' | 'ko'>('closed')
+
+  const scoreMatch = resultadoActual?.match(/(\d+)\s*-\s*(\d+)/)
   const [scoreA, setScoreA] = useState('')
   const [scoreB, setScoreB] = useState('')
   const [error, setError] = useState('')
+
+  const abrirEdicion = () => {
+    if (scoreMatch) { setScoreA(scoreMatch[1]); setScoreB(scoreMatch[2]) }
+    setView('score')
+  }
 
   const reset = () => {
     setView('closed'); setScoreA(''); setScoreB(''); setError('')
@@ -29,7 +40,7 @@ export default function BracketActions({
     const res = await fetch(`/api/matches/${matchId}/result`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, editar: isPlayed }),
     })
     if (res.ok) {
       window.location.reload()
@@ -54,6 +65,13 @@ export default function BracketActions({
   const submitWalkover = (ganadorId: string) => submit({ ganador_id: ganadorId, walkover: true })
 
   if (view === 'closed') {
+    if (isPlayed) {
+      return (
+        <button onClick={abrirEdicion} aria-label="Editar resultado" title="Editar resultado" style={editIconStyle}>
+          ✎
+        </button>
+      )
+    }
     return (
       <button onClick={() => setView('score')} style={{
         background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
@@ -81,6 +99,9 @@ export default function BracketActions({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '4px 0' }}>
+      {isPlayed && (
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 1 }}>CORREGIR RESULTADO</div>
+      )}
       <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
         <span title={teamA.nombre} style={teamLabelStyle}>{truncar(teamA.nombre)}</span>
         <input
@@ -114,6 +135,12 @@ const chipStyle = {
 
 const ghostChipStyle = {
   ...chipStyle, background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--border)',
+} as const
+
+const editIconStyle = {
+  background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)',
+  width: 18, height: 18, borderRadius: 5, fontSize: 10, lineHeight: 1, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
 } as const
 
 const teamLabelStyle = {

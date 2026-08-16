@@ -566,8 +566,8 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
             {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
-          {isOrganizer && match.estado !== 'jugado' && teamA && teamB && (
-            <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} />
+          {isOrganizer && teamA && teamB && (
+            <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} isPlayed={isPlayed} resultadoActual={match.resultado} />
           )}
         </div>
       )}

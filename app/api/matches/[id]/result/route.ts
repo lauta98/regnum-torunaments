@@ -23,11 +23,12 @@ export async function POST(
   }
 
   const body = await request.json()
-  const { ganador_id, walkover, score_ganador, score_perdedor } = body as {
+  const { ganador_id, walkover, score_ganador, score_perdedor, editar } = body as {
     ganador_id: string
     walkover?: boolean
     score_ganador?: number
     score_perdedor?: number
+    editar?: boolean
   }
 
   if (!ganador_id) return NextResponse.json({ error: 'ganador_id requerido' }, { status: 400 })
@@ -49,7 +50,13 @@ export async function POST(
     .single()
 
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
-  if (match.estado === 'jugado') return NextResponse.json({ error: 'Partido ya jugado' }, { status: 409 })
+
+  if (editar && match.estado !== 'jugado') {
+    return NextResponse.json({ error: 'Este partido todavía no tiene resultado cargado' }, { status: 409 })
+  }
+  if (!editar && match.estado === 'jugado') {
+    return NextResponse.json({ error: 'Partido ya jugado — usá "editar" para corregirlo' }, { status: 409 })
+  }
   if (!match.equipo_a_id || !match.equipo_b_id) {
     return NextResponse.json({ error: 'Todavía falta definir alguno de los dos equipos de este partido' }, { status: 409 })
   }
@@ -62,7 +69,105 @@ export async function POST(
 
   const perdedor_id = ganador_id === match.equipo_a_id ? match.equipo_b_id : match.equipo_a_id
 
-  // Get players from both teams
+  const ganadorNombre = ganador_id === match.equipo_a_id ? match.equipo_a?.nombre : match.equipo_b?.nombre
+  const perdedorNombre = ganador_id === match.equipo_a_id ? match.equipo_b?.nombre : match.equipo_a?.nombre
+  const resultado = walkover
+    ? `W.O. — ${ganadorNombre} gana por abandono de ${perdedorNombre}`
+    : `${ganadorNombre} ${score_ganador} - ${score_perdedor} ${perdedorNombre}`
+
+  /* ── Corrección de un resultado ya cargado ────────────────────── */
+  if (editar) {
+    if (bracketType === 'double_elimination') {
+      return NextResponse.json({
+        error: 'Corregir resultados en eliminación doble todavía no está soportado — avisale al desarrollador para arreglarlo a mano.',
+      }, { status: 400 })
+    }
+
+    const mismoGanador = ganador_id === match.ganador_id
+
+    if (mismoGanador) {
+      // Solo cambió el marcador (ej. corregir un typo) — el MMR no
+      // depende del margen, así que no hace falta tocar nada más.
+      await supabase.from('matches').update({ resultado }).eq('id', id)
+      return NextResponse.json({ ok: true })
+    }
+
+    // Cambió el ganador. Si el bracket no es round robin, el ganador
+    // anterior puede haber avanzado a la ronda siguiente — si esa ronda
+    // ya se jugó, no se puede corregir a ciegas sin deshacer también
+    // ese resultado (y los que dependan de él).
+    let nextMatch: any = null
+    if (bracketType !== 'round_robin') {
+      const { data } = await supabase
+        .from('matches').select('id, estado')
+        .eq('torneo_id', match.torneo_id).eq('bracket', 'main')
+        .eq('ronda_numero', match.ronda_numero + 1).eq('posicion', Math.ceil(match.posicion / 2))
+        .maybeSingle()
+      nextMatch = data
+      if (nextMatch?.estado === 'jugado') {
+        return NextResponse.json({
+          error: 'No se puede corregir — el equipo que había ganado ya jugó (y ganó o perdió) la siguiente ronda. Corregí primero el resultado de esa ronda.',
+        }, { status: 409 })
+      }
+    }
+
+    // Revertir el MMR que se había aplicado con el resultado anterior
+    const { data: historial } = await supabase.from('mmr_history').select('*').eq('match_id', id)
+    for (const h of historial ?? []) {
+      const { data: p } = await supabase.from('players').select('partidas_jugadas, partidas_ganadas').eq('id', h.player_id).single()
+      if (!p) continue
+      const partidas = Math.max(0, p.partidas_jugadas - 1)
+      const ganadas = Math.max(0, p.partidas_ganadas - (h.gano ? 1 : 0))
+      await supabase.from('players').update({
+        mmr_global: h.mmr_antes,
+        partidas_jugadas: partidas,
+        partidas_ganadas: ganadas,
+        winrate: partidas > 0 ? Math.round((ganadas / partidas) * 100) : 0,
+      }).eq('id', h.player_id)
+    }
+    await supabase.from('mmr_history').delete().eq('match_id', id)
+
+    // Aplicar el MMR del resultado corregido, y guardar el partido
+    await aplicarMmrYGuardar(supabase, id, match, ganador_id, perdedor_id, resultado)
+
+    // Reemplazar al equipo que había avanzado por el ganador correcto
+    if (nextMatch) {
+      const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
+      await supabase.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
+    }
+
+    return NextResponse.json({ ok: true })
+  }
+
+  /* ── Carga normal de un resultado nuevo ───────────────────────── */
+  await aplicarMmrYGuardar(supabase, id, match, ganador_id, perdedor_id, resultado)
+
+  if (bracketType === 'double_elimination') {
+    await avanzarEliminacionDoble(supabase, match, ganador_id, perdedor_id)
+  } else if (bracketType !== 'round_robin') {
+    // Eliminación simple: el ganador avanza a la ronda siguiente. Round
+    // Robin no tiene avance — cada partido es independiente.
+    const { data: nextMatch } = await supabase
+      .from('matches')
+      .select('id, equipo_a_id, equipo_b_id')
+      .eq('torneo_id', match.torneo_id)
+      .eq('bracket', 'main')
+      .eq('ronda_numero', match.ronda_numero + 1)
+      .eq('posicion', Math.ceil(match.posicion / 2))
+      .maybeSingle()
+
+    if (nextMatch) {
+      const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
+      await supabase.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
+    }
+  }
+
+  return NextResponse.json({ ok: true })
+}
+
+/** Aplica el delta de MMR a los jugadores de ambos equipos y guarda el
+ *  resultado del partido. Compartido entre la carga normal y la edición. */
+async function aplicarMmrYGuardar(supabase: any, matchId: string, match: any, ganador_id: string, perdedor_id: string, resultado: string) {
   const { data: ganadores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', ganador_id)
   const { data: perdedores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', perdedor_id)
 
@@ -90,7 +195,7 @@ export async function POST(
 
     historyInserts.push({
       player_id: member.player_id,
-      match_id: id,
+      match_id: matchId,
       torneo_id: match.torneo_id,
       mmr_antes: p.mmr_global,
       mmr_despues: nuevoMmr,
@@ -109,39 +214,11 @@ export async function POST(
   ganadores?.forEach((m: any) => processPlayer(m, true, avgMmrPerdedores))
   perdedores?.forEach((m: any) => processPlayer(m, false, avgMmrGanadores))
 
-  const ganadorNombre = ganador_id === match.equipo_a_id ? match.equipo_a?.nombre : match.equipo_b?.nombre
-  const perdedorNombre = ganador_id === match.equipo_a_id ? match.equipo_b?.nombre : match.equipo_a?.nombre
-  const resultado = walkover
-    ? `W.O. — ${ganadorNombre} gana por abandono de ${perdedorNombre}`
-    : `${ganadorNombre} ${score_ganador} - ${score_perdedor} ${perdedorNombre}`
-
   await Promise.all([
     ...allUpdates,
     supabase.from('mmr_history').insert(historyInserts),
-    supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado }).eq('id', id),
+    supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado }).eq('id', matchId),
   ])
-
-  if (bracketType === 'double_elimination') {
-    await avanzarEliminacionDoble(supabase, match, ganador_id, perdedor_id)
-  } else if (bracketType !== 'round_robin') {
-    // Eliminación simple: el ganador avanza a la ronda siguiente. Round
-    // Robin no tiene avance — cada partido es independiente.
-    const { data: nextMatch } = await supabase
-      .from('matches')
-      .select('id, equipo_a_id, equipo_b_id')
-      .eq('torneo_id', match.torneo_id)
-      .eq('bracket', 'main')
-      .eq('ronda_numero', match.ronda_numero + 1)
-      .eq('posicion', Math.ceil(match.posicion / 2))
-      .maybeSingle()
-
-    if (nextMatch) {
-      const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
-      await supabase.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
-    }
-  }
-
-  return NextResponse.json({ ok: true })
 }
 
 /**
