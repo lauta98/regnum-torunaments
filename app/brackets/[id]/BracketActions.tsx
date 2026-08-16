@@ -1,8 +1,20 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
-function truncar(nombre: string, max = 12) {
-  return nombre.length > max ? nombre.slice(0, max - 1) + '…' : nombre
+/** El texto guardado es siempre "{nombre del que ganó} {suPuntaje} -
+ *  {puntaje del otro} {nombre del que perdió}" — el ganador no
+ *  siempre es "equipo A", así que hay que fijarse qué nombre aparece
+ *  primero en el texto para saber a quién le corresponde cada número
+ *  (asumir el orden a ciegas invierte el resultado al pre-cargarlo). */
+function prefillScores(resultado: string | null | undefined, teamA: { nombre: string }, teamB: { nombre: string }): [string, string] {
+  if (!resultado) return ['', '']
+  const m = resultado.match(/(\d+)\s*-\s*(\d+)/)
+  if (!m) return ['', '']
+  const idxA = resultado.indexOf(teamA.nombre)
+  const idxB = resultado.indexOf(teamB.nombre)
+  const aApareceAntes = idxA !== -1 && (idxB === -1 || idxA <= idxB)
+  return aApareceAntes ? [m[1], m[2]] : [m[2], m[1]]
 }
 
 export default function BracketActions({
@@ -18,16 +30,16 @@ export default function BracketActions({
   isPlayed?: boolean
   resultadoActual?: string | null
 }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [view, setView] = useState<'closed' | 'score' | 'ko'>('closed')
-
-  const scoreMatch = resultadoActual?.match(/(\d+)\s*-\s*(\d+)/)
   const [scoreA, setScoreA] = useState('')
   const [scoreB, setScoreB] = useState('')
   const [error, setError] = useState('')
 
   const abrirEdicion = () => {
-    if (scoreMatch) { setScoreA(scoreMatch[1]); setScoreB(scoreMatch[2]) }
+    const [pa, pb] = prefillScores(resultadoActual, teamA, teamB)
+    setScoreA(pa); setScoreB(pb)
     setView('score')
   }
 
@@ -44,7 +56,8 @@ export default function BracketActions({
         body: JSON.stringify({ ...body, editar: isPlayed }),
       })
       if (res.ok) {
-        window.location.reload()
+        router.refresh()
+        reset()
         return
       }
       const d = await res.json().catch(() => null)
@@ -56,117 +69,127 @@ export default function BracketActions({
     }
   }
 
+  const sa = Number(scoreA)
+  const sb = Number(scoreB)
+  const scoreValido = Number.isInteger(sa) && Number.isInteger(sb) && sa >= 0 && sb >= 0 && sa !== sb && scoreA !== '' && scoreB !== ''
+  const ganadorPreview = scoreValido ? (sa > sb ? teamA : teamB) : null
+
   const submitScore = () => {
-    const sa = Number(scoreA)
-    const sb = Number(scoreB)
-    if (!Number.isInteger(sa) || !Number.isInteger(sb) || sa < 0 || sb < 0 || sa === sb) {
-      setError('Marcador inválido')
-      return
-    }
+    if (!scoreValido) { setError('Marcador inválido'); return }
     const ganador = sa > sb ? teamA : teamB
     submit({ ganador_id: ganador.id, score_ganador: Math.max(sa, sb), score_perdedor: Math.min(sa, sb) })
   }
 
   const submitWalkover = (ganadorId: string) => submit({ ganador_id: ganadorId, walkover: true })
 
-  if (view === 'closed') {
-    if (isPlayed) {
-      return (
-        <button onClick={abrirEdicion} aria-label="Editar resultado" title="Editar resultado" style={editIconStyle}>
-          ✎
-        </button>
-      )
-    }
-    return (
-      <button onClick={() => setView('score')} style={{
-        background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
-        color: 'var(--gold)', padding: '2px 8px', borderRadius: 6,
-        fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
-      }}>
-        RESULTADO
-      </button>
-    )
-  }
-
-  if (view === 'ko') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '4px 0' }}>
-        <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)' }}>GANÓ POR ABANDONO:</span>
-          {loading ? (
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)' }}>Guardando…</span>
-          ) : (
-            <>
-              <button onClick={() => submitWalkover(teamA.id)} disabled={loading} title={teamA.nombre} style={chipStyle}>{truncar(teamA.nombre)}</button>
-              <button onClick={() => submitWalkover(teamB.id)} disabled={loading} title={teamB.nombre} style={chipStyle}>{truncar(teamB.nombre)}</button>
-              <button onClick={() => setView('score')} disabled={loading} style={ghostChipStyle}>✕</button>
-            </>
-          )}
-        </div>
-        {error && <span style={{ fontSize: 10, color: '#f87171' }}>{error}</span>}
-      </div>
-    )
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, padding: '4px 0' }}>
-      {isPlayed && (
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 1 }}>CORREGIR RESULTADO</div>
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      {isPlayed ? (
+        <button onClick={abrirEdicion} aria-label="Corregir resultado" style={editBtnStyle}>
+          ✎ Corregir
+        </button>
+      ) : (
+        <button onClick={() => setView('score')} style={{
+          background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
+          color: 'var(--gold)', padding: '2px 8px', borderRadius: 6,
+          fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
+        }}>
+          RESULTADO
+        </button>
       )}
-      <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
-        <span title={teamA.nombre} style={teamLabelStyle}>{truncar(teamA.nombre)}</span>
-        <input
-          type="number" min={0} inputMode="numeric" value={scoreA}
-          onChange={e => setScoreA(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && submitScore()}
-          style={numInputStyle} aria-label={`Puntos de ${teamA.nombre}`}
-        />
-        <span style={{ color: 'var(--text-muted)', fontSize: 11 }}>–</span>
-        <input
-          type="number" min={0} inputMode="numeric" value={scoreB}
-          onChange={e => setScoreB(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && submitScore()}
-          style={numInputStyle} aria-label={`Puntos de ${teamB.nombre}`}
-        />
-        <span title={teamB.nombre} style={teamLabelStyle}>{truncar(teamB.nombre)}</span>
-        {loading ? (
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)' }}>Guardando…</span>
-        ) : (
+
+      {view !== 'closed' && (
+      <div style={popoverStyle} onClick={e => e.stopPropagation()}>
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 1, marginBottom: 10 }}>
+          {isPlayed ? 'CORREGIR RESULTADO' : 'CARGAR RESULTADO'}
+        </div>
+
+        {view === 'score' && (
           <>
-            <button onClick={submitScore} disabled={loading} style={chipStyle}>✓</button>
-            <button onClick={() => setView('ko')} disabled={loading} style={{ ...chipStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>KO</button>
-            <button onClick={reset} disabled={loading} style={ghostChipStyle}>✕</button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+              <ScoreRow nombre={teamA.nombre} value={scoreA} onChange={setScoreA} onEnter={submitScore} />
+              <ScoreRow nombre={teamB.nombre} value={scoreB} onChange={setScoreB} onEnter={submitScore} />
+            </div>
+
+            <div style={{ minHeight: 16, marginBottom: 10, fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)' }}>
+              {ganadorPreview && `→ Gana ${ganadorPreview.nombre} (${Math.max(sa, sb)}-${Math.min(sa, sb)})`}
+            </div>
+
+            {loading ? (
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '6px 0' }}>Guardando…</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={submitScore} style={{ ...btnStyle, flex: 1 }}>Guardar</button>
+                <button onClick={() => setView('ko')} style={{ ...btnStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>Abandono</button>
+                <button onClick={reset} style={ghostBtnStyle}>Cancelar</button>
+              </div>
+            )}
           </>
         )}
+
+        {view === 'ko' && (
+          <>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10 }}>¿Quién ganó por abandono del rival?</div>
+            {loading ? (
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '6px 0' }}>Guardando…</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <button onClick={() => submitWalkover(teamA.id)} style={btnStyle}>{teamA.nombre}</button>
+                <button onClick={() => submitWalkover(teamB.id)} style={btnStyle}>{teamB.nombre}</button>
+                <button onClick={() => setView('score')} style={ghostBtnStyle}>← Volver</button>
+              </div>
+            )}
+          </>
+        )}
+
+        {error && <div style={{ fontSize: 11, color: '#f87171', marginTop: 8 }}>{error}</div>}
       </div>
-      {error && <span style={{ fontSize: 10, color: '#f87171' }}>{error}</span>}
+      )}
     </div>
   )
 }
 
-const chipStyle = {
-  padding: '3px 7px', borderRadius: 5, border: '1px solid var(--border-gold)',
-  background: 'var(--gold-muted)', color: 'var(--gold)',
+function ScoreRow({ nombre, value, onChange, onEnter }: { nombre: string; value: string; onChange: (v: string) => void; onEnter: () => void }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ flex: 1, fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.3, wordBreak: 'break-word' }}>
+        {nombre}
+      </span>
+      <input
+        type="number" min={0} inputMode="numeric" value={value}
+        onChange={e => onChange(e.target.value)}
+        onKeyDown={e => e.key === 'Enter' && onEnter()}
+        style={numInputStyle} aria-label={`Puntos de ${nombre}`}
+      />
+    </div>
+  )
+}
+
+const editBtnStyle = {
+  background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)',
+  padding: '2px 8px', borderRadius: 6,
   fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, cursor: 'pointer',
 } as const
 
-const ghostChipStyle = {
-  ...chipStyle, background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--border)',
+const popoverStyle = {
+  position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
+  width: 230, padding: '12px 14px', borderRadius: 10,
+  background: '#141414', border: '1px solid var(--border-gold)',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
 } as const
 
-const editIconStyle = {
-  background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)',
-  width: 18, height: 18, borderRadius: 5, fontSize: 10, lineHeight: 1, cursor: 'pointer',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+const btnStyle = {
+  padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border-gold)',
+  background: 'var(--gold-muted)', color: 'var(--gold)',
+  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, cursor: 'pointer',
 } as const
 
-const teamLabelStyle = {
-  fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-secondary)',
-  maxWidth: 68, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+const ghostBtnStyle = {
+  ...btnStyle, background: 'transparent', color: 'var(--text-muted)', borderColor: 'var(--border)',
 } as const
 
 const numInputStyle = {
-  width: 26, padding: '2px 3px', borderRadius: 5, border: '1px solid var(--border-gold)',
+  width: 44, padding: '5px 4px', borderRadius: 6, border: '1px solid var(--border-gold)',
   background: '#0f0f0f', color: 'var(--text-primary)',
-  fontFamily: 'var(--font-display)', fontSize: 11, textAlign: 'center',
+  fontFamily: 'var(--font-display)', fontSize: 13, textAlign: 'center',
 } as const
