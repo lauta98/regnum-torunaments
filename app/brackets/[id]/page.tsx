@@ -250,11 +250,11 @@ export default async function BracketPage({
                     <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
                   </div>
                 )
-              ) : (
+              ) : torneo.bracket_type === 'round_robin' ? (
                 <div style={{ overflowX: 'auto' }}>
                   {/* Round headers */}
                   <div style={{ display: 'flex', gap: 0, minWidth: roundEntries.length * 240 }}>
-                    {roundEntries.map(([roundNum, roundMatches], colIdx) => {
+                    {roundEntries.map(([roundNum, roundMatches]) => {
                       const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
                       return (
                         <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -273,6 +273,8 @@ export default async function BracketPage({
                     })}
                   </div>
                 </div>
+              ) : (
+                <BracketTree roundEntries={roundEntries} isOrganizer={isOrganizer} fc={fc} />
               )
             )}
 
@@ -392,6 +394,119 @@ export default async function BracketPage({
         CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
       </footer>
     </>
+  )
+}
+
+/* ── Bracket tree (eliminación simple/doble) ─────────────────
+ * A diferencia de round robin, acá cada partido tiene una relación
+ * real con el/los que lo alimentan, así que se ubica cada uno en su
+ * posición real del árbol (no repartido parejo) y se dibujan líneas
+ * conectoras — si no, con byes y "TBD" de por medio no se entiende
+ * qué partido sale de cuál. */
+const ROW = 104
+const COL_W = 244
+const CARD_PAD = 10
+const HEADER_H = 34
+const CARD_CENTER = 40
+
+const SECTION_LABEL: Record<string, string> = {
+  losers: 'Llave de Perdedores',
+  grand_final: 'Gran Final',
+}
+
+function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string }) {
+  const sections: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }[] = []
+  roundEntries.forEach(([key, matches]) => {
+    const bracket = matches[0]?.bracket ?? 'main'
+    const roundNum = matches[0]?.ronda_numero ?? 0
+    let section = sections.find(s => s.bracket === bracket)
+    if (!section) { section = { bracket, rounds: [] }; sections.push(section) }
+    section.rounds.push({ key, roundNum, matches })
+  })
+  sections.forEach(s => s.rounds.sort((a, b) => a.roundNum - b.roundNum))
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+      {sections.map(section => (
+        <BracketSection key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} />
+      ))}
+    </div>
+  )
+}
+
+function BracketSection({ section, isOrganizer, fc }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string }) {
+  const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
+
+  // Posición vertical (en "filas") de cada partido: ronda 1 en orden, y
+  // cada ronda siguiente centrada entre los 2 partidos que la alimentan
+  // (o alineada 1 a 1 si la ronda anterior tiene la misma cantidad, como
+  // pasa en las rondas "mayores" de la llave de perdedores).
+  const yByRound: number[][] = []
+  rounds.forEach((r, idx) => {
+    const n = r.matches.length
+    if (idx === 0) { yByRound.push(r.matches.map((_, i) => i)); return }
+    const prevY = yByRound[idx - 1]
+    const prevN = prevY.length
+    if (prevN === n * 2) yByRound.push(r.matches.map((_, i) => (prevY[2 * i] + prevY[2 * i + 1]) / 2))
+    else if (prevN === n) yByRound.push(r.matches.map((_, i) => prevY[i]))
+    else { const lo = Math.min(...prevY), hi = Math.max(...prevY); const mid = (lo + hi) / 2; yByRound.push(r.matches.map(() => mid)) }
+  })
+
+  const maxY = Math.max(0, ...yByRound.flat())
+  const height = HEADER_H + (maxY + 1) * ROW
+  const width = rounds.length * COL_W
+
+  const connectors: { x1: number; y1: number; xm: number; x2: number; y2: number }[] = []
+  rounds.forEach((r, idx) => {
+    if (idx === 0) return
+    const prevN = rounds[idx - 1].matches.length
+    const n = r.matches.length
+    const x2 = idx * COL_W + CARD_PAD
+    const xm = idx * COL_W - COL_W / 2
+    r.matches.forEach((_, i) => {
+      const y2 = HEADER_H + yByRound[idx][i] * ROW + CARD_CENTER
+      if (prevN === n * 2) {
+        [2 * i, 2 * i + 1].forEach(pi => {
+          connectors.push({ x1: idx * COL_W - CARD_PAD, y1: HEADER_H + yByRound[idx - 1][pi] * ROW + CARD_CENTER, xm, x2, y2 })
+        })
+      } else if (prevN === n) {
+        connectors.push({ x1: idx * COL_W - CARD_PAD, y1: HEADER_H + yByRound[idx - 1][i] * ROW + CARD_CENTER, xm, x2, y2 })
+      }
+      // cuando no hay una relación 2:1 ni 1:1 clara (ej. gran final,
+      // que junta a las dos llaves) no se traza línea — no hay una
+      // única ronda anterior de la que "salga" en términos visuales.
+    })
+  })
+
+  return (
+    <div>
+      {SECTION_LABEL[section.bracket] && (
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+          {SECTION_LABEL[section.bracket]}
+        </div>
+      )}
+      <div style={{ overflowX: 'auto' }}>
+        <div style={{ position: 'relative', width, height, minWidth: width }}>
+          <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            {connectors.map((c, i) => (
+              <path key={i} d={`M ${c.x1} ${c.y1} H ${c.xm} V ${c.y2} H ${c.x2}`} fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth={1.5} />
+            ))}
+          </svg>
+          {rounds.map((r, colIdx) => (
+            <div key={r.key}>
+              <div style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600 }}>
+                {r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}
+              </div>
+              {r.matches.map((match, i) => (
+                <div key={match.id} style={{ position: 'absolute', left: colIdx * COL_W + CARD_PAD, top: HEADER_H + yByRound[colIdx][i] * ROW, width: COL_W - CARD_PAD * 2 }}>
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
