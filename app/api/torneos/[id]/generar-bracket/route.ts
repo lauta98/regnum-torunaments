@@ -23,12 +23,23 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
+// Nombre según la cantidad de partidos QUE QUEDAN en esa ronda (no la
+// cantidad de equipos) — así se corresponde con la terminología
+// estándar: 1 partido = Final, 2 = Semifinal, 4 = Cuartos, 8 =
+// Octavos, 16 = Dieciseisavos, 32 = Treintaidosavos.
+const NOMBRES_RONDA: Record<number, string> = {
+  1: 'Final',
+  2: 'Semifinal',
+  4: 'Cuartos de Final',
+  8: 'Octavos de Final',
+  16: 'Dieciseisavos de Final',
+  32: 'Treintaidosavos de Final',
+  64: 'Sesentaicuatroavos de Final',
+}
+
 function roundName(matchesEnEsaRonda: number, esFinal: boolean): string {
   if (esFinal) return 'Final'
-  if (matchesEnEsaRonda === 1) return 'Semifinal'
-  if (matchesEnEsaRonda === 2) return 'Cuartos de Final'
-  if (matchesEnEsaRonda === 4) return 'Octavos de Final'
-  return `Ronda de ${matchesEnEsaRonda * 2}`
+  return NOMBRES_RONDA[matchesEnEsaRonda] ?? `Ronda de ${matchesEnEsaRonda * 2}`
 }
 
 /** Eliminación simple — resuelve byes en el momento de generar, para que

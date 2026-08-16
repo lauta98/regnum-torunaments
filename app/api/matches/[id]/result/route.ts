@@ -169,6 +169,9 @@ export async function POST(
     if (nextMatch) {
       const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
       await svc.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
+    } else {
+      // No hay ronda siguiente — este era el partido final del torneo.
+      await svc.from('tournaments').update({ estado: 'finalizado' }).eq('id', match.torneo_id)
     }
   }
 

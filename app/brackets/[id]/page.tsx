@@ -9,6 +9,7 @@ import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
 import GenerarBracketButton from './GenerarBracketButton'
 import AbrirInscripcionesButton from './AbrirInscripcionesButton'
+import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 
 export const dynamic = 'force-dynamic'
@@ -203,6 +204,11 @@ export default async function BracketPage({
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>PARTIDOS</div>
                 </div>
               </div>
+              {isOrganizer && torneo.estado === 'live' && (
+                <div style={{ marginTop: 12 }}>
+                  <FinalizarTorneoButton torneoId={torneo.id} />
+                </div>
+              )}
             </div>
 
             {/* Nav items */}
@@ -527,10 +533,20 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
 
   // Parse score — busca el patrón "N - N" en cualquier parte del texto
   // (el resultado puede ser solo el marcador o una frase con nombres,
-  // ej. "Elven 2 - 0 Fuxi"), así que no alcanza con partir por "-".
+  // ej. "Elven 2 - 0 Fuxi"), así que no alcanza con partir por "-". El
+  // texto siempre empieza con el nombre de quien GANÓ, que no siempre
+  // es el equipo A — hay que fijarse cuál nombre aparece primero para
+  // no asignarle el número a quien no le corresponde.
   const scoreMatch = match.resultado?.match(/(\d+)\s*-\s*(\d+)/)
-  const scoreA = scoreMatch ? Number(scoreMatch[1]) : null
-  const scoreB = scoreMatch ? Number(scoreMatch[2]) : null
+  let scoreA: number | null = null
+  let scoreB: number | null = null
+  if (scoreMatch) {
+    const idxA = teamA ? match.resultado.indexOf(teamA.nombre) : -1
+    const idxB = teamB ? match.resultado.indexOf(teamB.nombre) : -1
+    const aApareceAntes = idxA !== -1 && (idxB === -1 || idxA <= idxB)
+    scoreA = Number(aApareceAntes ? scoreMatch[1] : scoreMatch[2])
+    scoreB = Number(aApareceAntes ? scoreMatch[2] : scoreMatch[1])
+  }
   const isWalkover = isPlayed && !scoreMatch && !!match.resultado
 
   return (
