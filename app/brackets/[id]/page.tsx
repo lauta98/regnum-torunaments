@@ -403,11 +403,11 @@ export default async function BracketPage({
  * posición real del árbol (no repartido parejo) y se dibujan líneas
  * conectoras — si no, con byes y "TBD" de por medio no se entiende
  * qué partido sale de cuál. */
-const ROW = 104
-const COL_W = 244
-const CARD_PAD = 10
-const HEADER_H = 34
-const CARD_CENTER = 40
+const ROW = 58
+const COL_W = 184
+const CARD_PAD = 6
+const HEADER_H = 24
+const CARD_CENTER = 25
 
 const SECTION_LABEL: Record<string, string> = {
   losers: 'Llave de Perdedores',
@@ -549,8 +549,8 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
 
       {/* Footer */}
       {(isOrganizer || isPlayed) && (
-        <div style={{ padding: '4px 10px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
+        <div style={{ padding: '2px 9px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
             {isPlayed ? 'JUGADO' : 'PENDIENTE'}
           </span>
           {isOrganizer && match.estado !== 'jugado' && teamA && teamB && (
@@ -569,21 +569,21 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?
 
   return (
     <div style={{
-      padding: '9px 12px', display: 'flex', alignItems: 'center', gap: 8,
+      padding: '5px 9px', display: 'flex', alignItems: 'center', gap: 6,
       background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
       borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
     }}>
       {/* Seed */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 14, textAlign: 'center', flexShrink: 0 }}>
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', width: 12, textAlign: 'center', flexShrink: 0 }}>
         {seed ?? ''}
       </span>
       {/* Team name */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>TBD</span>}
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 10 }}>TBD</span>}
       </span>
       {/* Score */}
       {score !== null && score !== undefined && !isNaN(score) && (
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: scoreColor, background: scoreBg, width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, flexShrink: 0 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: scoreColor, background: scoreBg, width: 20, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, flexShrink: 0 }}>
           {score}
         </span>
       )}
