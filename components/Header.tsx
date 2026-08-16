@@ -47,6 +47,16 @@ const IconDiscord = () => (
     <path d="M60.1 4.9A58.5 58.5 0 0 0 45.6.7a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.6 37.6 0 0 0 25.5.8a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.8 4.9a.2.2 0 0 0-.1.1C1.6 18.7-.9 32.1.3 45.3a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1c1.4-1.9 2.6-3.9 3.6-5.9a.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4 30 30 0 0 0 .6-.5.2.2 0 0 1 .2 0c11.5 5.2 23.9 5.2 35.3 0a.2.2 0 0 1 .2 0l.6.5a.2.2 0 0 1 0 .4 36.2 36.2 0 0 1-5.5 2.6.2.2 0 0 0-.1.3c1 2 2.3 4 3.6 5.9a.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C72.9 30 70 16.7 60.2 5a.2.2 0 0 0-.1-.1Z"/>
   </svg>
 )
+const IconMenu = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+)
+const IconClose = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+  </svg>
+)
 
 const NAV = [
   { label: 'Inicio',      href: '/',          icon: <IconHome /> },
@@ -59,11 +69,14 @@ export default function Header() {
   const pathname = usePathname()
   const [player, setPlayer] = useState<any>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   const isActive = (href: string) => {
     const hrefPath = href.split('?')[0]
     return pathname === hrefPath || (hrefPath !== '/' && pathname.startsWith(hrefPath + '/'))
   }
+
+  useEffect(() => { setMobileNavOpen(false) }, [pathname])
 
   useEffect(() => {
     const supabase = createClient()
@@ -85,30 +98,37 @@ export default function Header() {
       backdropFilter: 'blur(20px)',
       position: 'sticky', top: 0, zIndex: 100,
     }}>
+      <style>{`
+        .cor-hamburger { display: none; }
+        @media (max-width: 780px) {
+          .cor-nav-links { display: none !important; }
+          .cor-hamburger { display: flex !important; }
+        }
+      `}</style>
       <div style={{
-        maxWidth: 1400, margin: '0 auto', padding: '0 24px',
+        maxWidth: 1400, margin: '0 auto', padding: '0 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60,
-        gap: 16,
+        gap: 12,
       }}>
 
         {/* Logo */}
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0, minWidth: 0 }}>
           <div style={{
-            width: 36, height: 36,
+            width: 36, height: 36, flexShrink: 0,
             background: 'linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%)',
             border: '1px solid rgba(212,175,55,0.4)',
             borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'var(--gold)', fontSize: 16,
           }}>⚔️</div>
-          <div>
+          <div style={{ minWidth: 0, overflow: 'hidden' }}>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: 0.5 }}>CoR</div>
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase' }}>COMMUNITY</div>
           </div>
         </Link>
 
-        {/* Nav */}
-        <nav style={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+        {/* Nav (desktop) */}
+        <nav className="cor-nav-links" style={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
           {NAV.map(({ label, href, icon }) => {
             const active = isActive(href)
             return (
@@ -131,22 +151,38 @@ export default function Header() {
           })}
         </nav>
 
+        {/* Hamburger (mobile) */}
+        <button
+          className="cor-hamburger"
+          onClick={() => setMobileNavOpen(o => !o)}
+          aria-label={mobileNavOpen ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={mobileNavOpen}
+          style={{
+            alignItems: 'center', justifyContent: 'center',
+            width: 36, height: 36, flexShrink: 0,
+            background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8,
+            color: 'var(--text-primary)', cursor: 'pointer',
+          }}
+        >
+          {mobileNavOpen ? <IconClose /> : <IconMenu />}
+        </button>
+
         {/* Auth */}
         {player ? (
-          <div style={{ position: 'relative', flexShrink: 0 }}>
-            <button onClick={() => setDropdownOpen(o => !o)} style={{
-              display: 'flex', alignItems: 'center', gap: 8,
+          <div style={{ position: 'relative', flexShrink: 0, minWidth: 0 }}>
+            <button onClick={() => setDropdownOpen(o => !o)} aria-haspopup="true" aria-expanded={dropdownOpen} style={{
+              display: 'flex', alignItems: 'center', gap: 8, maxWidth: 160,
               background: 'rgba(255,255,255,0.05)',
               border: `1px solid ${rc}33`, borderRadius: 8, padding: '5px 11px',
               cursor: 'pointer', color: 'var(--text-primary)',
             }}>
               <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${rc}22`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {player.discord_avatar
-                  ? <img src={player.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  ? <img src={player.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Avatar de ${player.nickname_juego}`} />
                   : <span style={{ fontSize: 11, fontWeight: 700, color: rc }}>{player.nickname_juego?.[0]?.toUpperCase()}</span>}
               </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700 }}>{player.nickname_juego}</span>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>▾</span>
+              <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{player.nickname_juego}</span>
+              <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>▾</span>
             </button>
             {dropdownOpen && (
               <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: '#141414', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, minWidth: 200, zIndex: 200, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
@@ -219,6 +255,29 @@ export default function Header() {
           </button>
         )}
       </div>
+
+      {/* Nav (mobile panel) */}
+      {mobileNavOpen && (
+        <nav style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '4px 8px' }}>
+          {NAV.map(({ label, href, icon }) => {
+            const active = isActive(href)
+            return (
+              <Link key={href} href={href} onClick={() => setMobileNavOpen(false)} style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '13px 12px', borderRadius: 8,
+                background: active ? 'rgba(255,255,255,0.07)' : 'transparent',
+                fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600,
+                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                textDecoration: 'none',
+              }}>
+                <span style={{ color: active ? 'var(--gold)' : 'inherit', display: 'flex' }}>{icon}</span>
+                {label}
+              </Link>
+            )
+          })}
+        </nav>
+      )}
+
       {/* Ornamental golden divider */}
       <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.15) 15%, rgba(212,175,55,0.45) 40%, rgba(212,175,55,0.45) 60%, rgba(212,175,55,0.15) 85%, transparent 100%)' }} />
     </header>
