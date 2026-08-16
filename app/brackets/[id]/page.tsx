@@ -166,11 +166,19 @@ export default async function BracketPage({
           )}
         </div>
 
-        {/* Two-column layout: sidebar + content */}
-        <div style={{ display: 'flex', flex: 1, gap: 0 }}>
+        <style>{`
+          @media (max-width: 760px) {
+            .cor-bracket-layout { flex-direction: column !important; }
+            .cor-bracket-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 0 !important; }
+            .cor-bracket-main { padding: 16px !important; }
+          }
+        `}</style>
+
+        {/* Two-column layout: sidebar + content (se apila en mobile) */}
+        <div className="cor-bracket-layout" style={{ display: 'flex', flex: 1, gap: 0 }}>
 
           {/* Sidebar */}
-          <aside style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '20px 0' }}>
+          <aside className="cor-bracket-sidebar" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '20px 0' }}>
             {/* Tournament title in sidebar */}
             <div style={{ padding: '0 16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
               <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
@@ -215,7 +223,7 @@ export default async function BracketPage({
           </aside>
 
           {/* Main content */}
-          <main style={{ flex: 1, padding: '24px 28px', overflowX: 'auto', minWidth: 0 }}>
+          <main className="cor-bracket-main" style={{ flex: 1, padding: '24px 28px', overflowX: 'auto', minWidth: 0 }}>
 
             {torneo.estado === 'draft' && isOrganizer && (
               <AbrirInscripcionesButton torneoId={torneo.id} />
