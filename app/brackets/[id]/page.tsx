@@ -525,8 +525,13 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
   const ganadorId = match.ganador_id
   const isPlayed = match.estado === 'jugado'
 
-  // Parse score
-  const [scoreA, scoreB] = match.resultado?.split('-').map(Number) ?? [null, null]
+  // Parse score — busca el patrón "N - N" en cualquier parte del texto
+  // (el resultado puede ser solo el marcador o una frase con nombres,
+  // ej. "Elven 2 - 0 Fuxi"), así que no alcanza con partir por "-".
+  const scoreMatch = match.resultado?.match(/(\d+)\s*-\s*(\d+)/)
+  const scoreA = scoreMatch ? Number(scoreMatch[1]) : null
+  const scoreB = scoreMatch ? Number(scoreMatch[2]) : null
+  const isWalkover = isPlayed && !scoreMatch && !!match.resultado
 
   return (
     <div style={{
@@ -559,7 +564,7 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
       {(isOrganizer || isPlayed) && (
         <div style={{ padding: '2px 9px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
-            {isPlayed ? 'JUGADO' : 'PENDIENTE'}
+            {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
           {isOrganizer && match.estado !== 'jugado' && teamA && teamB && (
             <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} />

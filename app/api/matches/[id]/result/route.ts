@@ -23,9 +23,24 @@ export async function POST(
   }
 
   const body = await request.json()
-  const { ganador_id } = body as { ganador_id: string }
+  const { ganador_id, walkover, score_ganador, score_perdedor } = body as {
+    ganador_id: string
+    walkover?: boolean
+    score_ganador?: number
+    score_perdedor?: number
+  }
 
   if (!ganador_id) return NextResponse.json({ error: 'ganador_id requerido' }, { status: 400 })
+
+  if (!walkover) {
+    const valido =
+      Number.isInteger(score_ganador) && Number.isInteger(score_perdedor) &&
+      (score_ganador as number) >= 0 && (score_perdedor as number) >= 0 &&
+      (score_ganador as number) > (score_perdedor as number)
+    if (!valido) {
+      return NextResponse.json({ error: 'Marcador inválido — el ganador tiene que tener más puntos que el perdedor' }, { status: 400 })
+    }
+  }
 
   const { data: match } = await supabase
     .from('matches')
@@ -37,6 +52,9 @@ export async function POST(
   if (match.estado === 'jugado') return NextResponse.json({ error: 'Partido ya jugado' }, { status: 409 })
   if (!match.equipo_a_id || !match.equipo_b_id) {
     return NextResponse.json({ error: 'Todavía falta definir alguno de los dos equipos de este partido' }, { status: 409 })
+  }
+  if (ganador_id !== match.equipo_a_id && ganador_id !== match.equipo_b_id) {
+    return NextResponse.json({ error: 'ganador_id no corresponde a ninguno de los dos equipos de este partido' }, { status: 400 })
   }
 
   const { data: torneo } = await supabase.from('tournaments').select('bracket_type').eq('id', match.torneo_id).single()
@@ -91,10 +109,16 @@ export async function POST(
   ganadores?.forEach((m: any) => processPlayer(m, true, avgMmrPerdedores))
   perdedores?.forEach((m: any) => processPlayer(m, false, avgMmrGanadores))
 
+  const ganadorNombre = ganador_id === match.equipo_a_id ? match.equipo_a?.nombre : match.equipo_b?.nombre
+  const perdedorNombre = ganador_id === match.equipo_a_id ? match.equipo_b?.nombre : match.equipo_a?.nombre
+  const resultado = walkover
+    ? `W.O. — ${ganadorNombre} gana por abandono de ${perdedorNombre}`
+    : `${ganadorNombre} ${score_ganador} - ${score_perdedor} ${perdedorNombre}`
+
   await Promise.all([
     ...allUpdates,
     supabase.from('mmr_history').insert(historyInserts),
-    supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado: `${match.equipo_a?.nombre} vs ${match.equipo_b?.nombre}` }).eq('id', id),
+    supabase.from('matches').update({ ganador_id, estado: 'jugado', resultado }).eq('id', id),
   ])
 
   if (bracketType === 'double_elimination') {
