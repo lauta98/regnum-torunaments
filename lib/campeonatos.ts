@@ -43,12 +43,24 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
   if (equiposSinMembers.length > 0) {
     const { data: teams } = await supabase.from('teams').select('id, nombre, capitan_id').in('id', equiposSinMembers)
     for (const team of teams ?? []) {
-      if (!team.capitan_id) continue
-      const { data: personajes } = await supabase.from('personajes').select('id, nickname_juego').eq('player_id', team.capitan_id)
+      let personajes: any[] | null = null
+      if (team.capitan_id) {
+        const res = await supabase.from('personajes').select('id, nickname_juego, player_id').eq('player_id', team.capitan_id)
+        personajes = res.data
+      }
+      // Si el capitan_id no resuelve a ningun personaje (ej. el personaje se
+      // reasigno a otra cuenta despues de jugado el torneo, quedando el
+      // capitan_id viejo huerfano) o directamente no hay capitan_id (equipos
+      // de clan en formatos grandes, sin roster individual) se intenta por
+      // coincidencia exacta de nombre de equipo == nickname del personaje.
+      if (!personajes || personajes.length === 0) {
+        const res = await supabase.from('personajes').select('id, nickname_juego, player_id').ilike('nickname_juego', team.nombre)
+        personajes = res.data
+      }
       if (!personajes || personajes.length === 0) continue
       const match = personajes.length === 1 ? personajes[0] : personajes.find((p: any) => normalizar(p.nickname_juego) === normalizar(team.nombre))
       const elegido = match ?? personajes[0]
-      campeones.push({ personaje_id: elegido.id, player_id: team.capitan_id })
+      campeones.push({ personaje_id: elegido.id, player_id: elegido.player_id })
     }
   }
 

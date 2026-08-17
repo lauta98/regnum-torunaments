@@ -480,7 +480,10 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
       } else if ((hi - lo) / (n - 1) >= 1) {
         yByRound.push(r.matches.map((_, i) => lo + (i / (n - 1)) * (hi - lo)))
       } else {
-        const inicio = (lo + hi) / 2 - (n - 1) / 2
+        // Centrado sobre el rango anterior, pero nunca por encima de la
+        // fila 0 — si no, la tarjeta queda arriba del borde del contenedor,
+        // tapando el título de la columna (se veía "Ronda 2" desaparecido).
+        const inicio = Math.max(0, (lo + hi) / 2 - (n - 1) / 2)
         yByRound.push(r.matches.map((_, i) => inicio + i))
       }
     }
