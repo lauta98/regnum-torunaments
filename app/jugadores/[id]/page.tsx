@@ -53,7 +53,10 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const bestPersonaje = personajes?.[0]
   const { data: mmrHistory } = bestPersonaje ? await supabase
     .from('mmr_history')
-    .select('*, torneo:tournaments(nombre, formato)')
+    .select(`
+      *, torneo:tournaments(id, nombre, formato),
+      match:matches(id, ronda, ganador_id, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre))
+    `)
     .eq('personaje_id', bestPersonaje.id)
     .order('created_at', { ascending: false })
     .limit(15) : { data: null }
@@ -170,32 +173,54 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               })}
             </div>
 
-            {/* MMR History */}
+            {/* Historial de enfrentamientos */}
             {mmrHistory && mmrHistory.length > 0 && (
               <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
                 <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>
-                    HISTORIAL MMR — {bestPersonaje?.nickname_juego}
+                    HISTORIAL DE ENFRENTAMIENTOS — {bestPersonaje?.nickname_juego}
                   </span>
                 </div>
                 <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {mmrHistory.map((entry: any) => (
-                    <div key={entry.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: entry.gano ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)', border: `1px solid ${entry.gano ? '#4CAF50' : '#F44336'}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
-                        {entry.gano ? '✓' : '✗'}
-                      </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{entry.torneo?.nombre ?? 'Partido'}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{new Date(entry.created_at).toLocaleDateString('es-AR')}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: entry.delta > 0 ? '#4CAF50' : '#f87171', fontWeight: 700 }}>
-                          {entry.delta > 0 ? '+' : ''}{entry.delta}
+                  {mmrHistory.map((entry: any) => {
+                    const match = entry.match
+                    // El equipo de este personaje es el ganador o el
+                    // perdedor según `entry.gano` — el rival es el otro
+                    // de los dos equipos del partido.
+                    const rival = match
+                      ? (entry.gano
+                          ? (match.ganador_id === match.equipo_a?.id ? match.equipo_b : match.equipo_a)
+                          : (match.ganador_id === match.equipo_a?.id ? match.equipo_a : match.equipo_b))
+                      : null
+                    const content = (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <div style={{ width: 28, height: 28, borderRadius: '50%', background: entry.gano ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)', border: `1px solid ${entry.gano ? '#4CAF50' : '#F44336'}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>
+                          {entry.gano ? '✓' : '✗'}
                         </div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.mmr_despues} MMR</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {rival ? <>vs {rival.nombre}</> : 'Rival desconocido'}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                            {entry.torneo?.nombre ?? 'Partido'}{match?.ronda ? ` · ${match.ronda}` : ''} · {new Date(entry.created_at).toLocaleDateString('es-AR')}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: entry.delta > 0 ? '#4CAF50' : '#f87171', fontWeight: 700 }}>
+                            {entry.delta > 0 ? '+' : ''}{entry.delta}
+                          </div>
+                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.mmr_despues} MMR</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                    return match?.id ? (
+                      <Link key={entry.id} href={`/brackets/${entry.torneo?.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {content}
+                      </Link>
+                    ) : (
+                      <div key={entry.id}>{content}</div>
+                    )
+                  })}
                 </div>
               </div>
             )}
