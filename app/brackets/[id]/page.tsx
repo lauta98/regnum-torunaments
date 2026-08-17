@@ -451,10 +451,19 @@ function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string,
 function BracketSection({ section, isOrganizer, fc }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
-  // Posición vertical (en "filas") de cada partido: ronda 1 en orden, y
-  // cada ronda siguiente centrada entre los 2 partidos que la alimentan
-  // (o alineada 1 a 1 si la ronda anterior tiene la misma cantidad, como
-  // pasa en las rondas "mayores" de la llave de perdedores).
+  // Posición vertical (en "filas") de cada partido. Regla simple y a
+  // prueba de brackets irregulares: cuando la ronda anterior alimenta a
+  // esta 2 a 1 (la mitad de partidos) o 1 a 1 (mismo numero, como en las
+  // rondas "grandes" de la llave de perdedores) cada partido se centra
+  // sobre los que lo alimentan, para que las lineas conectoras se vean
+  // bien. En cualquier otro caso (byes repartidos de forma pareja en vez
+  // de solo en la ronda 1, gran final que junta 2 llaves, etc.) NO hay
+  // una unica ronda anterior de la que "sale" cada partido, asi que en
+  // vez de tratar de encajarla en el espacio de la ronda anterior (eso
+  // fue lo que rompia el layout: rangos que quedaban mas chicos que la
+  // cantidad de tarjetas, o arrancaban en fila negativa) se ubica
+  // independiente, una fila por partido arrancando siempre en 0. Nunca
+  // se pisan porque cada ronda usa su propio contador de filas.
   const yByRound: number[][] = []
   rounds.forEach((r, idx) => {
     const n = r.matches.length
@@ -463,30 +472,7 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
     const prevN = prevY.length
     if (prevN === n * 2) yByRound.push(r.matches.map((_, i) => (prevY[2 * i] + prevY[2 * i + 1]) / 2))
     else if (prevN === n) yByRound.push(r.matches.map((_, i) => prevY[i]))
-    else {
-      // Relación irregular (byes repartidos de forma pareja, ronda de
-      // "gran final" que junta 2 llaves, etc.) — no hay una única ronda
-      // anterior de la que cada partido "sale" 2 a 1, así que en vez de
-      // amontonar todo en un punto se reparten a lo largo del mismo rango
-      // vertical que ocupó la ronda anterior. Pero si esta ronda tiene MAS
-      // partidos que la anterior (bracket con byes concentrados mas
-      // adelante, no solo al principio — ese rango queda mas chico que la
-      // cantidad de tarjetas a mostrar) repartirlos ahi las amontona: se
-      // fuerza un minimo de 1 fila de separacion entre cada una, centrado
-      // sobre el rango anterior en vez de comprimido dentro de el.
-      const lo = Math.min(...prevY), hi = Math.max(...prevY)
-      if (n === 1) {
-        yByRound.push([(lo + hi) / 2])
-      } else if ((hi - lo) / (n - 1) >= 1) {
-        yByRound.push(r.matches.map((_, i) => lo + (i / (n - 1)) * (hi - lo)))
-      } else {
-        // Centrado sobre el rango anterior, pero nunca por encima de la
-        // fila 0 — si no, la tarjeta queda arriba del borde del contenedor,
-        // tapando el título de la columna (se veía "Ronda 2" desaparecido).
-        const inicio = Math.max(0, (lo + hi) / 2 - (n - 1) / 2)
-        yByRound.push(r.matches.map((_, i) => inicio + i))
-      }
-    }
+    else yByRound.push(r.matches.map((_, i) => i))
   })
 
   const maxY = Math.max(0, ...yByRound.flat())
