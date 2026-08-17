@@ -15,22 +15,49 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
   const [clase, setClase]       = useState<Clase>('Bárbaro')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [claimable, setClaimable] = useState<{ id: string } | null>(null)
+  const [claiming, setClaiming] = useState(false)
+
+  const handleReclamar = async () => {
+    if (!claimable) return
+    setClaiming(true); setError('')
+    const res = await fetch('/api/personajes/reclamar-cuenta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
+    })
+    const body = await res.json()
+    if (!res.ok) {
+      setError(body.error || 'No se pudo reclamar el personaje.')
+      setClaiming(false)
+      return
+    }
+    window.location.reload()
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nickname.trim()) return setError('El nickname es requerido.')
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setClaimable(null)
 
     const supabase = createClient()
 
-    // Verificar disponibilidad
+    // Verificar disponibilidad. Si es un personaje fantasma sin cuenta
+    // vinculada (cargado de un torneo historico), se ofrece reclamarlo.
     const { data: taken } = await supabase
       .from('personajes')
-      .select('id')
+      .select('id, verificado, player:players(user_id)')
       .ilike('nickname_juego', nickname.trim())
       .single()
 
-    if (taken) { setError('Ese nickname ya está en uso.'); setLoading(false); return }
+    if (taken) {
+      const player = Array.isArray(taken.player) ? taken.player[0] : taken.player
+      const esReclamable = !taken.verificado && !player?.user_id
+      if (esReclamable) setClaimable({ id: taken.id })
+      else setError('Ese nickname ya está en uso.')
+      setLoading(false)
+      return
+    }
 
     const { error: err } = await supabase.from('personajes').insert({
       player_id: playerId,
@@ -60,7 +87,7 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>NICKNAME EN EL JUEGO</label>
-                <input value={nickname} onChange={e => setNickname(e.target.value)} maxLength={24} placeholder="Nombre exacto en Regnum"
+                <input value={nickname} onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }} maxLength={24} placeholder="Nombre exacto en Regnum"
                   style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none' }} />
               </div>
               <div>
@@ -82,12 +109,23 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
                 </div>
               </div>
               {error && <p style={{ color: '#f87171', fontSize: 12, textAlign: 'center' }}>{error}</p>}
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                <button type="button" onClick={() => setOpen(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12, cursor: 'pointer' }}>Cancelar</button>
-                <button type="submit" disabled={loading} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer' }}>
-                  {loading ? 'Guardando...' : 'AGREGAR'}
-                </button>
-              </div>
+              {claimable ? (
+                <div style={{ border: '1px solid var(--border-gold)', borderRadius: 8, padding: '12px 14px', background: 'var(--gold-muted)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                    Ese nickname existe en el historial de torneos y nadie lo reclamó. Si es tuyo, reclamalo para heredar sus estadísticas.
+                  </p>
+                  <button type="button" onClick={handleReclamar} disabled={claiming} style={{ padding: '9px', borderRadius: 7, border: 'none', background: claiming ? 'var(--bg-surface)' : 'var(--gold)', color: claiming ? 'var(--text-muted)' : '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: claiming ? 'not-allowed' : 'pointer' }}>
+                    {claiming ? 'Reclamando...' : `RECLAMAR "${nickname.trim()}"`}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                  <button type="button" onClick={() => setOpen(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12, cursor: 'pointer' }}>Cancelar</button>
+                  <button type="submit" disabled={loading} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                    {loading ? 'Guardando...' : 'AGREGAR'}
+                  </button>
+                </div>
+              )}
             </form>
           </div>
         </div>

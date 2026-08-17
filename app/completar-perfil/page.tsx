@@ -17,25 +17,52 @@ function CompletarPerfilPage() {
   const [clase, setClase]       = useState<Clase>('Bárbaro')
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
+  const [claimable, setClaimable] = useState<{ id: string } | null>(null)
+  const [claiming, setClaiming] = useState(false)
+
+  const handleReclamar = async () => {
+    if (!claimable) return
+    setClaiming(true); setError('')
+    const res = await fetch('/api/personajes/reclamar-cuenta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
+    })
+    const body = await res.json()
+    if (!res.ok) {
+      setError(body.error || 'No se pudo reclamar la cuenta.')
+      setClaiming(false)
+      return
+    }
+    router.push(`/jugadores/${body.playerId}`)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!nickname.trim()) return setError('El nickname es requerido.')
-    setLoading(true); setError('')
+    setLoading(true); setError(''); setClaimable(null)
 
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
 
-    // 1. Verificar disponibilidad del nickname (case-insensitive)
+    // 1. Verificar disponibilidad del nickname (case-insensitive). Si existe
+    // pero es un personaje fantasma (sin cuenta vinculada, no verificado)
+    // cargado de un torneo historico, se ofrece reclamarlo en vez de bloquear.
     const { data: taken } = await supabase
       .from('personajes')
-      .select('id')
+      .select('id, verificado, player:players(user_id)')
       .ilike('nickname_juego', nickname.trim())
       .single()
 
     if (taken) {
-      setError('Ese nickname ya está en uso.')
+      const player = Array.isArray(taken.player) ? taken.player[0] : taken.player
+      const esReclamable = !taken.verificado && !player?.user_id
+      if (esReclamable) {
+        setClaimable({ id: taken.id })
+      } else {
+        setError('Ese nickname ya está en uso.')
+      }
       setLoading(false)
       return
     }
@@ -123,7 +150,7 @@ function CompletarPerfilPage() {
             <input
               style={inputStyle} value={nickname} maxLength={24}
               placeholder="Tu nombre exacto en Regnum"
-              onChange={e => setNickname(e.target.value)}
+              onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }}
             />
           </div>
 
@@ -168,15 +195,36 @@ function CompletarPerfilPage() {
 
           {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center' }}>{error}</p>}
 
-          <button type="submit" disabled={loading} style={{
-            padding: '12px', borderRadius: 10, border: 'none',
-            background: loading ? 'var(--bg-surface)' : 'var(--gold)',
-            color: loading ? 'var(--text-muted)' : '#000',
-            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: 1,
-            cursor: loading ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s',
-          }}>
-            {loading ? 'Guardando...' : 'EMPEZAR A COMPETIR'}
-          </button>
+          {claimable ? (
+            <div style={{
+              border: '1px solid var(--border-gold)', borderRadius: 10, padding: '14px 16px',
+              background: 'var(--gold-muted)', display: 'flex', flexDirection: 'column', gap: 10,
+            }}>
+              <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                Ese nickname ya existe en el historial de torneos pero nadie lo reclamó todavía.
+                Si sos vos, reclamalo para heredar tus estadísticas y tu MMR.
+              </p>
+              <button type="button" onClick={handleReclamar} disabled={claiming} style={{
+                padding: '10px', borderRadius: 8, border: 'none',
+                background: claiming ? 'var(--bg-surface)' : 'var(--gold)',
+                color: claiming ? 'var(--text-muted)' : '#000',
+                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 0.5,
+                cursor: claiming ? 'not-allowed' : 'pointer',
+              }}>
+                {claiming ? 'Reclamando...' : `RECLAMAR "${nickname.trim()}"`}
+              </button>
+            </div>
+          ) : (
+            <button type="submit" disabled={loading} style={{
+              padding: '12px', borderRadius: 10, border: 'none',
+              background: loading ? 'var(--bg-surface)' : 'var(--gold)',
+              color: loading ? 'var(--text-muted)' : '#000',
+              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: 1,
+              cursor: loading ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s',
+            }}>
+              {loading ? 'Guardando...' : 'EMPEZAR A COMPETIR'}
+            </button>
+          )}
         </form>
       </div>
     </div>
