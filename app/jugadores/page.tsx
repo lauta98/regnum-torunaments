@@ -66,7 +66,7 @@ export default async function JugadoresPage({
   /* ── Query personajes ──────────────────────────────── */
   let query = supabase
     .from('personajes')
-    .select('*, player:players(id, discord_username, discord_avatar, role)', { count: 'exact' })
+    .select('*, player:players(id, discord_username, discord_avatar, role, personaje_principal_id)', { count: 'exact' })
     .order('mmr', { ascending: false })
 
   if (params.reino) query = query.eq('reino', params.reino as Reino)
@@ -105,6 +105,12 @@ export default async function JugadoresPage({
       }
     }
     cuentas = Array.from(map.values()).sort((a, b) => b.best_personaje.mmr - a.best_personaje.mmr)
+    // Si el jugador eligió un personaje "principal", ese nombre se muestra
+    // en vez del discord_username (o del "—" cuando no tiene Discord vinculado).
+    cuentas.forEach(c => {
+      const principal = c.personajes.find((p: any) => p.id === c.personaje_principal_id)
+      c.nombre_mostrado = principal?.nickname_juego ?? c.discord_username ?? null
+    })
   }
 
   const totalPages = Math.ceil((count || 0) / PAGE)
@@ -317,9 +323,9 @@ export default async function JugadoresPage({
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                         {c.discord_avatar
                           ? <img src={c.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                          : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{c.discord_username?.[0]?.toUpperCase()}</span>}
+                          : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{c.nombre_mostrado?.[0]?.toUpperCase()}</span>}
                       </div>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.discord_username ?? '—'}</span>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_mostrado ?? '—'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <KingdomShield reino={bp?.reino} size={14} />

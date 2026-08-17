@@ -8,6 +8,7 @@ import type { Reino, UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
 import AgregarPersonaje from './AgregarPersonaje'
 import ReclamarNickname from './ReclamarNickname'
+import ElegirPrincipal from './ElegirPrincipal'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,10 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser()
   const isOwner = user ? player.user_id === user.id : false
 
+  /* ── Nombre a mostrar: el personaje "principal" elegido, si hay uno ── */
+  const principal = personajes?.find(p => p.id === player.personaje_principal_id)
+  const nombreCuenta = principal?.nickname_juego ?? player.discord_username ?? 'Jugador'
+
   /* ── MMR history del mejor personaje ─────────────── */
   const bestPersonaje = personajes?.[0]
   const { data: mmrHistoryRaw } = bestPersonaje ? await supabase
@@ -91,7 +96,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
           <Link href="/jugadores" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Ranking</Link>
           <span>›</span>
-          <span style={{ color: 'var(--text-primary)' }}>{player.discord_username ?? 'Jugador'}</span>
+          <span style={{ color: 'var(--text-primary)' }}>{nombreCuenta}</span>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: 24, alignItems: 'start' }}>
@@ -104,10 +109,10 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', overflow: 'hidden' }}>
                 {player.discord_avatar
                   ? <img src={player.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                  : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{player.discord_username?.[0]?.toUpperCase()}</span>}
+                  : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{nombreCuenta[0]?.toUpperCase()}</span>}
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
-                {player.discord_username ?? 'Jugador'}
+                {nombreCuenta}
               </h1>
               {player.role && player.role !== 'player' && (
                 <span style={{ display: 'inline-block', background: ROLE_BG[player.role as UserRole], color: ROLE_COLOR[player.role as UserRole], border: `1px solid ${ROLE_COLOR[player.role as UserRole]}55`, padding: '3px 10px', borderRadius: 4, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, marginBottom: 8 }}>
@@ -190,8 +195,10 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: p.winstreak > 0 ? '#4CAF50' : 'var(--text-muted)' }}>
                       {p.winstreak > 0 ? `🔥 ${p.winstreak}` : '—'}
                     </div>
-                    {/* Reclamar */}
-                    {!isOwner && <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />}
+                    {/* Reclamar / elegir principal */}
+                    {isOwner
+                      ? <ElegirPrincipal playerId={id} personajeId={p.id} esPrincipal={player.personaje_principal_id === p.id} />
+                      : <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />}
                   </div>
                 )
               })}

@@ -56,3 +56,14 @@ create policy "tournament_photos_write_org" on storage.objects for insert
 
 create policy "tournament_photos_update_org" on storage.objects for update
   using (bucket_id = 'tournament-photos' and auth.uid() is not null);
+
+-- =====================================================
+-- Personaje principal (el "main" que se muestra como
+-- nombre de usuario en el ranking por cuenta y demás
+-- lugares donde hoy se usa discord_username)
+-- =====================================================
+alter table public.players
+  add column if not exists personaje_principal_id uuid references public.personajes(id) on delete set null;
+-- No hace falta politica nueva: "players_update_own" ya permite que cada
+-- uno edite su propia fila (de donde sale este campo).
+
