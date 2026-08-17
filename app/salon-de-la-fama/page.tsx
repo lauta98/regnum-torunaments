@@ -8,7 +8,7 @@ import { canAdmin } from '@/lib/roles'
 import SubirFoto from './SubirFoto'
 
 export const dynamic = 'force-dynamic'
-export const metadata: Metadata = { title: 'Salón de la Fama — CoR' }
+export const metadata: Metadata = { title: 'Salón de la Fama' }
 
 const CLASE_ICON: Record<string, string> = {
   Bárbaro: '⚔️', Caballero: '🛡️', Conjurador: '✨', Brujo: '🔮', Tirador: '🏹', Cazador: '🐺',
