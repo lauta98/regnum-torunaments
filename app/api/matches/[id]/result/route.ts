@@ -120,18 +120,20 @@ export async function POST(
     }
 
     // Revertir el MMR que se había aplicado con el resultado anterior
+    // (vive en `personajes`, no en `players` — ver aplicarMmrYGuardar).
     const { data: historial } = await svc.from('mmr_history').select('*').eq('match_id', id)
     for (const h of historial ?? []) {
-      const { data: p } = await svc.from('players').select('partidas_jugadas, partidas_ganadas').eq('id', h.player_id).single()
+      if (!h.personaje_id) continue
+      const { data: p } = await svc.from('personajes').select('partidas_jugadas, partidas_ganadas').eq('id', h.personaje_id).single()
       if (!p) continue
       const partidas = Math.max(0, p.partidas_jugadas - 1)
       const ganadas = Math.max(0, p.partidas_ganadas - (h.gano ? 1 : 0))
-      await svc.from('players').update({
-        mmr_global: h.mmr_antes,
+      await svc.from('personajes').update({
+        mmr: h.mmr_antes,
         partidas_jugadas: partidas,
         partidas_ganadas: ganadas,
         winrate: partidas > 0 ? Math.round((ganadas / partidas) * 100) : 0,
-      }).eq('id', h.player_id)
+      }).eq('id', h.personaje_id)
     }
     await svc.from('mmr_history').delete().eq('match_id', id)
 
@@ -183,47 +185,55 @@ export async function POST(
  *  Devuelve un mensaje de error si la escritura del partido falla, o
  *  null si salió todo bien. */
 async function aplicarMmrYGuardar(supabase: any, matchId: string, match: any, ganador_id: string, perdedor_id: string, resultado: string): Promise<string | null> {
-  const { data: ganadores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', ganador_id)
-  const { data: perdedores } = await supabase.from('team_members').select('player_id, players(mmr_global, partidas_jugadas, partidas_ganadas)').eq('team_id', perdedor_id)
+  // El MMR que se muestra en el Ranking y en el perfil de cada
+  // jugador vive en `personajes` (un jugador puede tener varios
+  // personajes) — no en `players`. Hay que actualizar el personaje
+  // con el que jugó cada uno (team_members.personaje_id), no el
+  // jugador en general.
+  const { data: ganadores } = await supabase.from('team_members').select('player_id, personaje_id, personajes(mmr, partidas_jugadas, partidas_ganadas, winstreak)').eq('team_id', ganador_id)
+  const { data: perdedores } = await supabase.from('team_members').select('player_id, personaje_id, personajes(mmr, partidas_jugadas, partidas_ganadas, winstreak)').eq('team_id', perdedor_id)
 
   const allUpdates: PromiseLike<any>[] = []
   const historyInserts: any[] = []
 
   const processPlayer = (member: any, gano: boolean, opponentAvgMmr: number) => {
-    const p = member.players
-    if (!p) return
+    const p = member.personajes
+    if (!p || !member.personaje_id) return
     const k = p.partidas_jugadas >= ELO_VETERAN_THRESHOLD ? ELO_K_VETERAN : ELO_K_DEFAULT
-    const esperado = calcularEsperado(p.mmr_global, opponentAvgMmr)
-    const nuevoMmr = Math.max(100, calcularNuevoMMR(p.mmr_global, gano, esperado, k))
+    const esperado = calcularEsperado(p.mmr, opponentAvgMmr)
+    const nuevoMmr = Math.max(100, calcularNuevoMMR(p.mmr, gano, esperado, k))
     const nuevasPartidas = p.partidas_jugadas + 1
     const nuevasGanadas = p.partidas_ganadas + (gano ? 1 : 0)
     const nuevoWinrate = Math.round((nuevasGanadas / nuevasPartidas) * 100)
+    const nuevoWinstreak = gano ? (p.winstreak ?? 0) + 1 : 0
 
     allUpdates.push(
-      supabase.from('players').update({
-        mmr_global: nuevoMmr,
+      supabase.from('personajes').update({
+        mmr: nuevoMmr,
         partidas_jugadas: nuevasPartidas,
         partidas_ganadas: nuevasGanadas,
         winrate: nuevoWinrate,
-      }).eq('id', member.player_id)
+        winstreak: nuevoWinstreak,
+      }).eq('id', member.personaje_id)
     )
 
     historyInserts.push({
       player_id: member.player_id,
+      personaje_id: member.personaje_id,
       match_id: matchId,
       torneo_id: match.torneo_id,
-      mmr_antes: p.mmr_global,
+      mmr_antes: p.mmr,
       mmr_despues: nuevoMmr,
       gano,
     })
   }
 
   const avgMmrGanadores = ganadores && ganadores.length > 0
-    ? ganadores.reduce((s: number, m: any) => s + (m.players?.mmr_global ?? 1200), 0) / ganadores.length
+    ? ganadores.reduce((s: number, m: any) => s + (m.personajes?.mmr ?? 1200), 0) / ganadores.length
     : 1200
 
   const avgMmrPerdedores = perdedores && perdedores.length > 0
-    ? perdedores.reduce((s: number, m: any) => s + (m.players?.mmr_global ?? 1200), 0) / perdedores.length
+    ? perdedores.reduce((s: number, m: any) => s + (m.personajes?.mmr ?? 1200), 0) / perdedores.length
     : 1200
 
   ganadores?.forEach((m: any) => processPlayer(m, true, avgMmrPerdedores))
