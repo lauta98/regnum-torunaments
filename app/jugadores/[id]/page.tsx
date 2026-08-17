@@ -45,6 +45,21 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
     .eq('player_id', id)
     .order('mmr', { ascending: false })
 
+  /* ── Campeonatos ganados (por cualquiera de sus personajes) ─ */
+  const personajeIds = personajes?.map(p => p.id) ?? []
+  const { data: campeonatos } = personajeIds.length ? await supabase
+    .from('campeonatos')
+    .select('personaje_id, torneo:tournaments(id, nombre)')
+    .in('personaje_id', personajeIds)
+    : { data: null }
+  const campeonatosPorPersonaje = new Map<string, { id: string; nombre: string }[]>()
+  campeonatos?.forEach((c: any) => {
+    if (!c.torneo) return
+    const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
+    arr.push(c.torneo)
+    campeonatosPorPersonaje.set(c.personaje_id, arr)
+  })
+
   /* ── Sesión actual ────────────────────────────────── */
   const { data: { user } } = await supabase.auth.getUser()
   const isOwner = user ? player.user_id === user.id : false
@@ -154,6 +169,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                           <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
                           {p.verificado && <span style={{ fontSize: 11, color: '#2196F3' }} title="Verificado">✓</span>}
+                          {campeonatosPorPersonaje.get(p.id)?.map(t => (
+                            <span key={t.id} style={{ fontSize: 12 }} title={`Campeón de ${t.nombre}`}>🏆</span>
+                          ))}
                         </div>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino} · {p.clase}</div>
                       </div>

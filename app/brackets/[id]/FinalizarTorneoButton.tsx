@@ -1,21 +1,16 @@
 'use client'
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase'
 
 export default function FinalizarTorneoButton({ torneoId }: { torneoId: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const finalizar = async () => {
-    if (!confirm('¿Dar por finalizado el torneo? Ya no se van a poder cargar más resultados nuevos (pero sí seguir corrigiendo los que ya están).')) return
+    if (!confirm('¿Dar por finalizado el torneo? Se corona al campeón en el Salón de la Fama y ya no se van a poder cargar más resultados nuevos (pero sí seguir corrigiendo los que ya están).')) return
     setLoading(true); setError('')
-    const supabase = createClient()
-    const { error: err } = await supabase
-      .from('tournaments')
-      .update({ estado: 'finalizado' })
-      .eq('id', torneoId)
-
-    if (err) { setError(err.message); setLoading(false); return }
+    const res = await fetch(`/api/torneos/${torneoId}/finalizar`, { method: 'POST' })
+    const body = await res.json()
+    if (!res.ok) { setError(body.error || 'Error al finalizar'); setLoading(false); return }
     window.location.reload()
   }
 
