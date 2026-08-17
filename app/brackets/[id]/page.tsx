@@ -463,7 +463,15 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
     const prevN = prevY.length
     if (prevN === n * 2) yByRound.push(r.matches.map((_, i) => (prevY[2 * i] + prevY[2 * i + 1]) / 2))
     else if (prevN === n) yByRound.push(r.matches.map((_, i) => prevY[i]))
-    else { const lo = Math.min(...prevY), hi = Math.max(...prevY); const mid = (lo + hi) / 2; yByRound.push(r.matches.map(() => mid)) }
+    else {
+      // Relación irregular (byes repartidos de forma pareja, ronda de
+      // "gran final" que junta 2 llaves, etc.) — no hay una única ronda
+      // anterior de la que cada partido "sale" 2 a 1, así que en vez de
+      // amontonar todo en un punto se reparten parejo a lo largo del
+      // mismo rango vertical que ocupó la ronda anterior.
+      const lo = Math.min(...prevY), hi = Math.max(...prevY)
+      yByRound.push(r.matches.map((_, i) => n === 1 ? (lo + hi) / 2 : lo + (i / (n - 1)) * (hi - lo)))
+    }
   })
 
   const maxY = Math.max(0, ...yByRound.flat())
