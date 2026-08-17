@@ -64,9 +64,13 @@ export default async function JugadoresPage({
   const from = (page - 1) * PAGE
 
   /* ── Query personajes ──────────────────────────────── */
+  // Nota: personaje_principal_id se trae aparte (ver mas abajo) en vez de
+  // en este select anidado — si esa columna todavia no existe (falta correr
+  // la migracion), un select anidado roto tumba TODA esta consulta (a
+  // diferencia de select('*') suelto, que solo omite lo que falta).
   let query = supabase
     .from('personajes')
-    .select('*, player:players(id, discord_username, discord_avatar, role, personaje_principal_id)', { count: 'exact' })
+    .select('*, player:players(id, discord_username, discord_avatar, role)', { count: 'exact' })
     .order('mmr', { ascending: false })
 
   if (params.reino) query = query.eq('reino', params.reino as Reino)
@@ -105,10 +109,17 @@ export default async function JugadoresPage({
       }
     }
     cuentas = Array.from(map.values()).sort((a, b) => b.best_personaje.mmr - a.best_personaje.mmr)
-    // Si el jugador eligió un personaje "principal", ese nombre se muestra
-    // en vez del discord_username (o del "—" cuando no tiene Discord vinculado).
+
+    // Personaje "principal" elegido por cada cuenta (aparte del select de
+    // arriba a proposito — ver nota mas arriba). Si la columna todavia no
+    // existe (falta correr la migracion) esto devuelve error y se ignora
+    // sin romper el resto de la pagina.
+    const { data: principales } = await supabase.from('players').select('id, personaje_principal_id').in('id', cuentas.map(c => c.id))
+    const principalPorCuenta = new Map<string, string>()
+    principales?.forEach((p: any) => { if (p.personaje_principal_id) principalPorCuenta.set(p.id, p.personaje_principal_id) })
     cuentas.forEach(c => {
-      const principal = c.personajes.find((p: any) => p.id === c.personaje_principal_id)
+      const principalId = principalPorCuenta.get(c.id)
+      const principal = c.personajes.find((p: any) => p.id === principalId)
       c.nombre_mostrado = principal?.nickname_juego ?? c.discord_username ?? null
     })
   }
