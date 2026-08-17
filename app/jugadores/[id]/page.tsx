@@ -51,15 +51,21 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
 
   /* ── MMR history del mejor personaje ─────────────── */
   const bestPersonaje = personajes?.[0]
-  const { data: mmrHistory } = bestPersonaje ? await supabase
+  const { data: mmrHistoryRaw } = bestPersonaje ? await supabase
     .from('mmr_history')
     .select(`
-      *, torneo:tournaments(id, nombre, formato),
+      *, torneo:tournaments(id, nombre, formato, fecha_inicio),
       match:matches(id, ronda, ganador_id, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre))
     `)
-    .eq('personaje_id', bestPersonaje.id)
-    .order('created_at', { ascending: false })
-    .limit(15) : { data: null }
+    .eq('personaje_id', bestPersonaje.id) : { data: null }
+
+  // Se ordena por la fecha real del torneo (fecha_inicio), no por created_at:
+  // el historial se puede cargar retroactivamente mucho despues de jugado,
+  // asi que created_at no refleja el orden cronologico real de los partidos.
+  const mmrHistory = mmrHistoryRaw
+    ?.slice()
+    .sort((a: any, b: any) => (b.torneo?.fecha_inicio ?? '').localeCompare(a.torneo?.fecha_inicio ?? ''))
+    .slice(0, 15) ?? null
 
   return (
     <>
@@ -202,7 +208,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                             {rival ? <>vs {rival.nombre}</> : 'Rival desconocido'}
                           </div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                            {entry.torneo?.nombre ?? 'Partido'}{match?.ronda ? ` · ${match.ronda}` : ''} · {new Date(entry.created_at).toLocaleDateString('es-AR')}
+                            {entry.torneo?.nombre ?? 'Partido'}{match?.ronda ? ` · ${match.ronda}` : ''}{entry.torneo?.fecha_inicio ? ` · ${new Date(entry.torneo.fecha_inicio + 'T12:00:00').toLocaleDateString('es-AR')}` : ''}
                           </div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
