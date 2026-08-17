@@ -467,10 +467,22 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
       // Relación irregular (byes repartidos de forma pareja, ronda de
       // "gran final" que junta 2 llaves, etc.) — no hay una única ronda
       // anterior de la que cada partido "sale" 2 a 1, así que en vez de
-      // amontonar todo en un punto se reparten parejo a lo largo del
-      // mismo rango vertical que ocupó la ronda anterior.
+      // amontonar todo en un punto se reparten a lo largo del mismo rango
+      // vertical que ocupó la ronda anterior. Pero si esta ronda tiene MAS
+      // partidos que la anterior (bracket con byes concentrados mas
+      // adelante, no solo al principio — ese rango queda mas chico que la
+      // cantidad de tarjetas a mostrar) repartirlos ahi las amontona: se
+      // fuerza un minimo de 1 fila de separacion entre cada una, centrado
+      // sobre el rango anterior en vez de comprimido dentro de el.
       const lo = Math.min(...prevY), hi = Math.max(...prevY)
-      yByRound.push(r.matches.map((_, i) => n === 1 ? (lo + hi) / 2 : lo + (i / (n - 1)) * (hi - lo)))
+      if (n === 1) {
+        yByRound.push([(lo + hi) / 2])
+      } else if ((hi - lo) / (n - 1) >= 1) {
+        yByRound.push(r.matches.map((_, i) => lo + (i / (n - 1)) * (hi - lo)))
+      } else {
+        const inicio = (lo + hi) / 2 - (n - 1) / 2
+        yByRound.push(r.matches.map((_, i) => inicio + i))
+      }
     }
   })
 
