@@ -46,7 +46,7 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
     // vinculada (cargado de un torneo historico), se ofrece reclamarlo.
     const { data: taken } = await supabase
       .from('personajes')
-      .select('id, verificado, player:players(user_id)')
+      .select('id, verificado, player:players!personajes_player_id_fkey(user_id)')
       .ilike('nickname_juego', nickname.trim())
       .single()
 

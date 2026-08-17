@@ -33,14 +33,14 @@ export default async function AdminPage() {
 
   const { data: reports } = await supabase
     .from('nickname_reports')
-    .select('*, personaje:personajes(id, nickname_juego, verificado, player:players(id, discord_username)), reporter:players(discord_username)')
+    .select('*, personaje:personajes(id, nickname_juego, verificado, player:players!personajes_player_id_fkey(id, discord_username)), reporter:players(discord_username)')
     .eq('estado', 'pendiente')
     .eq('tipo', 'reporte')
     .order('created_at', { ascending: false })
 
   const { data: reclamos } = await supabase
     .from('nickname_reports')
-    .select('*, personaje:personajes(id, nickname_juego, player:players(id, discord_username)), claimer:players!claimer_id(id, discord_username)')
+    .select('*, personaje:personajes(id, nickname_juego, player:players!personajes_player_id_fkey(id, discord_username)), claimer:players!claimer_id(id, discord_username)')
     .eq('estado', 'pendiente')
     .eq('tipo', 'reclamo')
     .order('created_at', { ascending: false })

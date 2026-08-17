@@ -51,7 +51,7 @@ function CompletarPerfilPage() {
     // cargado de un torneo historico, se ofrece reclamarlo en vez de bloquear.
     const { data: taken } = await supabase
       .from('personajes')
-      .select('id, verificado, player:players(user_id)')
+      .select('id, verificado, player:players!personajes_player_id_fkey(user_id)')
       .ilike('nickname_juego', nickname.trim())
       .single()
 

@@ -35,7 +35,7 @@ export default async function HomePage({
     { count: totalTorneos },
     { count: totalMatches },
   ] = await Promise.all([
-    supabase.from('personajes').select('*, player:players(id, discord_username, role)').order('mmr', { ascending: false }).limit(10),
+    supabase.from('personajes').select('*, player:players!personajes_player_id_fkey(id, discord_username, role)').order('mmr', { ascending: false }).limit(10),
     supabase.from('personajes').select('*', { count: 'exact', head: true }),
     supabase.from('tournaments').select('*', { count: 'exact', head: true }),
     supabase.from('matches').select('*', { count: 'exact', head: true }),

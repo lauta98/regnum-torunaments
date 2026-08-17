@@ -20,7 +20,7 @@ export async function POST(req: Request) {
 
   const { data: personaje } = await svc
     .from('personajes')
-    .select('id, verificado, player_id, players(user_id)')
+    .select('id, verificado, player_id, players!personajes_player_id_fkey(user_id)')
     .eq('id', personajeId)
     .single()
 

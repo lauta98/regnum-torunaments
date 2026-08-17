@@ -70,7 +70,7 @@ export default async function JugadoresPage({
   // diferencia de select('*') suelto, que solo omite lo que falta).
   let query = supabase
     .from('personajes')
-    .select('*, player:players(id, discord_username, discord_avatar, role)', { count: 'exact' })
+    .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, role)', { count: 'exact' })
     .order('mmr', { ascending: false })
 
   if (params.reino) query = query.eq('reino', params.reino as Reino)
