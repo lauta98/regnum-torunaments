@@ -7,7 +7,7 @@ import { canAdmin } from '@/lib/roles'
 import UsuariosTable from './UsuariosTable'
 import VerificarPersonaje from './VerificarPersonaje'
 import ResolverReclamo from './ResolverReclamo'
-import EliminarTorneoButton from './EliminarTorneoButton'
+import TorneosRecientes from './TorneosRecientes'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Panel Administrador' }
@@ -50,7 +50,7 @@ export default async function AdminPage() {
     .from('tournaments')
     .select('id, nombre, estado, formato, created_at, creator:players(nickname_juego), registros:tournament_registrations(count)')
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(100)
 
   const counts = {
     total:      players?.length ?? 0,
@@ -116,60 +116,7 @@ export default async function AdminPage() {
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
               ÚLTIMOS TORNEOS
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
-              {allTournaments?.map((t: any, i: number) => {
-                const statusColor: Record<string, string> = {
-                  draft: '#606060', inscripciones: '#2196F3', live: '#F44336', finalizado: '#4CAF50',
-                }
-                const statusLabel: Record<string, string> = {
-                  draft: 'Borrador', inscripciones: 'Inscripciones', live: 'EN VIVO', finalizado: 'Finalizado',
-                }
-                const sc = statusColor[t.estado] ?? '#606060'
-                return (
-                  <div key={t.id} style={{
-                    padding: '14px 16px',
-                    borderBottom: i < (allTournaments.length - 1) ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {t.nombre}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>
-                          por {t.creator?.nickname_juego ?? '—'} · {t.registros?.[0]?.count ?? 0} equipos
-                        </div>
-                      </div>
-                      <span style={{
-                        flexShrink: 0,
-                        background: `${sc}18`, color: sc, border: `1px solid ${sc}44`,
-                        padding: '3px 8px', borderRadius: 4,
-                        fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1,
-                      }}>
-                        {statusLabel[t.estado] ?? t.estado}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <Link href={`/admin/torneos/${t.id}`} style={{
-                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                        fontSize: 11, padding: '7px 10px', borderRadius: 6,
-                        background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.35)', color: 'var(--gold)',
-                        fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: 0.3, textDecoration: 'none',
-                      }}>
-                        ✎ Editar
-                      </Link>
-                      <div style={{ flex: 1 }}>
-                        <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
-              {!allTournaments?.length && (
-                <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12 }}>
-                  No hay torneos creados aún.
-                </div>
-              )}
-            </div>
+            <TorneosRecientes torneos={(allTournaments ?? []) as any} />
           </div>
         </div>
 

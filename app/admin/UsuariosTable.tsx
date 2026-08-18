@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, isSuperAdmin } from '@/lib/roles'
 import type { UserRole } from '@/lib/types'
 import RoleManager from './RoleManager'
+import Pagination from '@/components/Pagination'
 
 type Player = {
   id: string; nickname_juego: string; reino: string; clase_principal: string
@@ -190,59 +191,9 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
           <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
             {(paginaActual - 1) * PAGE_SIZE + 1}–{Math.min(paginaActual * PAGE_SIZE, filtrados.length)} de {filtrados.length}
           </span>
-          {totalPaginas > 1 && (
-            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-              <button
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={paginaActual === 1}
-                style={pagBtnStyle(false, paginaActual === 1)}
-              >
-                ‹
-              </button>
-              {paginasVisibles(paginaActual, totalPaginas).map((n, idx) =>
-                n === '…' ? (
-                  <span key={`e${idx}`} style={{ padding: '0 4px', color: 'var(--text-muted)', fontSize: 12 }}>…</span>
-                ) : (
-                  <button key={n} onClick={() => setPage(n as number)} style={pagBtnStyle(n === paginaActual, false)}>
-                    {n}
-                  </button>
-                )
-              )}
-              <button
-                onClick={() => setPage(p => Math.min(totalPaginas, p + 1))}
-                disabled={paginaActual === totalPaginas}
-                style={pagBtnStyle(false, paginaActual === totalPaginas)}
-              >
-                ›
-              </button>
-            </div>
-          )}
+          <Pagination page={paginaActual} totalPages={totalPaginas} onChange={setPage} />
         </div>
       )}
     </div>
   )
-}
-
-function pagBtnStyle(activa: boolean, deshabilitada: boolean): React.CSSProperties {
-  return {
-    minWidth: 28, padding: '5px 8px', borderRadius: 6,
-    border: `1px solid ${activa ? 'var(--gold)' : 'rgba(255,255,255,0.12)'}`,
-    background: activa ? 'rgba(212,175,55,0.15)' : 'transparent',
-    color: deshabilitada ? 'var(--text-muted)' : activa ? 'var(--gold)' : 'var(--text-secondary)',
-    fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: activa ? 700 : 400,
-    cursor: deshabilitada ? 'not-allowed' : 'pointer', opacity: deshabilitada ? 0.4 : 1,
-  }
-}
-
-// Lista de páginas a mostrar: siempre primera y última, la actual ±1, con
-// "…" donde se corta — así con 14 páginas no se listan 14 botones seguidos.
-function paginasVisibles(actual: number, total: number): (number | '…')[] {
-  const paginas = new Set<number>([1, total, actual, actual - 1, actual + 1])
-  const ordenadas = [...paginas].filter(n => n >= 1 && n <= total).sort((a, b) => a - b)
-  const resultado: (number | '…')[] = []
-  for (let i = 0; i < ordenadas.length; i++) {
-    if (i > 0 && ordenadas[i] - ordenadas[i - 1] > 1) resultado.push('…')
-    resultado.push(ordenadas[i])
-  }
-  return resultado
 }

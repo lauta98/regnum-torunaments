@@ -3,13 +3,9 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { REINO_COLOR, getTier, temaTorneo, FORMAT_COLOR } from '@/lib/constants'
-import type { Reino, UserRole } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
-import AgregarPersonaje from './AgregarPersonaje'
-import ReclamarNickname from './ReclamarNickname'
-import ElegirPrincipal from './ElegirPrincipal'
-import EditarNickname from './EditarNickname'
+import PersonajesYHistorial from './PersonajesYHistorial'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,13 +14,6 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   const supabase = await createServerSupabase()
   const { data } = await supabase.from('players').select('discord_username').eq('id', id).single()
   return { title: data?.discord_username ?? 'Jugador' }
-}
-
-const CLASE_ICON: Record<string, string> = {
-  Bárbaro: '⚔️', Caballero: '🛡️', Conjurador: '✨', Brujo: '🔮', Tirador: '🏹', Cazador: '🐺',
-}
-const SHIELD_SRC: Record<string, string> = {
-  Syrtis: '/shield-syrtis.png', Ignis: '/shield-ignis.png', Alsius: '/shield-alsius.png',
 }
 
 export default async function JugadorPage({ params }: { params: Promise<{ id: string }> }) {
@@ -54,12 +43,12 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
     .select('personaje_id, tipo, equipo_nombre, torneo:tournaments(id, nombre)')
     .in('personaje_id', personajeIds)
     : { data: null }
-  const campeonatosPorPersonaje = new Map<string, { id: string; nombre: string; tipo: string; equipo_nombre: string | null }[]>()
+  const campeonatosPorPersonaje: Record<string, { id: string; nombre: string; tipo: string; equipo_nombre: string | null }[]> = {}
   campeonatos?.forEach((c: any) => {
     if (!c.torneo) return
-    const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
+    const arr = campeonatosPorPersonaje[c.personaje_id] ?? []
     arr.push({ ...c.torneo, tipo: c.tipo ?? 'individual', equipo_nombre: c.equipo_nombre })
-    campeonatosPorPersonaje.set(c.personaje_id, arr)
+    campeonatosPorPersonaje[c.personaje_id] = arr
   })
 
   /* ── Sesión actual ────────────────────────────────── */
@@ -70,23 +59,30 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const principal = personajes?.find(p => p.id === player.personaje_principal_id)
   const nombreCuenta = principal?.nickname_juego ?? player.discord_username ?? 'Jugador'
 
-  /* ── MMR history del mejor personaje ─────────────── */
+  /* ── MMR history de TODOS los personajes (el usuario elige cuál ver) ── */
   const bestPersonaje = personajes?.[0]
-  const { data: mmrHistoryRaw } = bestPersonaje ? await supabase
+  const { data: mmrHistoryRaw } = personajeIds.length ? await supabase
     .from('mmr_history')
     .select(`
       *, torneo:tournaments(id, nombre, formato, fecha_inicio, subclases_permitidas),
       match:matches(id, ronda, ganador_id, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre))
     `)
-    .eq('personaje_id', bestPersonaje.id) : { data: null }
+    .in('personaje_id', personajeIds) : { data: null }
 
   // Se ordena por la fecha real del torneo (fecha_inicio), no por created_at:
   // el historial se puede cargar retroactivamente mucho despues de jugado,
   // asi que created_at no refleja el orden cronologico real de los partidos.
-  const mmrHistory = mmrHistoryRaw
+  // Despues se agrupa por personaje_id para que el cliente pueda cambiar
+  // de un historial a otro sin volver a pedirle datos al servidor.
+  const historiasPorPersonaje: Record<string, any[]> = {}
+  mmrHistoryRaw
     ?.slice()
     .sort((a: any, b: any) => (b.torneo?.fecha_inicio ?? '').localeCompare(a.torneo?.fecha_inicio ?? ''))
-    .slice(0, 15) ?? null
+    .forEach((entry: any) => {
+      const arr = historiasPorPersonaje[entry.personaje_id] ?? []
+      if (arr.length < 15) arr.push(entry)
+      historiasPorPersonaje[entry.personaje_id] = arr
+    })
 
   return (
     <>
@@ -147,154 +143,14 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
           {/* ── Panel derecho ──────────────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-            {/* Personajes */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>PERSONAJES</span>
-                {isOwner && <AgregarPersonaje playerId={id} />}
-              </div>
-
-              {!personajes?.length ? (
-                <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13 }}>Sin personajes registrados.</div>
-              ) : personajes.map((p, i) => {
-                const rc = REINO_COLOR[p.reino as Reino] ?? 'var(--gold)'
-                const tier = getTier(p.mmr)
-                return (
-                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: `1fr 90px 90px 90px ${isOwner ? '58px' : '36px'}`, padding: '14px 20px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', gap: 8 }}>
-                    {/* Personaje info */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ position: 'relative', flexShrink: 0 }}>
-                        <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
-                          {CLASE_ICON[p.clase]}
-                        </div>
-                        {SHIELD_SRC[p.reino] && (
-                          <img src={SHIELD_SRC[p.reino]} alt={p.reino} width={13} height={13} className={`shield-${p.reino?.toLowerCase()}`} style={{ objectFit: 'contain', position: 'absolute', bottom: -2, right: -4 }} />
-                        )}
-                      </div>
-                      <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
-                          {p.verificado && <span style={{ fontSize: 11, color: '#2196F3' }} title="Verificado">✓</span>}
-                          {campeonatosPorPersonaje.get(p.id)?.map(t => (
-                            <span key={t.id} style={{ fontSize: 12 }} title={t.tipo === 'equipo' ? `Campeón de clan (${t.equipo_nombre}) — ${t.nombre}` : `Campeón de ${t.nombre}`}>
-                              {t.tipo === 'equipo' ? '🛡️' : '🏆'}
-                            </span>
-                          ))}
-                        </div>
-                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino} · {p.clase}</div>
-                      </div>
-                    </div>
-                    {/* MMR */}
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{p.mmr}</div>
-                      <span className={`tier-pill ${tier.cssClass}`} style={{ display: 'inline-flex', marginTop: 2 }}>{tier.icon} {tier.name}</span>
-                    </div>
-                    {/* WR */}
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: Number(p.winrate) >= 55 ? '#4CAF50' : 'var(--text-secondary)', fontWeight: 600 }}>{p.winrate}%</div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{p.partidas_jugadas} PJ</div>
-                    </div>
-                    {/* WS */}
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: p.winstreak > 0 ? '#4CAF50' : 'var(--text-muted)' }}>
-                      {p.winstreak > 0 ? `🔥 ${p.winstreak}` : '—'}
-                    </div>
-                    {/* Reclamar / elegir principal + corregir nombre */}
-                    {isOwner ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <ElegirPrincipal playerId={id} personajeId={p.id} esPrincipal={player.personaje_principal_id === p.id} />
-                        <EditarNickname personajeId={p.id} nicknameActual={p.nickname_juego} />
-                      </div>
-                    ) : (
-                      <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-
-            {/* Historial de enfrentamientos */}
-            {mmrHistory && mmrHistory.length > 0 && (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>
-                    HISTORIAL DE ENFRENTAMIENTOS — {bestPersonaje?.nickname_juego}
-                  </span>
-                </div>
-                <div style={{ padding: '10px 20px 4px', display: 'flex', flexDirection: 'column' }}>
-                  {mmrHistory.map((entry: any, i: number) => {
-                    const match = entry.match
-                    // El equipo de este personaje es el ganador o el
-                    // perdedor según `entry.gano` — el rival es el otro
-                    // de los dos equipos del partido.
-                    const rival = match
-                      ? (entry.gano
-                          ? (match.ganador_id === match.equipo_a?.id ? match.equipo_b : match.equipo_a)
-                          : (match.ganador_id === match.equipo_a?.id ? match.equipo_a : match.equipo_b))
-                      : null
-
-                    const tema = temaTorneo(entry.torneo?.subclases_permitidas)
-                    const themeColor = tema?.color ?? FORMAT_COLOR[entry.torneo?.formato as keyof typeof FORMAT_COLOR] ?? 'var(--gold)'
-                    const themeIcon = tema?.icon ?? '🏆'
-
-                    // Se agrupan filas consecutivas del mismo torneo bajo un
-                    // encabezado propio en vez de repetir el nombre en cada
-                    // fila — así se distingue de un vistazo a qué torneo
-                    // pertenece cada tanda de partidos.
-                    const prevTorneoId = i > 0 ? mmrHistory[i - 1].torneo?.id : null
-                    const esNuevoGrupo = entry.torneo?.id !== prevTorneoId
-
-                    const content = (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '7px 0 7px 12px', borderLeft: `2px solid ${themeColor}55`, marginLeft: 2 }}>
-                        <div style={{ width: 24, height: 24, borderRadius: '50%', background: entry.gano ? 'rgba(76,175,80,0.15)' : 'rgba(244,67,54,0.15)', border: `1px solid ${entry.gano ? '#4CAF50' : '#F44336'}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, flexShrink: 0 }}>
-                          {entry.gano ? '✓' : '✗'}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 12, color: 'var(--text-primary)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {rival ? <>vs {rival.nombre}</> : 'Rival desconocido'}
-                          </div>
-                          {match?.ronda && (
-                            <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>{match.ronda}</div>
-                          )}
-                        </div>
-                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: entry.delta > 0 ? '#4CAF50' : '#f87171', fontWeight: 700 }}>
-                            {entry.delta > 0 ? '+' : ''}{entry.delta}
-                          </div>
-                          <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{entry.mmr_despues} MMR</div>
-                        </div>
-                      </div>
-                    )
-
-                    return (
-                      <div key={entry.id}>
-                        {esNuevoGrupo && (
-                          <div style={{
-                            display: 'flex', alignItems: 'center', gap: 7,
-                            marginTop: i === 0 ? 0 : 14, marginBottom: 4, paddingLeft: 2,
-                          }}>
-                            <span style={{ fontSize: 12 }}>{themeIcon}</span>
-                            <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: themeColor, letterSpacing: 0.5 }}>
-                              {entry.torneo?.nombre ?? 'Partido'}
-                            </span>
-                            {entry.torneo?.fecha_inicio && (
-                              <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>
-                                {new Date(entry.torneo.fecha_inicio + 'T12:00:00').toLocaleDateString('es-AR')}
-                              </span>
-                            )}
-                            <div style={{ flex: 1, height: 1, background: `${themeColor}33` }} />
-                          </div>
-                        )}
-                        {match?.id ? (
-                          <Link href={`/brackets/${entry.torneo?.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-                            {content}
-                          </Link>
-                        ) : content}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
+            <PersonajesYHistorial
+              playerId={id}
+              personajes={personajes ?? []}
+              isOwner={isOwner}
+              personajePrincipalId={player.personaje_principal_id}
+              campeonatosPorPersonaje={campeonatosPorPersonaje}
+              historiasPorPersonaje={historiasPorPersonaje}
+            />
 
           </div>
         </div>
