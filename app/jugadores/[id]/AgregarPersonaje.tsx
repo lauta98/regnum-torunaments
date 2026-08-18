@@ -21,18 +21,23 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
   const handleReclamar = async () => {
     if (!claimable) return
     setClaiming(true); setError('')
-    const res = await fetch('/api/personajes/reclamar-cuenta', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
-    })
-    const body = await res.json()
-    if (!res.ok) {
-      setError(body.error || 'No se pudo reclamar el personaje.')
+    try {
+      const res = await fetch('/api/personajes/reclamar-cuenta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(body.error || 'No se pudo reclamar el personaje.')
+        setClaiming(false)
+        return
+      }
+      window.location.reload()
+    } catch {
+      setError('No se pudo conectar con el servidor. Probá de nuevo.')
       setClaiming(false)
-      return
     }
-    window.location.reload()
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,37 +45,42 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
     if (!nickname.trim()) return setError('El nickname es requerido.')
     setLoading(true); setError(''); setClaimable(null)
 
-    const supabase = createClient()
+    try {
+      const supabase = createClient()
 
-    // Verificar disponibilidad. Si es un personaje fantasma sin cuenta
-    // vinculada (cargado de un torneo historico), se ofrece reclamarlo.
-    const { data: taken } = await supabase
-      .from('personajes')
-      .select('id, verificado, player:players!personajes_player_id_fkey(user_id)')
-      .ilike('nickname_juego', nickname.trim())
-      .single()
+      // Verificar disponibilidad. Si es un personaje fantasma sin cuenta
+      // vinculada (cargado de un torneo historico), se ofrece reclamarlo.
+      const { data: taken } = await supabase
+        .from('personajes')
+        .select('id, verificado, player:players!personajes_player_id_fkey(user_id)')
+        .ilike('nickname_juego', nickname.trim())
+        .single()
 
-    if (taken) {
-      const player = Array.isArray(taken.player) ? taken.player[0] : taken.player
-      const esReclamable = !taken.verificado && !player?.user_id
-      if (esReclamable) setClaimable({ id: taken.id })
-      else setError('Ese nickname ya está en uso.')
+      if (taken) {
+        const player = Array.isArray(taken.player) ? taken.player[0] : taken.player
+        const esReclamable = !taken.verificado && !player?.user_id
+        if (esReclamable) setClaimable({ id: taken.id })
+        else setError('Ese nickname ya está en uso.')
+        setLoading(false)
+        return
+      }
+
+      const { error: err } = await supabase.from('personajes').insert({
+        player_id: playerId,
+        nickname_juego: nickname.trim(),
+        reino,
+        clase,
+      })
+
+      if (err) {
+        setError(err.message.includes('unique') ? 'Ese nickname ya está en uso.' : err.message)
+        setLoading(false)
+      } else {
+        window.location.reload()
+      }
+    } catch {
+      setError('No se pudo conectar con el servidor. Probá de nuevo.')
       setLoading(false)
-      return
-    }
-
-    const { error: err } = await supabase.from('personajes').insert({
-      player_id: playerId,
-      nickname_juego: nickname.trim(),
-      reino,
-      clase,
-    })
-
-    if (err) {
-      setError(err.message.includes('unique') ? 'Ese nickname ya está en uso.' : err.message)
-      setLoading(false)
-    } else {
-      window.location.reload()
     }
   }
 
@@ -87,7 +97,7 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
                 <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>NICKNAME EN EL JUEGO</label>
-                <input value={nickname} onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }} maxLength={24} placeholder="Nombre exacto en Regnum"
+                <input value={nickname} onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }} maxLength={32} placeholder="Nombre exacto en Regnum"
                   style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none' }} />
               </div>
               <div>

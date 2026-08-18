@@ -162,7 +162,7 @@ function CompletarPerfilPage() {
               NICKNAME EN EL JUEGO
             </label>
             <input
-              style={inputStyle} value={nickname} maxLength={24}
+              style={inputStyle} value={nickname} maxLength={32}
               placeholder="Tu nombre exacto en Regnum"
               onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }}
             />
