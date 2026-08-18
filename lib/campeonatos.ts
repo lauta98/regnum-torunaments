@@ -18,16 +18,60 @@ function normalizar(s: string) {
   return s.normalize('NFC').replace(/[‘’ʼ´`]/g, "'").replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
+/** Para torneos round_robin no hay "final": el campeón es quien queda
+ *  primero en la tabla de posiciones (más victorias, después diferencia
+ *  de puntos a favor/contra, después puntos a favor). Si dos o más
+ *  equipos quedan exactamente empatados en los tres criterios, se
+ *  devuelven todos como co-campeones. */
+function tablaDePosiciones(matches: { equipo_a_id: string | null; equipo_b_id: string | null; ganador_id: string | null; resultado: string | null }[]): string[] {
+  const stats: Record<string, { w: number; d: number; for: number; against: number }> = {}
+  const ensure = (id: string) => (stats[id] ??= { w: 0, d: 0, for: 0, against: 0 })
+
+  for (const m of matches) {
+    if (!m.equipo_a_id || !m.equipo_b_id) continue
+    const a = ensure(m.equipo_a_id), b = ensure(m.equipo_b_id)
+    const parsed = m.resultado?.match(/(\d+)\s*-\s*(\d+)/)
+    const scores = parsed ? [Number(parsed[1]), Number(parsed[2])] : null
+    if (m.ganador_id) {
+      const aGana = m.ganador_id === m.equipo_a_id
+      const ganador = aGana ? a : b, perdedor = aGana ? b : a
+      ganador.w++
+      if (scores) {
+        const [sGanador, sPerdedor] = aGana ? scores : [scores[1], scores[0]]
+        ganador.for += sGanador; ganador.against += sPerdedor
+        perdedor.for += sPerdedor; perdedor.against += sGanador
+      }
+    } else {
+      a.d++; b.d++
+      if (scores) { a.for += scores[0]; a.against += scores[1]; b.for += scores[1]; b.against += scores[0] }
+    }
+  }
+
+  const entries = Object.entries(stats)
+  if (entries.length === 0) return []
+  entries.sort(([, x], [, y]) => y.w - x.w || (y.for - y.against) - (x.for - x.against) || y.for - x.for)
+  const [, top] = entries[0]
+  return entries
+    .filter(([, s]) => s.w === top.w && s.for - s.against === top.for - top.against && s.for === top.for)
+    .map(([id]) => id)
+}
+
 export async function detectarCampeones(supabase: any, torneoId: string): Promise<Campeon[]> {
+  const { data: torneo } = await supabase.from('tournaments').select('bracket_type').eq('id', torneoId).single()
   const { data: matches } = await supabase
     .from('matches')
-    .select('ronda_numero, ganador_id')
+    .select('ronda_numero, ganador_id, equipo_a_id, equipo_b_id, resultado')
     .eq('torneo_id', torneoId)
     .eq('estado', 'jugado')
   if (!matches || matches.length === 0) return []
 
-  const maxRonda = Math.max(...matches.map((m: any) => m.ronda_numero))
-  const teamIds = [...new Set(matches.filter((m: any) => m.ronda_numero === maxRonda && m.ganador_id).map((m: any) => m.ganador_id))]
+  let teamIds: string[]
+  if (torneo?.bracket_type === 'round_robin') {
+    teamIds = tablaDePosiciones(matches)
+  } else {
+    const maxRonda = Math.max(...matches.map((m: any) => m.ronda_numero))
+    teamIds = [...new Set(matches.filter((m: any) => m.ronda_numero === maxRonda && m.ganador_id).map((m: any) => m.ganador_id))] as string[]
+  }
   if (teamIds.length === 0) return []
 
   const { data: members } = await supabase
