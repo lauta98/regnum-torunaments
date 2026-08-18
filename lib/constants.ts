@@ -52,6 +52,51 @@ export const CLASES: Clase[] = [
   'Bárbaro', 'Caballero', 'Conjurador', 'Brujo', 'Tirador', 'Cazador',
 ]
 
+export const CLASE_COLOR: Record<Clase, string> = {
+  Bárbaro: '#dc3d3d',
+  Caballero: '#4a80c9',
+  Conjurador: '#8b6cf6',
+  Brujo: '#a21caf',
+  Tirador: '#0d9488',
+  Cazador: '#c2650c',
+}
+
+export const CLASE_ICON: Record<Clase, string> = {
+  Bárbaro: '⚔️', Caballero: '🛡️', Conjurador: '✨', Brujo: '🔮', Tirador: '🏹', Cazador: '🐺',
+}
+
+/** Los tres arquetipos "clásicos" de Regnum — cada uno agrupa 2 subclases.
+ *  Cuando un torneo restringe subclases_permitidas exactamente a uno de
+ *  estos pares (ej. Conjurador+Brujo) tiene sentido mostrarlo como
+ *  "Magos" en vez de listar las 2 subclases sueltas. */
+export type Arquetipo = 'guerreros' | 'magos' | 'arqueros'
+export const ARQUETIPOS: Record<Arquetipo, { label: string; clases: Clase[]; color: string; icon: string }> = {
+  guerreros: { label: 'Guerreros', clases: ['Bárbaro', 'Caballero'], color: '#c0392b', icon: '⚔️' },
+  magos:     { label: 'Magos',     clases: ['Conjurador', 'Brujo'],  color: '#8e44ad', icon: '🔮' },
+  arqueros:  { label: 'Arqueros',  clases: ['Tirador', 'Cazador'],   color: '#0e8f7e', icon: '🏹' },
+}
+
+export type TemaTorneo = { label: string; color: string; icon: string }
+
+/** Deriva el "tema" visual de un torneo a partir de las subclases que
+ *  puede jugar: una sola subclase -> el tema de esa subclase; un par que
+ *  forma exactamente uno de los 3 arquetipos -> el tema del arquetipo;
+ *  cualquier otra combinación (o ninguna restricción) -> sin tema
+ *  especial, se usa el color de formato como antes. */
+export function temaTorneo(subclasesPermitidas: Clase[] | null | undefined): TemaTorneo | null {
+  if (!subclasesPermitidas || subclasesPermitidas.length === 0) return null
+  if (subclasesPermitidas.length === 1) {
+    const c = subclasesPermitidas[0]
+    return { label: CLASE_LABEL[c], color: CLASE_COLOR[c], icon: CLASE_ICON[c] }
+  }
+  const set = new Set(subclasesPermitidas)
+  for (const key of Object.keys(ARQUETIPOS) as Arquetipo[]) {
+    const grupo = ARQUETIPOS[key]
+    if (grupo.clases.length === set.size && grupo.clases.every(c => set.has(c))) return grupo
+  }
+  return null
+}
+
 export const REINOS: Reino[] = ['Syrtis', 'Ignis', 'Alsius']
 
 export const FORMATS: TournamentFormat[] = ['1v1', '2v2', '3v3', '7v7']

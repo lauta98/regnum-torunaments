@@ -2,10 +2,10 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE, CLASE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
 import SubclaseDropdown from './SubclaseDropdown'
 import OrdenDropdown from './OrdenDropdown'
+import TorneoCard from '@/components/TorneoCard'
 
 type Params = { formato?: string; sub?: string; estado?: string; orden?: string }
 
@@ -140,84 +140,6 @@ export default async function TorneosPage({
       </main>
       <Footer />
     </>
-  )
-}
-
-function TorneoCard({ torneo: t }: { torneo: any }) {
-  const st = STATUS_STYLE[t.estado as TournamentStatus]
-  const fc = FMT_COLOR[t.formato] ?? '#d4af37'
-  const fmtLabel = FMT_LABEL[t.formato] ?? t.formato
-  const inscritos = t.registros?.[0]?.count ?? 0
-
-  return (
-    <Link href={`/brackets/${t.id}`} style={{ textDecoration: 'none' }}>
-      <div className="card-hover" style={{
-        background: t.destacado
-          ? 'linear-gradient(145deg, #120f00 0%, #0d0d0d 50%, #0a0d00 100%)'
-          : '#0a0a0a',
-        border: `1px solid ${t.destacado ? 'rgba(212,175,55,0.35)' : `${fc}22`}`,
-        borderRadius: 14, overflow: 'hidden',
-        boxShadow: t.destacado
-          ? '0 0 32px rgba(212,175,55,0.08), inset 0 0 60px rgba(0,0,0,0.3)'
-          : `inset 0 0 40px rgba(0,0,0,0.2)`,
-        ['--hover-color' as string]: fc,
-      } as React.CSSProperties}
-      >
-        {/* Top accent bar con glow */}
-        <div style={{ height: 3, background: `linear-gradient(90deg, ${fc}cc, ${fc}55, ${fc}11)`, boxShadow: `0 0 8px ${fc}44` }} />
-
-        <div style={{ padding: '20px 22px' }}>
-          {/* Badges row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <div style={{ display: 'flex', gap: 7, flexWrap: 'wrap' }}>
-              <span style={{ background: `${fc}18`, color: fc, border: `1px solid ${fc}33`, padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5 }}>
-                {fmtLabel}
-              </span>
-              {t.destacado && (
-                <span style={{ background: 'rgba(212,175,55,0.12)', color: 'var(--gold)', border: '1px solid rgba(212,175,55,0.3)', padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5 }}>
-                  Destacado
-                </span>
-              )}
-            </div>
-            <span style={{ background: st.bg, color: st.color, padding: '3px 10px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 5 }}>
-              {t.estado === 'live' && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#F44336' }} />}
-              {st.label}
-            </span>
-          </div>
-
-          {/* Title */}
-          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 6, lineHeight: 1.35, letterSpacing: 0.5 }}>
-            {t.nombre}
-          </h2>
-
-          {t.descripcion && (
-            <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 14, lineHeight: 1.5,
-              overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-              {t.descripcion}
-            </p>
-          )}
-
-          {/* Meta */}
-          <div style={{ display: 'flex', gap: 14, fontSize: 12, color: 'var(--text-muted)', marginBottom: t.creator ? 14 : 0 }}>
-            <span>📅 {new Date(t.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-            <span>👥 {inscritos}/{t.max_equipos}</span>
-            {t.premio && <span>🎁 {t.premio}</span>}
-          </div>
-
-          {/* Creator */}
-          {t.creator && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid rgba(255,255,255,0.06)', marginTop: 12 }}>
-              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {t.creator.discord_avatar
-                  ? <img src={t.creator.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                  : <span style={{ fontSize: 9, color: 'var(--gold)' }}>{t.creator.nickname_juego?.[0]}</span>}
-              </div>
-              <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>por <span style={{ color: 'var(--text-secondary)' }}>{t.creator.nickname_juego}</span></span>
-            </div>
-          )}
-        </div>
-      </div>
-    </Link>
   )
 }
 
