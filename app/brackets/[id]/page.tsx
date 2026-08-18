@@ -503,6 +503,20 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
       usedRows.add(next)
       return next
     })
+
+    // Anti-colisión: con bye en más de un nivel (ej. Ronda1→Ronda2 Y
+    // Ronda2→Cuartos) el promedio fraccionario de un partido puede caer
+    // por pura coincidencia numérica casi encima del de otro partido de
+    // la misma ronda, aunque cada uno individualmente esté bien calculado.
+    // Se ordena por posición y se empuja hacia abajo cualquiera que quede
+    // a menos de 1 fila del anterior, preservando el orden relativo.
+    const order = filled.map((_, i) => i).sort((i, j) => filled[i] - filled[j])
+    let minY = -Infinity
+    for (const i of order) {
+      if (filled[i] < minY) filled[i] = minY
+      minY = filled[i] + 1
+    }
+
     yByRound.push(filled)
     sourcesByRound.push(srcs)
   })
