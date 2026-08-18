@@ -158,7 +158,7 @@ export default async function SalonDeLaFamaPage() {
                               <img src={SHIELD_SRC[p.reino]} alt={p.reino} width={16} height={16} className={`shield-${p.reino?.toLowerCase()}`} style={{ objectFit: 'contain', position: 'absolute', bottom: -4, right: -6 }} />
                             )}
                             {puedeEditar && (
-                              <div style={{ position: 'absolute', bottom: -6, left: -6, zIndex: 2 }} onClick={e => e.preventDefault()}>
+                              <div style={{ position: 'absolute', bottom: -6, left: -6, zIndex: 2 }}>
                                 <SubirFoto tabla="campeonatos" id={c.id} campo="foto_url" label="Cambiar foto del campeón" variant="icon" />
                               </div>
                             )}

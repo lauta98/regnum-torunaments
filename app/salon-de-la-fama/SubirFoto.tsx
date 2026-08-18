@@ -43,6 +43,13 @@ export default function SubirFoto({ tabla, id, campo, label, variant = 'label' }
     return (
       <label
         title={label}
+        // Este botón suele quedar superpuesto sobre una tarjeta que en sí
+        // misma es un <Link> (ej. la foto del campeón dentro del link a
+        // su perfil) — sin el stopPropagation, tocarlo también dispararía
+        // la navegación del link de abajo. OJO: no usar preventDefault
+        // acá, porque el <label> necesita su comportamiento por defecto
+        // (abrir el selector de archivos del input asociado).
+        onClick={e => e.stopPropagation()}
         style={{
           position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
           width: 26, height: 26, borderRadius: '50%', cursor: loading ? 'not-allowed' : 'pointer',
