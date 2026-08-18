@@ -107,7 +107,7 @@ export default async function SalonDeLaFamaPage() {
 
                     {puedeEditar && (
                       <div style={{ position: 'absolute', top: 12, right: 12, zIndex: 2 }}>
-                        <SubirFoto tabla="tournaments" id={torneo.id} campo="imagen_url" label="Cambiar foto del torneo" variant="icon" />
+                        <SubirFoto tabla="tournaments" id={torneo.id} campo="imagen_url" label="Cambiar foto del torneo" variant="icon" aspectRatio={4.5} />
                       </div>
                     )}
 
