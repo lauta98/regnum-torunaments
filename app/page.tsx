@@ -71,14 +71,17 @@ export default async function HomePage({
 
           {/* Hero */}
           <div style={{
-            background: 'linear-gradient(135deg, #0c0c0c 0%, #111008 100%)',
+            backgroundImage: "linear-gradient(100deg, rgba(9,8,5,0.95) 0%, rgba(9,8,5,0.86) 32%, rgba(9,8,5,0.5) 62%, rgba(9,8,5,0.22) 100%), linear-gradient(0deg, rgba(9,8,5,0.55) 0%, rgba(9,8,5,0) 30%), url('/Gemini_Generated_Image_j0m601j0m601j0m6.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 38%',
             border: '1px solid rgba(255,255,255,0.07)',
             borderRadius: 16, padding: '44px 40px',
             position: 'relative', overflow: 'hidden',
             display: 'flex', flexDirection: 'column', justifyContent: 'center',
+            minHeight: 420,
           }}>
             {/* Ambient glow */}
-            <div style={{ position: 'absolute', bottom: -60, right: -60, width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(212,175,55,0.05) 0%, transparent 70%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'absolute', bottom: -60, right: -60, width: 300, height: 300, background: 'radial-gradient(ellipse, rgba(212,175,55,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
             {/* Title */}
             <div style={{ marginBottom: 20 }}>
