@@ -43,9 +43,14 @@ export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }:
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-      {stats.map(({ icon, label, value, delta, color }) => (
+      {stats.map(({ icon, label, value, delta, color }, i) => (
         <div key={label} style={{
-          background: '#0f0f0f',
+          backgroundImage: i === 0
+            ? "linear-gradient(0deg, rgba(6,5,4,0.88) 0%, rgba(6,5,4,0.62) 45%, rgba(6,5,4,0.4) 100%), url('/hero-torneos.jpg')"
+            : undefined,
+          backgroundColor: i === 0 ? undefined : '#0f0f0f',
+          backgroundSize: i === 0 ? '230%' : undefined,
+          backgroundPosition: i === 0 ? '53% 30%' : undefined,
           border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 12, padding: '18px 20px',
           transition: 'border-color 0.2s',
