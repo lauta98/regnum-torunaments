@@ -3,6 +3,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
+import PublicacionesTab from './PublicacionesTab'
 
 const STATUS_COLOR: Record<string, { color: string; label: string }> = {
   pending:  { color: '#F59E0B', label: '⏳ Pendiente' },
@@ -24,7 +25,7 @@ export default function AdminPage() {
   const [requests, setRequests]           = useState<any[]>([])
   const [premiumRequests, setPremiumRequests] = useState<any[]>([])
   const [reports, setReports]             = useState<any[]>([])
-  const [tab, setTab]                     = useState<'destacados' | 'premium' | 'reportes'>('reportes')
+  const [tab, setTab]                     = useState<'destacados' | 'premium' | 'reportes' | 'publicaciones'>('reportes')
   const [loading, setLoading]             = useState(true)
   const [error, setError]                 = useState('')
   const [processing, setProcessing]       = useState<string | null>(null)
@@ -129,6 +130,7 @@ export default function AdminPage() {
           { key: 'reportes',   label: `🚨 Reportes${pendingReports.length > 0 ? ` (${pendingReports.length})` : ''}` },
           { key: 'destacados', label: `★ Destacados${pendingCount > 0 ? ` (${pendingCount})` : ''}` },
           { key: 'premium',    label: `🧉 Premium${premiumPending > 0 ? ` (${premiumPending})` : ''}` },
+          { key: 'publicaciones', label: '📦 Publicaciones' },
         ].map(t => (
           <button key={t.key} onClick={() => setTab(t.key as any)} style={{
             fontSize: 13, padding: '8px 18px', borderRadius: 8, cursor: 'pointer',
@@ -147,19 +149,24 @@ export default function AdminPage() {
       )}
 
       {/* Filtros */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {(['pending', 'all', 'approved', 'rejected'] as const).map(f => (
-          <button key={f} onClick={() => setFilter(f)} style={{
-            fontSize: 12, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
-            fontFamily: "'Cinzel',serif", border: '1px solid',
-            borderColor: filter === f ? 'var(--gold)' : 'var(--dark-border)',
-            background: filter === f ? 'rgba(201,168,76,0.1)' : 'none',
-            color: filter === f ? 'var(--gold)' : 'var(--text-muted)',
-          }}>
-            {f === 'all' ? 'Todas' : f === 'pending' ? `Pendientes` : f === 'approved' ? 'Aprobadas' : 'Rechazadas'}
-          </button>
-        ))}
-      </div>
+      {tab !== 'publicaciones' && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {(['pending', 'all', 'approved', 'rejected'] as const).map(f => (
+            <button key={f} onClick={() => setFilter(f)} style={{
+              fontSize: 12, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
+              fontFamily: "'Cinzel',serif", border: '1px solid',
+              borderColor: filter === f ? 'var(--gold)' : 'var(--dark-border)',
+              background: filter === f ? 'rgba(201,168,76,0.1)' : 'none',
+              color: filter === f ? 'var(--gold)' : 'var(--text-muted)',
+            }}>
+              {f === 'all' ? 'Todas' : f === 'pending' ? `Pendientes` : f === 'approved' ? 'Aprobadas' : 'Rechazadas'}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ── TAB: PUBLICACIONES ── */}
+      {tab === 'publicaciones' && <PublicacionesTab />}
 
       {/* ── TAB: REPORTES ── */}
       {tab === 'reportes' && (
