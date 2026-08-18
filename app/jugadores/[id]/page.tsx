@@ -9,6 +9,7 @@ import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
 import AgregarPersonaje from './AgregarPersonaje'
 import ReclamarNickname from './ReclamarNickname'
 import ElegirPrincipal from './ElegirPrincipal'
+import EditarNickname from './EditarNickname'
 
 export const dynamic = 'force-dynamic'
 
@@ -159,7 +160,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                 const rc = REINO_COLOR[p.reino as Reino] ?? 'var(--gold)'
                 const tier = getTier(p.mmr)
                 return (
-                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 90px 90px 36px', padding: '14px 20px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', gap: 8 }}>
+                  <div key={p.id} style={{ display: 'grid', gridTemplateColumns: `1fr 90px 90px 90px ${isOwner ? '58px' : '36px'}`, padding: '14px 20px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', gap: 8 }}>
                     {/* Personaje info */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -197,10 +198,15 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: p.winstreak > 0 ? '#4CAF50' : 'var(--text-muted)' }}>
                       {p.winstreak > 0 ? `🔥 ${p.winstreak}` : '—'}
                     </div>
-                    {/* Reclamar / elegir principal */}
-                    {isOwner
-                      ? <ElegirPrincipal playerId={id} personajeId={p.id} esPrincipal={player.personaje_principal_id === p.id} />
-                      : <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />}
+                    {/* Reclamar / elegir principal + corregir nombre */}
+                    {isOwner ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <ElegirPrincipal playerId={id} personajeId={p.id} esPrincipal={player.personaje_principal_id === p.id} />
+                        <EditarNickname personajeId={p.id} nicknameActual={p.nickname_juego} />
+                      </div>
+                    ) : (
+                      <ReclamarNickname personajeId={p.id} nickname={p.nickname_juego} />
+                    )}
                   </div>
                 )
               })}

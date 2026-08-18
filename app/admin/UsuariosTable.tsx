@@ -11,6 +11,7 @@ type Player = {
 }
 
 const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
+const PAGE_SIZE = 25
 
 export default function UsuariosTable({ players, meId }: { players: Player[]; meId: string }) {
   const router = useRouter()
@@ -19,6 +20,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
   const [bulkRole, setBulkRole] = useState<UserRole>('organizer')
   const [applying, setApplying] = useState(false)
   const [error, setError] = useState('')
+  const [page, setPage] = useState(1)
 
   const filtrados = useMemo(() => {
     const term = q.trim().toLowerCase()
@@ -28,6 +30,12 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
       p.discord_username?.toLowerCase().includes(term)
     )
   }, [players, q])
+
+  const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE))
+  const paginaActual = Math.min(page, totalPaginas)
+  const paginados = filtrados.slice((paginaActual - 1) * PAGE_SIZE, paginaActual * PAGE_SIZE)
+
+  const cambiarQuery = (val: string) => { setQ(val); setPage(1) }
 
   // Solo se pueden seleccionar los que un cambio en lote realmente podría
   // tocar — no tiene sentido ofrecer tildar a uno mismo o a un admin
@@ -71,7 +79,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
         <input
           value={q}
-          onChange={e => setQ(e.target.value)}
+          onChange={e => cambiarQuery(e.target.value)}
           placeholder="Buscar jugador por nombre o Discord..."
           style={{
             flex: '1 1 220px', background: '#0f0f0f', border: '1px solid var(--border-gold)', borderRadius: 8,
@@ -119,13 +127,13 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
           </div>
         )}
 
-        {filtrados.map((p, i) => {
+        {paginados.map((p, i) => {
           const puedeSeleccionar = p.id !== meId && !isSuperAdmin(p.nickname_juego)
           return (
             <div key={p.id} style={{
               display: 'grid', gridTemplateColumns: '28px 1fr 120px 140px',
               padding: '12px 20px',
-              borderBottom: i < filtrados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              borderBottom: i < paginados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
               alignItems: 'center',
             }}>
               <input
@@ -176,6 +184,65 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
           )
         })}
       </div>
+
+      {filtrados.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+            {(paginaActual - 1) * PAGE_SIZE + 1}–{Math.min(paginaActual * PAGE_SIZE, filtrados.length)} de {filtrados.length}
+          </span>
+          {totalPaginas > 1 && (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={paginaActual === 1}
+                style={pagBtnStyle(false, paginaActual === 1)}
+              >
+                ‹
+              </button>
+              {paginasVisibles(paginaActual, totalPaginas).map((n, idx) =>
+                n === '…' ? (
+                  <span key={`e${idx}`} style={{ padding: '0 4px', color: 'var(--text-muted)', fontSize: 12 }}>…</span>
+                ) : (
+                  <button key={n} onClick={() => setPage(n as number)} style={pagBtnStyle(n === paginaActual, false)}>
+                    {n}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => setPage(p => Math.min(totalPaginas, p + 1))}
+                disabled={paginaActual === totalPaginas}
+                style={pagBtnStyle(false, paginaActual === totalPaginas)}
+              >
+                ›
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
+}
+
+function pagBtnStyle(activa: boolean, deshabilitada: boolean): React.CSSProperties {
+  return {
+    minWidth: 28, padding: '5px 8px', borderRadius: 6,
+    border: `1px solid ${activa ? 'var(--gold)' : 'rgba(255,255,255,0.12)'}`,
+    background: activa ? 'rgba(212,175,55,0.15)' : 'transparent',
+    color: deshabilitada ? 'var(--text-muted)' : activa ? 'var(--gold)' : 'var(--text-secondary)',
+    fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: activa ? 700 : 400,
+    cursor: deshabilitada ? 'not-allowed' : 'pointer', opacity: deshabilitada ? 0.4 : 1,
+  }
+}
+
+// Lista de páginas a mostrar: siempre primera y última, la actual ±1, con
+// "…" donde se corta — así con 14 páginas no se listan 14 botones seguidos.
+function paginasVisibles(actual: number, total: number): (number | '…')[] {
+  const paginas = new Set<number>([1, total, actual, actual - 1, actual + 1])
+  const ordenadas = [...paginas].filter(n => n >= 1 && n <= total).sort((a, b) => a - b)
+  const resultado: (number | '…')[] = []
+  for (let i = 0; i < ordenadas.length; i++) {
+    if (i > 0 && ordenadas[i] - ordenadas[i - 1] > 1) resultado.push('…')
+    resultado.push(ordenadas[i])
+  }
+  return resultado
 }
