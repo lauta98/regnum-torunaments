@@ -645,8 +645,9 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
   let scoreA: number | null = null
   let scoreB: number | null = null
   if (scoreMatch) {
-    const idxA = teamA ? match.resultado.indexOf(teamA.nombre) : -1
-    const idxB = teamB ? match.resultado.indexOf(teamB.nombre) : -1
+    const resultadoLower = match.resultado.toLowerCase()
+    const idxA = teamA ? resultadoLower.indexOf(teamA.nombre.toLowerCase()) : -1
+    const idxB = teamB ? resultadoLower.indexOf(teamB.nombre.toLowerCase()) : -1
     const aApareceAntes = idxA !== -1 && (idxB === -1 || idxA <= idxB)
     scoreA = Number(aApareceAntes ? scoreMatch[1] : scoreMatch[2])
     scoreB = Number(aApareceAntes ? scoreMatch[2] : scoreMatch[1])
