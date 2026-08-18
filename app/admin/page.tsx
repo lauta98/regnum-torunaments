@@ -78,6 +78,13 @@ export default async function AdminPage() {
           <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             Bienvenido, <span style={{ color: 'var(--gold)' }}>{me.nickname_juego}</span> — control total del sistema
           </p>
+          <Link href="/admin/personajes" style={{
+            display: 'inline-block', marginTop: 12, padding: '7px 16px', borderRadius: 8,
+            background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.3)', color: 'var(--gold)',
+            fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: 0.5, textDecoration: 'none',
+          }}>
+            Gestionar personajes →
+          </Link>
         </div>
 
         {/* KPIs */}
