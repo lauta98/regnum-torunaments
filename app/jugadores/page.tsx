@@ -84,14 +84,21 @@ export default async function JugadoresPage({
   /* ── Campeonatos (para la insignia 🏆) ─────────────── */
   const personajeIds = (personajes ?? []).map((p: any) => p.id)
   const { data: campeonatosData } = personajeIds.length ? await supabase
-    .from('campeonatos').select('personaje_id, torneo:tournaments(nombre)').in('personaje_id', personajeIds)
+    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, torneo:tournaments(nombre)').in('personaje_id', personajeIds)
     : { data: null }
   const campeonatosPorPersonaje = new Map<string, string[]>()
+  const campeonatosClanPorPersonaje = new Map<string, string[]>()
   campeonatosData?.forEach((c: any) => {
     if (!c.torneo) return
-    const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
-    arr.push(c.torneo.nombre)
-    campeonatosPorPersonaje.set(c.personaje_id, arr)
+    if (c.tipo === 'equipo') {
+      const arr = campeonatosClanPorPersonaje.get(c.personaje_id) ?? []
+      arr.push(`${c.torneo.nombre} (${c.equipo_nombre})`)
+      campeonatosClanPorPersonaje.set(c.personaje_id, arr)
+    } else {
+      const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
+      arr.push(c.torneo.nombre)
+      campeonatosPorPersonaje.set(c.personaje_id, arr)
+    }
   })
 
   /* ── Para vista cuentas: agrupar por player ────────── */
@@ -217,6 +224,7 @@ export default async function JugadoresPage({
                         <div style={{ fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 12 : 11, fontWeight: 700, color: rank === 1 ? m.main : 'var(--text-primary)', letterSpacing: 0.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {p.nickname_juego} {p.verificado && <span title="Verificado">✓</span>}
                           {campeonatosPorPersonaje.get(p.id) && <span title={`Campeón de ${campeonatosPorPersonaje.get(p.id)!.join(', ')}`}>🏆</span>}
+                          {campeonatosClanPorPersonaje.get(p.id) && <span title={`Campeón de clan — ${campeonatosClanPorPersonaje.get(p.id)!.join(', ')}`}>🛡️</span>}
                         </div>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: rank === 1 ? 16 : 13, fontWeight: 700, color: m.main }}>{p.mmr}</div>
                         <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {tier.name}</span>
@@ -271,6 +279,7 @@ export default async function JugadoresPage({
                               {p.nickname_juego}
                               {p.verificado && <span style={{ fontSize: 10, color: '#2196F3' }} title="Personaje verificado">✓</span>}
                               {campeonatosPorPersonaje.get(p.id) && <span style={{ fontSize: 11 }} title={`Campeón de ${campeonatosPorPersonaje.get(p.id)!.join(', ')}`}>🏆</span>}
+                              {campeonatosClanPorPersonaje.get(p.id) && <span style={{ fontSize: 11 }} title={`Campeón de clan — ${campeonatosClanPorPersonaje.get(p.id)!.join(', ')}`}>🛡️</span>}
                             </div>
                             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{p.player?.discord_username ?? '—'}</div>
                           </div>

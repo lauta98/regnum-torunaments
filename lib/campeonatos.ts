@@ -12,7 +12,7 @@
  * personaje por player_id (y si el jugador tiene más de un personaje, por
  * coincidencia de nombre con el nombre del equipo).
  */
-export type Campeon = { personaje_id: string; player_id: string | null }
+export type Campeon = { personaje_id: string; player_id: string | null; equipo: boolean; equipo_nombre: string | null }
 
 function normalizar(s: string) {
   return s.normalize('NFC').replace(/[‘’ʼ´`]/g, "'").replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase()
@@ -79,14 +79,20 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
     .select('team_id, player_id, personaje_id')
     .in('team_id', teamIds)
 
-  const campeones: Campeon[] = []
+  // personaje_id + de qué team_id salió, para poder decidir después si
+  // ese team aportó 1 solo campeón (torneo individual/1v1/2v2) o varios
+  // (torneo de equipo grande tipo clan) — eso determina si se marca
+  // "equipo" en vez de "individual".
+  const porTeam: { personaje_id: string; player_id: string | null; team_id: string }[] = []
   const equiposSinMembers = teamIds.filter(id => !members?.some((m: any) => m.team_id === id))
 
-  members?.forEach((m: any) => { if (m.personaje_id) campeones.push({ personaje_id: m.personaje_id, player_id: m.player_id }) })
+  members?.forEach((m: any) => { if (m.personaje_id) porTeam.push({ personaje_id: m.personaje_id, player_id: m.player_id, team_id: m.team_id }) })
+
+  const { data: teamsInfo } = await supabase.from('teams').select('id, nombre, capitan_id').in('id', teamIds)
+  const nombrePorTeam = new Map((teamsInfo ?? []).map((t: any) => [t.id, t.nombre]))
 
   if (equiposSinMembers.length > 0) {
-    const { data: teams } = await supabase.from('teams').select('id, nombre, capitan_id').in('id', equiposSinMembers)
-    for (const team of teams ?? []) {
+    for (const team of (teamsInfo ?? []).filter((t: any) => equiposSinMembers.includes(t.id))) {
       let personajes: any[] | null = null
       if (team.capitan_id) {
         const res = await supabase.from('personajes').select('id, nickname_juego, player_id').eq('player_id', team.capitan_id)
@@ -104,9 +110,19 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
       if (!personajes || personajes.length === 0) continue
       const match = personajes.length === 1 ? personajes[0] : personajes.find((p: any) => normalizar(p.nickname_juego) === normalizar(team.nombre))
       const elegido = match ?? personajes[0]
-      campeones.push({ personaje_id: elegido.id, player_id: elegido.player_id })
+      porTeam.push({ personaje_id: elegido.id, player_id: elegido.player_id, team_id: team.id })
     }
   }
+
+  const countPorTeam = new Map<string, number>()
+  porTeam.forEach(c => countPorTeam.set(c.team_id, (countPorTeam.get(c.team_id) ?? 0) + 1))
+
+  const campeones: Campeon[] = porTeam.map(c => ({
+    personaje_id: c.personaje_id,
+    player_id: c.player_id,
+    equipo: (countPorTeam.get(c.team_id) ?? 0) > 1,
+    equipo_nombre: (countPorTeam.get(c.team_id) ?? 0) > 1 ? ((nombrePorTeam.get(c.team_id) as string) ?? null) : null,
+  }))
 
   // dedup por personaje_id (por si el mismo personaje aparece 2 veces por algún dato inconsistente)
   const vistos = new Set<string>()

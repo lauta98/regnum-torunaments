@@ -25,7 +25,7 @@ export default async function SalonDeLaFamaPage() {
   const { data: campeonatos } = await supabase
     .from('campeonatos')
     .select(`
-      id, foto_url, personaje_id, player_id,
+      id, foto_url, personaje_id, player_id, tipo, equipo_nombre,
       personaje:personajes(id, nickname_juego, reino, clase),
       torneo:tournaments(id, nombre, formato, fecha_inicio, imagen_url, creator_id)
     `)
@@ -131,15 +131,19 @@ export default async function SalonDeLaFamaPage() {
                     {campeones.map((c: any) => {
                       const p = c.personaje
                       if (!p) return null
-                      const rc = REINO_COLOR[p.reino as Reino] ?? 'var(--gold)'
+                      const esClan = c.tipo === 'equipo'
+                      const rc = esClan ? '#5b8fd4' : (REINO_COLOR[p.reino as Reino] ?? 'var(--gold)')
                       return (
                         <Link
                           key={c.id}
                           href={`/jugadores/${c.player_id}`}
                           style={{
                             textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12,
-                            background: 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))',
-                            border: '1px solid rgba(212,175,55,0.22)', borderRadius: 12,
+                            background: esClan
+                              ? 'linear-gradient(135deg, rgba(91,143,212,0.08), rgba(91,143,212,0.02))'
+                              : 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))',
+                            border: `1px solid ${esClan ? 'rgba(91,143,212,0.28)' : 'rgba(212,175,55,0.22)'}`,
+                            borderRadius: 12,
                             padding: '10px 18px 10px 10px', minWidth: 190, flex: '1 1 190px',
                             transition: 'border-color 0.15s, background 0.15s',
                           }}
@@ -164,8 +168,8 @@ export default async function SalonDeLaFamaPage() {
                             )}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.85 }}>
-                              🏆 CAMPEÓN
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: esClan ? '#5b8fd4' : 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.85 }}>
+                              {esClan ? `🛡️ CLAN CAMPEÓN — ${c.equipo_nombre}` : '🏆 CAMPEÓN'}
                             </div>
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {p.nickname_juego}

@@ -50,14 +50,14 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const personajeIds = personajes?.map(p => p.id) ?? []
   const { data: campeonatos } = personajeIds.length ? await supabase
     .from('campeonatos')
-    .select('personaje_id, torneo:tournaments(id, nombre)')
+    .select('personaje_id, tipo, equipo_nombre, torneo:tournaments(id, nombre)')
     .in('personaje_id', personajeIds)
     : { data: null }
-  const campeonatosPorPersonaje = new Map<string, { id: string; nombre: string }[]>()
+  const campeonatosPorPersonaje = new Map<string, { id: string; nombre: string; tipo: string; equipo_nombre: string | null }[]>()
   campeonatos?.forEach((c: any) => {
     if (!c.torneo) return
     const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
-    arr.push(c.torneo)
+    arr.push({ ...c.torneo, tipo: c.tipo ?? 'individual', equipo_nombre: c.equipo_nombre })
     campeonatosPorPersonaje.set(c.personaje_id, arr)
   })
 
@@ -175,7 +175,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                           <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
                           {p.verificado && <span style={{ fontSize: 11, color: '#2196F3' }} title="Verificado">✓</span>}
                           {campeonatosPorPersonaje.get(p.id)?.map(t => (
-                            <span key={t.id} style={{ fontSize: 12 }} title={`Campeón de ${t.nombre}`}>🏆</span>
+                            <span key={t.id} style={{ fontSize: 12 }} title={t.tipo === 'equipo' ? `Campeón de clan (${t.equipo_nombre}) — ${t.nombre}` : `Campeón de ${t.nombre}`}>
+                              {t.tipo === 'equipo' ? '🛡️' : '🏆'}
+                            </span>
                           ))}
                         </div>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino} · {p.clase}</div>
