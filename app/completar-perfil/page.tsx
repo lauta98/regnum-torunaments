@@ -23,18 +23,23 @@ function CompletarPerfilPage() {
   const handleReclamar = async () => {
     if (!claimable) return
     setClaiming(true); setError('')
-    const res = await fetch('/api/personajes/reclamar-cuenta', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
-    })
-    const body = await res.json()
-    if (!res.ok) {
-      setError(body.error || 'No se pudo reclamar la cuenta.')
+    try {
+      const res = await fetch('/api/personajes/reclamar-cuenta', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ personajeId: claimable.id, nickname: nickname.trim(), reino, clase }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(body.error || 'No se pudo reclamar la cuenta. Probá de nuevo.')
+        setClaiming(false)
+        return
+      }
+      router.push(`/jugadores/${body.playerId}`)
+    } catch {
+      setError('No se pudo conectar con el servidor. Probá de nuevo.')
       setClaiming(false)
-      return
     }
-    router.push(`/jugadores/${body.playerId}`)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,6 +47,15 @@ function CompletarPerfilPage() {
     if (!nickname.trim()) return setError('El nickname es requerido.')
     setLoading(true); setError(''); setClaimable(null)
 
+    try {
+      await handleSubmitInner()
+    } catch {
+      setError('No se pudo conectar con el servidor. Probá de nuevo.')
+      setLoading(false)
+    }
+  }
+
+  const handleSubmitInner = async () => {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { router.push('/login'); return }
