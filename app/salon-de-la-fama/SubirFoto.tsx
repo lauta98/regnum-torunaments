@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import ImageCropModal from './ImageCropModal'
+import ImageCropModal from '@/components/ImageCropModal'
 
 /** Botón para subir/reemplazar una foto (de torneo o de campeón) a Supabase
  * Storage y guardar la URL pública en la fila correspondiente. Antes de

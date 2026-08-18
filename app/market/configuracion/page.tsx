@@ -3,6 +3,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import Link from 'next/link'
+import ImageCropModal from '@/components/ImageCropModal'
 
 const inp: React.CSSProperties = {
   width: '100%', background: 'var(--dark-surface)', border: '1px solid var(--dark-border)',
@@ -39,6 +40,8 @@ export default function ConfiguracionPage() {
   const [bannerUrl, setBannerUrl]   = useState('')
   const [nameColor, setNameColor]   = useState('')
   const [error, setError]           = useState('')
+  const [cropAvatarFile, setCropAvatarFile] = useState<File | null>(null)
+  const [cropBannerFile, setCropBannerFile] = useState<File | null>(null)
   const fileRef       = useRef<HTMLInputElement>(null)
   const avatarFileRef = useRef<HTMLInputElement>(null)
   const supabase = useMemo(() => createClient(), [])
@@ -71,18 +74,19 @@ export default function ConfiguracionPage() {
     })
   }, [])
 
-  const uploadAvatar = async (file: File) => {
+  const uploadAvatar = async (blob: Blob) => {
+    setCropAvatarFile(null)
     setUploadingAvatar(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploadingAvatar(false); return }
-    const ext = file.name.split('.').pop()
-    const path = `${user.id}/avatar.${ext}`
+    const path = `${user.id}/avatar.jpg`
     const { error: uploadError } = await supabase.storage
       .from('profile-banners')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
     if (uploadError) { setError('Error al subir avatar: ' + uploadError.message); setUploadingAvatar(false); return }
     const { data: urlData } = supabase.storage.from('profile-banners').getPublicUrl(path)
-    setAvatarUrl(urlData.publicUrl)
+    const bustedUrl = `${urlData.publicUrl}?t=${Date.now()}`
+    setAvatarUrl(bustedUrl)
     await fetch('/api/market/configuracion', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -91,17 +95,17 @@ export default function ConfiguracionPage() {
     setUploadingAvatar(false)
   }
 
-  const uploadBanner = async (file: File) => {
+  const uploadBanner = async (blob: Blob) => {
+    setCropBannerFile(null)
     setUploading(true)
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setUploading(false); return }
 
-    const ext = file.name.split('.').pop()
-    const path = `${user.id}/banner.${ext}`
+    const path = `${user.id}/banner.jpg`
 
     const { error: uploadError } = await supabase.storage
       .from('profile-banners')
-      .upload(path, file, { upsert: true, contentType: file.type })
+      .upload(path, blob, { upsert: true, contentType: 'image/jpeg' })
 
     if (uploadError) {
       setError('Error al subir imagen: ' + uploadError.message)
@@ -113,7 +117,7 @@ export default function ConfiguracionPage() {
       .from('profile-banners')
       .getPublicUrl(path)
 
-    setBannerUrl(urlData.publicUrl)
+    setBannerUrl(`${urlData.publicUrl}?t=${Date.now()}`)
     setUploading(false)
   }
 
@@ -233,7 +237,7 @@ export default function ConfiguracionPage() {
                 </div>
                 <div>
                   <input ref={avatarFileRef} type="file" accept="image/*" style={{ display: 'none' }}
-                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadAvatar(f) }} />
+                    onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) setCropAvatarFile(f) }} />
                   <button
                     onClick={() => avatarFileRef.current?.click()}
                     disabled={uploadingAvatar}
@@ -357,7 +361,7 @@ export default function ConfiguracionPage() {
             type="file"
             accept="image/*"
             style={{ display: 'none' }}
-            onChange={e => { const f = e.target.files?.[0]; if (f) uploadBanner(f) }}
+            onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) setCropBannerFile(f) }}
           />
           <button
             onClick={() => fileRef.current?.click()}
@@ -462,6 +466,23 @@ export default function ConfiguracionPage() {
       >
         {saving ? 'Guardando...' : 'GUARDAR CAMBIOS'}
       </button>
+
+      {cropAvatarFile && (
+        <ImageCropModal
+          file={cropAvatarFile}
+          aspectRatio={1}
+          onCancel={() => setCropAvatarFile(null)}
+          onConfirm={uploadAvatar}
+        />
+      )}
+      {cropBannerFile && (
+        <ImageCropModal
+          file={cropBannerFile}
+          aspectRatio={4.5}
+          onCancel={() => setCropBannerFile(null)}
+          onConfirm={uploadBanner}
+        />
+      )}
     </div>
   )
 }

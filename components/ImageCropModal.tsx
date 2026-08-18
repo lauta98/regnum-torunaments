@@ -1,10 +1,11 @@
 'use client'
 import { useRef, useState, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 /** Modal de recorte: el usuario arrastra la imagen para posicionarla y
  * usa el control de zoom para acercar/alejar, dentro de un marco con la
- * proporción final (cuadrado para foto de campeón, ancho para banner de
- * torneo). Al confirmar exporta exactamente lo que se ve en el marco. */
+ * proporción final (cuadrado para foto de campeón/avatar, ancho para
+ * banner). Al confirmar exporta exactamente lo que se ve en el marco. */
 export default function ImageCropModal({
   file, aspectRatio, onConfirm, onCancel,
 }: {
@@ -18,8 +19,11 @@ export default function ImageCropModal({
   const [zoom, setZoom] = useState(1)
   const [pos, setPos] = useState({ x: 0, y: 0 }) // top-left de la imagen relativo al marco, en px
   const [busy, setBusy] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const frameRef = useRef<HTMLDivElement>(null)
   const dragState = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null)
+
+  useEffect(() => { setMounted(true) }, [])
 
   const FRAME_W = 340
   const FRAME_H = Math.round(FRAME_W / aspectRatio)
@@ -94,7 +98,15 @@ export default function ImageCropModal({
     img.src = imgUrl
   }
 
-  return (
+  if (!mounted) return null
+
+  // Se monta en un Portal (document.body) en vez de en el lugar donde se
+  // invoca el uploader: aunque el fondo usa position:fixed y "parece"
+  // flotar arriba de todo, si se renderizara como hijo normal seguiría
+  // estando dentro del DOM del elemento que lo abrió (ej. un <Link> de una
+  // tarjeta), y un click ahí terminaba propagándose y disparando la
+  // navegación de ese link.
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={onCancel}>
       <div style={{ background: '#141414', border: '1px solid var(--border-gold)', borderRadius: 14, padding: 24, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', marginBottom: 14, letterSpacing: 0.5 }}>
@@ -144,6 +156,7 @@ export default function ImageCropModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
