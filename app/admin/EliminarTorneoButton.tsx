@@ -18,24 +18,24 @@ export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: s
 
   if (confirmando) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'stretch', width: '100%' }}>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={eliminar} disabled={loading} style={{
-            fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: loading ? 'not-allowed' : 'pointer',
-            background: 'rgba(244,67,54,0.18)', border: '1px solid rgba(244,67,54,0.5)', color: '#F44336',
-            fontFamily: 'var(--font-display)', letterSpacing: 0.5,
+            flex: 1, fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
+            background: 'rgba(244,67,54,0.22)', border: '1px solid rgba(244,67,54,0.6)', color: '#ff6b6b',
+            fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: 0.3,
           }}>
-            {loading ? '...' : `Confirmar borrado`}
+            {loading ? '...' : 'Confirmar'}
           </button>
           <button onClick={() => setConfirmando(false)} disabled={loading} style={{
-            fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
+            flex: 1, fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: 'pointer',
             background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)',
             fontFamily: 'var(--font-display)',
           }}>
             Cancelar
           </button>
         </div>
-        {error && <span style={{ fontSize: 9, color: '#F44336', maxWidth: 200, textAlign: 'right' }}>{error}</span>}
+        {error && <span style={{ fontSize: 10, color: '#ff6b6b' }}>{error}</span>}
       </div>
     )
   }
@@ -45,12 +45,13 @@ export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: s
       title={`Eliminar "${nombre}"`}
       onClick={() => setConfirmando(true)}
       style={{
-        fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
-        background: 'transparent', border: '1px solid rgba(244,67,54,0.3)', color: 'rgba(244,67,54,0.8)',
-        fontFamily: 'var(--font-display)', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+        fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: 'pointer', width: '100%',
+        background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.35)', color: '#ff8a8a',
+        fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: 0.3,
       }}
     >
-      Eliminar
+      🗑 Eliminar
     </button>
   )
 }

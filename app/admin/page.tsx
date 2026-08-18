@@ -3,9 +3,8 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canAdmin, isSuperAdmin } from '@/lib/roles'
-import type { UserRole } from '@/lib/types'
-import RoleManager from './RoleManager'
+import { canAdmin } from '@/lib/roles'
+import UsuariosTable from './UsuariosTable'
 import VerificarPersonaje from './VerificarPersonaje'
 import ResolverReclamo from './ResolverReclamo'
 import EliminarTorneoButton from './EliminarTorneoButton'
@@ -109,70 +108,7 @@ export default async function AdminPage() {
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
               GESTIÓN DE USUARIOS
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
-
-              {/* Header tabla */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 140px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
-                {['JUGADOR', 'ROL ACTUAL', 'CAMBIAR ROL'].map(col => (
-                  <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.5 }}>{col}</div>
-                ))}
-              </div>
-
-              {players?.map((p: any, i: number) => (
-                <div key={p.id} style={{
-                  display: 'grid', gridTemplateColumns: '1fr 120px 140px',
-                  padding: '12px 20px',
-                  borderBottom: i < (players.length - 1) ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                  alignItems: 'center',
-                }}>
-                  {/* Jugador */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                      {p.discord_avatar
-                        ? <img src={p.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                        : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{p.nickname_juego?.[0]?.toUpperCase()}</span>}
-                    </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: p.id === me.id ? 'var(--gold)' : 'var(--text-primary)' }}>
-                          {p.nickname_juego}
-                        </span>
-                        {p.id === me.id && (
-                          <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>(tú)</span>
-                        )}
-                        {isSuperAdmin(p.nickname_juego) && (
-                          <span style={{ fontSize: 9, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 0.5 }}>🔒</span>
-                        )}
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
-                        {p.reino} · {p.clase_principal}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Rol actual */}
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center',
-                    background: ROLE_BG[p.role as UserRole] ?? 'rgba(255,255,255,0.05)',
-                    color: ROLE_COLOR[p.role as UserRole] ?? 'var(--text-muted)',
-                    border: `1px solid ${ROLE_COLOR[p.role as UserRole] ?? 'transparent'}44`,
-                    padding: '3px 9px', borderRadius: 4,
-                    fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5,
-                    width: 'fit-content',
-                  }}>
-                    {ROLE_LABEL[p.role as UserRole] ?? p.role}
-                  </span>
-
-                  {/* Selector de rol (client component) */}
-                  <RoleManager
-                    playerId={p.id}
-                    currentRole={p.role}
-                    isSelf={p.id === me.id}
-                    isProtected={isSuperAdmin(p.nickname_juego)}
-                  />
-                </div>
-              ))}
-            </div>
+            <UsuariosTable players={(players ?? []) as any} meId={me.id} />
           </div>
 
           {/* ── Últimos torneos ─────────────────────────────────── */}
@@ -191,10 +127,10 @@ export default async function AdminPage() {
                 const sc = statusColor[t.estado] ?? '#606060'
                 return (
                   <div key={t.id} style={{
-                    padding: '12px 16px',
+                    padding: '14px 16px',
                     borderBottom: i < (allTournaments.length - 1) ? '1px solid rgba(255,255,255,0.04)' : 'none',
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {t.nombre}
@@ -203,24 +139,26 @@ export default async function AdminPage() {
                           por {t.creator?.nickname_juego ?? '—'} · {t.registros?.[0]?.count ?? 0} equipos
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
-                        <span style={{
-                          background: `${sc}18`, color: sc, border: `1px solid ${sc}44`,
-                          padding: '2px 7px', borderRadius: 4,
-                          fontFamily: 'var(--font-display)', fontSize: 8, letterSpacing: 1,
-                        }}>
-                          {statusLabel[t.estado] ?? t.estado}
-                        </span>
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <Link href={`/admin/torneos/${t.id}`} style={{
-                            fontSize: 9, padding: '3px 8px', borderRadius: 4,
-                            background: 'transparent', border: '1px solid rgba(212,175,55,0.3)', color: 'var(--gold)',
-                            fontFamily: 'var(--font-display)', textDecoration: 'none',
-                          }}>
-                            Editar
-                          </Link>
-                          <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
-                        </div>
+                      <span style={{
+                        flexShrink: 0,
+                        background: `${sc}18`, color: sc, border: `1px solid ${sc}44`,
+                        padding: '3px 8px', borderRadius: 4,
+                        fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1,
+                      }}>
+                        {statusLabel[t.estado] ?? t.estado}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Link href={`/admin/torneos/${t.id}`} style={{
+                        flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
+                        fontSize: 11, padding: '7px 10px', borderRadius: 6,
+                        background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.35)', color: 'var(--gold)',
+                        fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: 0.3, textDecoration: 'none',
+                      }}>
+                        ✎ Editar
+                      </Link>
+                      <div style={{ flex: 1 }}>
+                        <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
                       </div>
                     </div>
                   </div>
