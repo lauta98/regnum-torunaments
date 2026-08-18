@@ -1,5 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
+import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canAdmin, isSuperAdmin } from '@/lib/roles'
@@ -203,7 +204,16 @@ export default async function AdminPage() {
                         }}>
                           {statusLabel[t.estado] ?? t.estado}
                         </span>
-                        <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <Link href={`/admin/torneos/${t.id}`} style={{
+                            fontSize: 9, padding: '3px 8px', borderRadius: 4,
+                            background: 'transparent', border: '1px solid rgba(212,175,55,0.3)', color: 'var(--gold)',
+                            fontFamily: 'var(--font-display)', textDecoration: 'none',
+                          }}>
+                            Editar
+                          </Link>
+                          <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
+                        </div>
                       </div>
                     </div>
                   </div>

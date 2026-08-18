@@ -2,6 +2,33 @@ import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-serv
 import { NextResponse } from 'next/server'
 import { canAdmin } from '@/lib/roles'
 
+const CAMPOS_EDITABLES = [
+  'nombre', 'descripcion', 'formato', 'estado', 'fecha_inicio', 'fecha_fin',
+  'premio', 'max_equipos', 'destacado', 'reglamento', 'subclases_permitidas',
+] as const
+
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id: torneoId } = await params
+  const supabase = await createServerSupabase()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
+
+  const { data: me } = await supabase.from('players').select('role').eq('user_id', user.id).single()
+  if (!me || !canAdmin(me.role)) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const body = await req.json()
+  const patch: Record<string, unknown> = {}
+  for (const campo of CAMPOS_EDITABLES) {
+    if (campo in body) patch[campo] = body[campo]
+  }
+  if (Object.keys(patch).length === 0) return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })
+
+  const svc = createServiceSupabase()
+  const { data: torneo, error } = await svc.from('tournaments').update(patch).eq('id', torneoId).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true, torneo })
+}
+
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
   const supabase = await createServerSupabase()

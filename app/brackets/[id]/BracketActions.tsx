@@ -32,7 +32,7 @@ export default function BracketActions({
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [view, setView] = useState<'closed' | 'score' | 'ko'>('closed')
+  const [view, setView] = useState<'closed' | 'score' | 'ko' | 'revertir'>('closed')
   const [scoreA, setScoreA] = useState('')
   const [scoreB, setScoreB] = useState('')
   const [error, setError] = useState('')
@@ -82,12 +82,31 @@ export default function BracketActions({
 
   const submitWalkover = (ganadorId: string) => submit({ ganador_id: ganadorId, walkover: true })
 
+  const revertir = async () => {
+    setLoading(true); setError('')
+    try {
+      const res = await fetch(`/api/matches/${matchId}`, { method: 'DELETE' })
+      if (res.ok) { router.refresh(); reset(); return }
+      const d = await res.json().catch(() => null)
+      setError(d?.error ?? `Error al revertir (${res.status})`)
+    } catch {
+      setError('No se pudo conectar con el servidor — probá de nuevo')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
       {isPlayed ? (
-        <button onClick={abrirEdicion} aria-label="Corregir resultado" style={editBtnStyle}>
-          ✎ Corregir
-        </button>
+        <div style={{ display: 'flex', gap: 4 }}>
+          <button onClick={abrirEdicion} aria-label="Corregir resultado" style={editBtnStyle}>
+            ✎ Corregir
+          </button>
+          <button onClick={() => setView('revertir')} aria-label="Revertir resultado" title="Revertir a pendiente" style={{ ...editBtnStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.35)' }}>
+            ↺
+          </button>
+        </div>
       ) : (
         <button onClick={() => setView('score')} style={{
           background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
@@ -100,9 +119,25 @@ export default function BracketActions({
 
       {view !== 'closed' && (
       <div style={popoverStyle} onClick={e => e.stopPropagation()}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 1, marginBottom: 10 }}>
-          {isPlayed ? 'CORREGIR RESULTADO' : 'CARGAR RESULTADO'}
+        <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: view === 'revertir' ? '#f87171' : 'var(--gold)', letterSpacing: 1, marginBottom: 10 }}>
+          {view === 'revertir' ? 'REVERTIR RESULTADO' : isPlayed ? 'CORREGIR RESULTADO' : 'CARGAR RESULTADO'}
         </div>
+
+        {view === 'revertir' && (
+          <>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>
+              Esto deshace el mmr que se aplicó con este resultado y deja el partido en pendiente otra vez. No se puede si el equipo que ganó ya jugó la ronda siguiente.
+            </div>
+            {loading ? (
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '6px 0' }}>Revirtiendo…</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={revertir} style={{ ...btnStyle, flex: 1, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>Sí, revertir</button>
+                <button onClick={reset} style={ghostBtnStyle}>Cancelar</button>
+              </div>
+            )}
+          </>
+        )}
 
         {view === 'score' && (
           <>
