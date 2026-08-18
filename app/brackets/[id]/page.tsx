@@ -451,28 +451,55 @@ function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string,
 function BracketSection({ section, isOrganizer, fc }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
-  // Posición vertical (en "filas") de cada partido. Regla simple y a
-  // prueba de brackets irregulares: cuando la ronda anterior alimenta a
-  // esta 2 a 1 (la mitad de partidos) o 1 a 1 (mismo numero, como en las
-  // rondas "grandes" de la llave de perdedores) cada partido se centra
-  // sobre los que lo alimentan, para que las lineas conectoras se vean
-  // bien. En cualquier otro caso (byes repartidos de forma pareja en vez
-  // de solo en la ronda 1, gran final que junta 2 llaves, etc.) NO hay
-  // una unica ronda anterior de la que "sale" cada partido, asi que en
-  // vez de tratar de encajarla en el espacio de la ronda anterior (eso
-  // fue lo que rompia el layout: rangos que quedaban mas chicos que la
-  // cantidad de tarjetas, o arrancaban en fila negativa) se ubica
-  // independiente, una fila por partido arrancando siempre en 0. Nunca
-  // se pisan porque cada ronda usa su propio contador de filas.
+  // Posición vertical (en "filas") de cada partido. En vez de adivinar la
+  // relación entre rondas por CANTIDAD de partidos (eso se rompía apenas
+  // había byes repartidos más allá de la ronda 1 — ej. Ronda 1 con 4
+  // partidos reales y Ronda 2 con 8 porque 12 jugadores entraban directo
+  // por bye: 4 no es ni el doble ni igual a 8, así que la ronda entera
+  // quedaba "flotando" sin alinear ni conectar con nada) se traza el
+  // linaje real: para cada partido se busca en la ronda anterior el/los
+  // partido(s) cuyo ganador_id coincide con equipo_a_id/equipo_b_id de
+  // este partido. Si se encuentran los dos lados, la fila es el promedio
+  // de ambos (como una llave normal). Si se encuentra solo uno (el otro
+  // lado entró directo por bye, sin jugar la ronda anterior) la fila se
+  // alinea con ese único origen. Si no se encuentra ninguno (round robin,
+  // gran final que junta dos llaves, etc.) el partido no tiene un origen
+  // vertical real, así que se ubica en la primera fila libre de esa
+  // ronda — nunca se pisa con uno que sí esté alineado.
   const yByRound: number[][] = []
+  const sourcesByRound: { a: number | null; b: number | null }[][] = []
   rounds.forEach((r, idx) => {
-    const n = r.matches.length
-    if (idx === 0) { yByRound.push(r.matches.map((_, i) => i)); return }
+    if (idx === 0) {
+      yByRound.push(r.matches.map((_, i) => i))
+      sourcesByRound.push(r.matches.map(() => ({ a: null, b: null })))
+      return
+    }
+    const prevMatches = rounds[idx - 1].matches
     const prevY = yByRound[idx - 1]
-    const prevN = prevY.length
-    if (prevN === n * 2) yByRound.push(r.matches.map((_, i) => (prevY[2 * i] + prevY[2 * i + 1]) / 2))
-    else if (prevN === n) yByRound.push(r.matches.map((_, i) => prevY[i]))
-    else yByRound.push(r.matches.map((_, i) => i))
+    const usedRows = new Set<number>()
+    const srcs: { a: number | null; b: number | null }[] = []
+    const raw: (number | null)[] = r.matches.map(m => {
+      const srcAIdx = m.equipo_a_id ? prevMatches.findIndex(pm => pm.ganador_id === m.equipo_a_id) : -1
+      const srcBIdx = m.equipo_b_id ? prevMatches.findIndex(pm => pm.ganador_id === m.equipo_b_id) : -1
+      const yA = srcAIdx !== -1 ? prevY[srcAIdx] : null
+      const yB = srcBIdx !== -1 ? prevY[srcBIdx] : null
+      srcs.push({ a: yA, b: yB })
+      let y: number | null = null
+      if (yA !== null && yB !== null) y = (yA + yB) / 2
+      else if (yA !== null) y = yA
+      else if (yB !== null) y = yB
+      if (y !== null) usedRows.add(y)
+      return y
+    })
+    let next = 0
+    const filled = raw.map(y => {
+      if (y !== null) return y
+      while (usedRows.has(next)) next++
+      usedRows.add(next)
+      return next
+    })
+    yByRound.push(filled)
+    sourcesByRound.push(srcs)
   })
 
   const maxY = Math.max(0, ...yByRound.flat())
@@ -482,22 +509,16 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
   const connectors: { x1: number; y1: number; xm: number; x2: number; y2: number }[] = []
   rounds.forEach((r, idx) => {
     if (idx === 0) return
-    const prevN = rounds[idx - 1].matches.length
-    const n = r.matches.length
     const x2 = idx * COL_W + CARD_PAD
     const xm = idx * COL_W - COL_W / 2
     r.matches.forEach((_, i) => {
       const y2 = HEADER_H + yByRound[idx][i] * ROW + CARD_CENTER
-      if (prevN === n * 2) {
-        [2 * i, 2 * i + 1].forEach(pi => {
-          connectors.push({ x1: idx * COL_W - CARD_PAD, y1: HEADER_H + yByRound[idx - 1][pi] * ROW + CARD_CENTER, xm, x2, y2 })
-        })
-      } else if (prevN === n) {
-        connectors.push({ x1: idx * COL_W - CARD_PAD, y1: HEADER_H + yByRound[idx - 1][i] * ROW + CARD_CENTER, xm, x2, y2 })
-      }
-      // cuando no hay una relación 2:1 ni 1:1 clara (ej. gran final,
-      // que junta a las dos llaves) no se traza línea — no hay una
-      // única ronda anterior de la que "salga" en términos visuales.
+      const { a, b } = sourcesByRound[idx][i]
+      const x1 = idx * COL_W - CARD_PAD
+      if (a !== null) connectors.push({ x1, y1: HEADER_H + a * ROW + CARD_CENTER, xm, x2, y2 })
+      if (b !== null) connectors.push({ x1, y1: HEADER_H + b * ROW + CARD_CENTER, xm, x2, y2 })
+      // sin origen trazable en la ronda anterior (bye directo, round
+      // robin, gran final que junta dos llaves) no se dibuja línea.
     })
   })
 
