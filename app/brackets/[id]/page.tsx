@@ -417,11 +417,16 @@ export default async function BracketPage({
  * posición real del árbol (no repartido parejo) y se dibujan líneas
  * conectoras — si no, con byes y "TBD" de por medio no se entiende
  * qué partido sale de cuál. */
-const ROW = 58
+// Las tarjetas de partido miden ~77px de alto una vez que se les agrega el
+// footer (estado + acciones de organizador): ROW tiene que ser mayor a eso
+// o las filas contiguas de una misma ronda se pisan. CARD_CENTER es la
+// mitad de esa altura, para que las líneas conectoras salgan del centro
+// vertical real de la tarjeta.
+const ROW = 86
 const COL_W = 184
 const CARD_PAD = 6
 const HEADER_H = 24
-const CARD_CENTER = 25
+const CARD_CENTER = 39
 
 const SECTION_LABEL: Record<string, string> = {
   losers: 'Llave de Perdedores',
