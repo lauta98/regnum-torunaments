@@ -194,7 +194,7 @@ export default function AdminPage() {
                               {r.listing?.item_name || 'Ítem desconocido'}
                             </span>
                             {r.listing_id && !r.resolved && (
-                              <Link href={`/listing/${r.listing_id}`} target="_blank"
+                              <Link href={`/market/listing/${r.listing_id}`} target="_blank"
                                 style={{ fontSize: 11, color: 'var(--gold)', border: '1px solid var(--gold-dark)', borderRadius: 6, padding: '2px 8px', textDecoration: 'none', whiteSpace: 'nowrap', background: 'rgba(201,168,76,0.08)' }}>
                                 Ver publicación ↗
                               </Link>
@@ -295,7 +295,7 @@ export default function AdminPage() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
                 <div>
-                  <Link href={`/listing/${r.listing?.id}`} target="_blank" className="cinzel"
+                  <Link href={`/market/listing/${r.listing?.id}`} target="_blank" className="cinzel"
                     style={{ fontSize: 15, color: 'var(--text-primary)', textDecoration: 'none' }}>
                     {r.listing?.item_name || 'Ítem desconocido'}
                   </Link>

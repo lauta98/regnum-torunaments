@@ -89,7 +89,7 @@ export default function SellerCard({ profile, listingId, sellerId }: Props) {
           {initials}
         </div>
         <div>
-          <Link href={`/perfil/${profile?.username}`} style={{ fontFamily: "'Cinzel',serif", fontSize: 15, color: 'var(--text-primary)', textDecoration: 'none' }}>
+          <Link href={`/market/perfil/${profile?.username}`} style={{ fontFamily: "'Cinzel',serif", fontSize: 15, color: 'var(--text-primary)', textDecoration: 'none' }}>
             {profile?.username}
           </Link>
           {profile?.regnum_nick && (

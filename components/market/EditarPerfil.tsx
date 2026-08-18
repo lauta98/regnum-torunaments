@@ -57,7 +57,7 @@ export default function EditarPerfil({ profile }: { profile: any }) {
       }}>
         ✏ Editar contacto
       </button>
-      <button onClick={() => window.location.href = '/configuracion'} style={{
+      <button onClick={() => window.location.href = '/market/configuracion'} style={{
         background: 'none', border: '1px solid var(--dark-border)', color: 'var(--text-muted)',
         padding: '4px 12px', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit',
       }}>

@@ -345,7 +345,7 @@ function MisListingsInner() {
                     {/* Acciones */}
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {l.status !== 'completed' && (
-                        <Link href={`/mis-listings/${l.id}/editar`} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(201,168,76,0.4)', background: 'none', color: 'var(--gold)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>
+                        <Link href={`/market/mis-listings/${l.id}/editar`} style={{ fontSize: 11, padding: '4px 10px', borderRadius: 6, border: '1px solid rgba(201,168,76,0.4)', background: 'none', color: 'var(--gold)', cursor: 'pointer', fontFamily: 'inherit', textDecoration: 'none' }}>
                           ✏ Editar
                         </Link>
                       )}

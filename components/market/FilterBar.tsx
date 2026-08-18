@@ -180,7 +180,7 @@ export default function FilterBar() {
     }
     p.delete('page')
     const qs = p.toString()
-    router.push(qs ? `/?${qs}` : '/')
+    router.push(qs ? `/market?${qs}` : '/market')
   }, [router, searchParams])
 
   // Cambio de categoría → resetea subcat
@@ -189,7 +189,7 @@ export default function FilterBar() {
     if (val === 'all') { p.delete('cat') } else { p.set('cat', val) }
     p.delete('subcat')
     p.delete('page')
-    router.push(p.toString() ? `/?${p.toString()}` : '/')
+    router.push(p.toString() ? `/market?${p.toString()}` : '/market')
   }, [router, searchParams])
 
   // Cambio de subclase → setea clase en el param para que page.tsx filtre
@@ -221,7 +221,7 @@ export default function FilterBar() {
 
   const clearAll = () => {
     setQInput(''); setPrecioMinInput(''); setPrecioMaxInput('')
-    router.push('/')
+    router.push('/market')
   }
 
   const subcats = SUBCATS[cat] ?? null

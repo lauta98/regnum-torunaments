@@ -156,7 +156,7 @@ export default function TransaccionesPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                 {esSeller ? '👤 Comprador: ' : '👤 Vendedor: '}
-                <Link href={`/perfil/${otroUsuario?.username}`} style={{ color: 'var(--gold-light)', textDecoration: 'none' }}>
+                <Link href={`/market/perfil/${otroUsuario?.username}`} style={{ color: 'var(--gold-light)', textDecoration: 'none' }}>
                   {otroUsuario?.username || 'Usuario desconocido'}
                 </Link>
                 {otroUsuario?.avg_rating && (
@@ -270,7 +270,7 @@ export default function TransaccionesPage() {
                 <span style={{ fontSize: 12, color: '#888' }}>
                   {(() => { const d = new Date(t.completed_at); const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']; return `Completado el ${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}` })()}
                 </span>
-                <Link href={`/calificar/${t.id}`} style={{
+                <Link href={`/market/calificar/${t.id}`} style={{
                   fontSize: 12, padding: '5px 14px', borderRadius: 6,
                   background: 'rgba(201,168,76,0.1)', border: '1px solid var(--gold-dark)',
                   color: 'var(--gold)', textDecoration: 'none',

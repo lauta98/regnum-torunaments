@@ -166,7 +166,7 @@ export default function NotificacionesPage() {
             )
 
             return n.listing_id ? (
-              <Link key={n.id} href={`/listing/${n.listing_id}`} style={{ textDecoration: 'none' }}>
+              <Link key={n.id} href={`/market/listing/${n.listing_id}`} style={{ textDecoration: 'none' }}>
                 {card}
               </Link>
             ) : (

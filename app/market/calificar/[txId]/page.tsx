@@ -173,7 +173,7 @@ export default function CalificarPage() {
             }}>
               ← Mis Tratos
             </Link>
-            <Link href={`/perfil/${otherUser?.username}`} style={{
+            <Link href={`/market/perfil/${otherUser?.username}`} style={{
               background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
               color: 'var(--dark-bg)', padding: '8px 20px', borderRadius: 8,
               textDecoration: 'none', fontSize: 13, fontWeight: 700,

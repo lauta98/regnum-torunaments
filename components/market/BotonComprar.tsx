@@ -45,7 +45,7 @@ export default function BotonComprar({ listing, currentUserId }: {
       color: '#5BC98B', fontSize: 14,
     }}>
       ✅ Solicitud enviada —{' '}
-      <a href="/transacciones" style={{ color: '#5BC98B', fontWeight: 700, textDecoration: 'underline' }}>
+      <a href="/market/transacciones" style={{ color: '#5BC98B', fontWeight: 700, textDecoration: 'underline' }}>
         ver en Mis Tratos
       </a>
     </div>
