@@ -5,6 +5,17 @@ import type { Metadata } from 'next'
 import { FORMAT_COLOR, STATUS_STYLE, CLASE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
 import SubclaseDropdown from './SubclaseDropdown'
+import OrdenDropdown from './OrdenDropdown'
+
+type Params = { formato?: string; sub?: string; estado?: string; orden?: string }
+
+// Arma el href de un filtro preservando el resto de los params activos.
+function qs(current: Params, changes: Partial<Params>) {
+  const next: Record<string, string> = { ...current, ...changes } as Record<string, string>
+  Object.keys(next).forEach(k => { if (!next[k]) delete next[k] })
+  const s = new URLSearchParams(next).toString()
+  return `/torneos${s ? `?${s}` : ''}`
+}
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Torneos' }
@@ -36,18 +47,19 @@ function Pill({ href, active, color, children }: { href: string; active: boolean
 export default async function TorneosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ formato?: string; sub?: string }>
+  searchParams: Promise<Params>
 }) {
   const params = await searchParams
   const supabase = await createServerSupabase()
+  const ordenAntiguos = params.orden === 'antiguos'
 
   let query = supabase
     .from('tournaments')
     .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count)')
-    .order('destacado', { ascending: false })
-    .order('created_at', { ascending: false })
+    .order('fecha_inicio', { ascending: ordenAntiguos })
 
   if (params.formato) query = query.eq('formato', params.formato as TournamentFormat)
+  if (params.estado) query = query.eq('estado', params.estado as TournamentStatus)
 
   const { data: tourneysDelFormato } = await query
 
@@ -84,17 +96,22 @@ export default async function TorneosPage({
         </div>
 
         {/* Formato filters */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: params.formato === '1v1' ? 12 : 24, flexWrap: 'wrap' }}>
-          <Pill href="/torneos" active={!params.formato}>Todos</Pill>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: params.formato === '1v1' ? 12 : 24, flexWrap: 'wrap' }}>
+          <Pill href={qs(params, { formato: undefined })} active={!params.formato}>Todos</Pill>
           {(['1v1', '2v2', '3v3', '7v7'] as const).map(f => (
-            <Pill key={f} href={`/torneos?formato=${f}`} active={params.formato === f} color={FMT_COLOR[f]}>
+            <Pill key={f} href={qs(params, { formato: f })} active={params.formato === f} color={FMT_COLOR[f]}>
               {FMT_LABEL[f]}
             </Pill>
           ))}
           <div style={{ flex: 1 }} />
-          <Pill href="/torneos?estado=finalizado" active={false} color="var(--text-muted)">
+          <Pill
+            href={qs(params, { estado: params.estado === 'finalizado' ? undefined : 'finalizado' })}
+            active={params.estado === 'finalizado'}
+            color="var(--text-muted)"
+          >
             Solo Finalizados
           </Pill>
+          <OrdenDropdown />
         </div>
 
         {/* Subclase: dropdown, solo si hay más de una subclase entre estos torneos */}

@@ -7,6 +7,7 @@ import type { UserRole } from '@/lib/types'
 import RoleManager from './RoleManager'
 import VerificarPersonaje from './VerificarPersonaje'
 import ResolverReclamo from './ResolverReclamo'
+import EliminarTorneoButton from './EliminarTorneoButton'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Panel Administrador' }
@@ -194,14 +195,16 @@ export default async function AdminPage() {
                           por {t.creator?.nickname_juego ?? '—'} · {t.registros?.[0]?.count ?? 0} equipos
                         </div>
                       </div>
-                      <span style={{
-                        background: `${sc}18`, color: sc, border: `1px solid ${sc}44`,
-                        padding: '2px 7px', borderRadius: 4,
-                        fontFamily: 'var(--font-display)', fontSize: 8, letterSpacing: 1,
-                        flexShrink: 0,
-                      }}>
-                        {statusLabel[t.estado] ?? t.estado}
-                      </span>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                        <span style={{
+                          background: `${sc}18`, color: sc, border: `1px solid ${sc}44`,
+                          padding: '2px 7px', borderRadius: 4,
+                          fontFamily: 'var(--font-display)', fontSize: 8, letterSpacing: 1,
+                        }}>
+                          {statusLabel[t.estado] ?? t.estado}
+                        </span>
+                        <EliminarTorneoButton torneoId={t.id} nombre={t.nombre} />
+                      </div>
                     </div>
                   </div>
                 )
