@@ -8,6 +8,7 @@ import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/type
 import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
 import GenerarBracketButton from './GenerarBracketButton'
+import GenerarCopaButton from './GenerarCopaButton'
 import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
@@ -133,6 +134,14 @@ export default async function BracketPage({
     const ordenDiff = BRACKET_ORDEN[bracketA] - BRACKET_ORDEN[bracketB]
     return ordenDiff !== 0 ? ordenDiff : roundNumA - roundNumB
   })
+
+  // Liga + Copa: la fase de liga (bracket='league') se lista aparte de la
+  // copa (bracket='main'/'losers'/'grand_final', generada después con un
+  // botón manual una vez que la liga termina).
+  const ligaEntries = roundEntries.filter(([key]) => key.startsWith('league-'))
+  const copaEntries = roundEntries.filter(([key]) => !key.startsWith('league-'))
+  const ligaMatches = matches?.filter((m: any) => m.bracket === 'league') ?? []
+  const ligaCompleta = ligaMatches.length > 0 && ligaMatches.every((m: any) => m.estado === 'jugado')
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
@@ -265,26 +274,34 @@ export default async function BracketPage({
                   </div>
                 )
               ) : torneo.bracket_type === 'round_robin' ? (
-                <div style={{ overflowX: 'auto' }}>
-                  {/* Round headers */}
-                  <div style={{ display: 'flex', gap: 0, minWidth: roundEntries.length * 240 }}>
-                    {roundEntries.map(([roundNum, roundMatches]) => {
-                      const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
-                      return (
-                        <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                          {/* Round label */}
-                          <div style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600 }}>
-                            {roundName}
-                          </div>
-                          {/* Matches */}
-                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
-                            {roundMatches.map((match: any) => (
-                              <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} />
-                            ))}
-                          </div>
+                <LigaFechas entries={roundEntries} isOrganizer={isOrganizer} fc={fc} />
+              ) : torneo.bracket_type === 'league_cup' ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+                      Fase de Liga
+                    </div>
+                    <LigaFechas entries={ligaEntries} isOrganizer={isOrganizer} fc={fc} />
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+                      Copa
+                    </div>
+                    {copaEntries.length > 0 ? (
+                      <BracketTree roundEntries={copaEntries} isOrganizer={isOrganizer} fc={fc} />
+                    ) : ligaCompleta ? (
+                      isOrganizer ? (
+                        <GenerarCopaButton torneoId={torneo.id} cupo={torneo.playoff_cupo ?? 0} />
+                      ) : (
+                        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                          <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>La liga terminó — la copa se genera en cualquier momento.</p>
                         </div>
                       )
-                    })}
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                        <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Disponible cuando termine la fase de liga.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -298,15 +315,19 @@ export default async function BracketPage({
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
                   Tabla de Posiciones
                 </div>
-                {torneo.bracket_type !== 'round_robin' ? (
+                {torneo.bracket_type !== 'round_robin' && torneo.bracket_type !== 'league_cup' ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
-                    Las posiciones están disponibles para torneos Round Robin.
+                    Las posiciones están disponibles para torneos Liga y Liga + Copa.
                   </div>
                 ) : (() => {
-                  // Calcular standings para round robin
+                  // Calcular standings de la fase de liga (para Liga+Copa,
+                  // solo cuentan los partidos de la liga, no los de la copa)
+                  const matchesLiga = torneo.bracket_type === 'league_cup'
+                    ? matches?.filter((m: any) => m.bracket === 'league')
+                    : matches
                   type StandRow = { nombre: string; W: number; L: number; D: number; pts: number }
                   const standings: Record<string, StandRow> = {}
-                  matches?.forEach((m: any) => {
+                  matchesLiga?.forEach((m: any) => {
                     const na = m.equipo_a?.nombre
                     const nb = m.equipo_b?.nombre
                     if (!na || !nb) return
@@ -431,6 +452,40 @@ const CARD_CENTER = 39
 const SECTION_LABEL: Record<string, string> = {
   losers: 'Llave de Perdedores',
   grand_final: 'Gran Final',
+}
+
+/** Fase de liga (round robin puro, o la fase de liga de Liga + Copa):
+ *  lista simple de fechas, sin árbol de conectores — acá no hay "quién
+ *  avanza a quién", cada fecha es independiente. */
+function LigaFechas({ entries, isOrganizer, fc }: { entries: [string, any[]][]; isOrganizer: boolean; fc: string }) {
+  if (entries.length === 0) {
+    return (
+      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+        <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Sin partidos todavía.</p>
+      </div>
+    )
+  }
+  return (
+    <div style={{ overflowX: 'auto' }}>
+      <div style={{ display: 'flex', gap: 0, minWidth: entries.length * 240 }}>
+        {entries.map(([roundNum, roundMatches]) => {
+          const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
+          return (
+            <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600 }}>
+                {roundName}
+              </div>
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
+                {roundMatches.map((match: any) => (
+                  <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string }) {

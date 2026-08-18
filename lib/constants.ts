@@ -64,10 +64,11 @@ export const FORMAT_TEAM_SIZE: Record<TournamentFormat, number> = {
 export const BRACKET_TYPE_LABEL: Record<BracketType, string> = {
   single_elimination: 'Eliminación simple',
   double_elimination: 'Eliminación doble',
-  round_robin: 'Round Robin (todos contra todos)',
+  round_robin: 'Liga (todos contra todos)',
+  league_cup: 'Liga + Copa',
 }
 
-export const BRACKET_TYPES: BracketType[] = ['single_elimination', 'double_elimination', 'round_robin']
+export const BRACKET_TYPES: BracketType[] = ['single_elimination', 'double_elimination', 'round_robin', 'league_cup']
 
 export const ELO_K_DEFAULT         = 32
 export const ELO_K_VETERAN         = 16

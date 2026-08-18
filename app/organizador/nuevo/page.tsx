@@ -18,6 +18,8 @@ function NuevoTorneoPage() {
     fecha_inicio: '',
     max_equipos: 8,
     premio: '',
+    playoff_cupo: 4,
+    playoff_bracket_type: 'single_elimination' as 'single_elimination' | 'double_elimination',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -33,6 +35,9 @@ function NuevoTorneoPage() {
     e.preventDefault()
     if (!form.nombre.trim()) return setError('El nombre es requerido.')
     if (!form.fecha_inicio) return setError('La fecha de inicio es requerida.')
+    if (form.bracket_type === 'league_cup' && (!form.playoff_cupo || form.playoff_cupo < 2)) {
+      return setError('El cupo de copa tiene que ser al menos 2.')
+    }
     setLoading(true); setError('')
 
     const supabase = createClient()
@@ -62,6 +67,8 @@ function NuevoTorneoPage() {
       fecha_inicio: form.fecha_inicio,
       max_equipos: form.max_equipos,
       premio: form.premio.trim() || null,
+      playoff_cupo: form.bracket_type === 'league_cup' ? form.playoff_cupo : null,
+      playoff_bracket_type: form.bracket_type === 'league_cup' ? form.playoff_bracket_type : null,
     })
 
     if (err) {
@@ -154,6 +161,38 @@ function NuevoTorneoPage() {
                 })}
               </div>
             </div>
+
+            {form.bracket_type === 'league_cup' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, background: 'rgba(212,175,55,0.05)', border: '1px solid var(--border-gold)', borderRadius: 10, padding: 16 }}>
+                <div>
+                  <label style={labelStyle}>CUPO A COPA</label>
+                  <input
+                    type="number" min={2} style={inputStyle} value={form.playoff_cupo}
+                    onChange={e => setForm(f => ({ ...f, playoff_cupo: parseInt(e.target.value) || 0 }))}
+                  />
+                  <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                    Cuántos de los mejores puestos de la liga pasan a la copa.
+                  </p>
+                </div>
+                <div>
+                  <label style={labelStyle}>TIPO DE COPA</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {(['single_elimination', 'double_elimination'] as const).map(bt => {
+                      const active = form.playoff_bracket_type === bt
+                      return (
+                        <button type="button" key={bt} onClick={() => setForm(f => ({ ...f, playoff_bracket_type: bt }))} style={{
+                          flex: 1, padding: '10px 6px', borderRadius: 8, cursor: 'pointer',
+                          border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                          background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
+                          color: active ? 'var(--gold)' : 'var(--text-secondary)',
+                          fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
+                        }}>{bt === 'single_elimination' ? 'Simple' : 'Doble'}</button>
+                      )
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div>
               <label style={labelStyle}>SUBCLASES QUE PUEDEN PARTICIPAR</label>

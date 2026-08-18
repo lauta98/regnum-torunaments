@@ -20,7 +20,7 @@ export default function GenerarBracketButton({ torneoId, inscritos, bracketType 
     }
   }
 
-  const puedeSortearEnVivo = bracketType !== 'round_robin' && bracketType !== 'double_elimination'
+  const puedeSortearEnVivo = bracketType !== 'round_robin' && bracketType !== 'double_elimination' && bracketType !== 'league_cup'
 
   return (
     <div style={{ textAlign: 'center', padding: '60px 24px', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>

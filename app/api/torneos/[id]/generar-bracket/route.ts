@@ -1,151 +1,6 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-
-interface SlotMatch {
-  round: number
-  posicion: number
-  equipoA: string | null
-  equipoB: string | null
-}
-
-function nextPow2(n: number): number {
-  let p = 1
-  while (p < n) p *= 2
-  return p
-}
-
-function shuffle<T>(arr: T[]): T[] {
-  const a = [...arr]
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[a[i], a[j]] = [a[j], a[i]]
-  }
-  return a
-}
-
-// Nombre según la cantidad de partidos QUE QUEDAN en esa ronda (no la
-// cantidad de equipos) — así se corresponde con la terminología
-// estándar: 1 partido = Final, 2 = Semifinal, 4 = Cuartos, 8 =
-// Octavos, 16 = Dieciseisavos, 32 = Treintaidosavos.
-const NOMBRES_RONDA: Record<number, string> = {
-  1: 'Final',
-  2: 'Semifinal',
-  4: 'Cuartos de Final',
-  8: 'Octavos de Final',
-  16: 'Dieciseisavos de Final',
-  32: 'Treintaidosavos de Final',
-  64: 'Sesentaicuatroavos de Final',
-}
-
-function roundName(matchesEnEsaRonda: number, esFinal: boolean): string {
-  if (esFinal) return 'Final'
-  return NOMBRES_RONDA[matchesEnEsaRonda] ?? `Ronda de ${matchesEnEsaRonda * 2}`
-}
-
-/** Eliminación simple — resuelve byes en el momento de generar, para que
- *  las rondas siguientes ya arranquen con el equipo que pasó de largo.
- *  Si se pasa `ordenFijo`, se respeta tal cual (sorteo en vivo ya hecho
- *  en el cliente); si no, se mezcla acá (sorteo rápido). */
-function buildSingleElimination(teamIds: string[], ordenFijo?: string[]): SlotMatch[][] {
-  const size = nextPow2(teamIds.length)
-  let current: (string | null)[] = ordenFijo && ordenFijo.length === teamIds.length ? [...ordenFijo] : shuffle(teamIds)
-  while (current.length < size) current.push(null) // bye
-
-  const rounds: SlotMatch[][] = []
-  let roundNum = 1
-  while (current.length > 1) {
-    const roundMatches: SlotMatch[] = []
-    const next: (string | null)[] = []
-    for (let i = 0; i < current.length / 2; i++) {
-      const a = current[2 * i]
-      const b = current[2 * i + 1]
-      roundMatches.push({ round: roundNum, posicion: i + 1, equipoA: a, equipoB: b })
-      if (a && !b) next.push(a)
-      else if (b && !a) next.push(b)
-      else next.push(null) // se define jugando (o queda TBD si ambos son bye, no debería pasar)
-    }
-    rounds.push(roundMatches)
-    current = next
-    roundNum++
-  }
-  return rounds
-}
-
-interface LBRoundSpec { round: number; matches: number }
-
-/** Calcula cuántas rondas y partidos tiene la llave de perdedores para
- *  un cuadro de `size` equipos (potencia de 2 exacta). Alterna rondas
- *  "menores" (sobrevivientes de perdedores contra sí mismos, reduce a
- *  la mitad) y "mayores" (sobrevivientes contra los que acaban de bajar
- *  de la llave principal, misma cantidad). El total de partidos da
- *  siempre size-2, que es el número conocido para eliminación doble. */
-function calcularRondasPerdedores(size: number): LBRoundSpec[] {
-  const R = Math.log2(size)
-  const specs: LBRoundSpec[] = []
-  let survivors = 0
-  let roundNum = 0
-  for (let wr = 1; wr <= R; wr++) {
-    const wbLosers = size / Math.pow(2, wr)
-    if (wr === 1) {
-      roundNum++
-      const m = wbLosers / 2
-      specs.push({ round: roundNum, matches: m })
-      survivors = m
-    } else {
-      roundNum++
-      specs.push({ round: roundNum, matches: survivors }) // ronda mayor: sobrevivientes vs nuevos caídos
-      if (wr < R && survivors > 1) {
-        roundNum++
-        const m = survivors / 2
-        specs.push({ round: roundNum, matches: m }) // ronda menor: sobrevivientes entre sí
-        survivors = m
-      }
-    }
-  }
-  return specs
-}
-
-/** Eliminación doble — solo admite una cantidad de equipos que sea
- *  potencia de 2 exacta (4, 8, 16, 32), para no mezclar byes con la
- *  llave de perdedores (ahí es donde este formato se rompe fácil).
- *  Genera la llave principal (ronda 1 con equipos reales, el resto
- *  vacío) + la llave de perdedores entera vacía (se llena sola a
- *  medida que se cargan resultados) + un lugar para la gran final. */
-function buildDoubleElimination(teamIds: string[], ordenFijo?: string[]): {
-  main: SlotMatch[][]
-  losers: LBRoundSpec[]
-} {
-  const main = buildSingleElimination(teamIds, ordenFijo)
-  const size = nextPow2(teamIds.length)
-  const losers = calcularRondasPerdedores(size)
-  return { main, losers }
-}
-
-/** Round robin — método del círculo. Todos juegan contra todos una vez,
- *  repartido en fechas para minimizar partidos simultáneos por equipo. */
-function buildRoundRobin(teamIds: string[]): SlotMatch[][] {
-  let arr: (string | null)[] = [...teamIds]
-  if (arr.length % 2 !== 0) arr.push(null) // equipo libre si es impar
-  const n = arr.length
-  const half = n / 2
-  const rounds: SlotMatch[][] = []
-
-  for (let r = 0; r < n - 1; r++) {
-    const roundMatches: SlotMatch[] = []
-    let pos = 1
-    for (let i = 0; i < half; i++) {
-      const a = arr[i]
-      const b = arr[n - 1 - i]
-      if (a && b) roundMatches.push({ round: r + 1, posicion: pos++, equipoA: a, equipoB: b })
-    }
-    if (roundMatches.length) rounds.push(roundMatches)
-    const fixed = arr[0]
-    const rest = arr.slice(1)
-    rest.unshift(rest.pop()!)
-    arr = [fixed, ...rest]
-  }
-  return rounds
-}
+import { nextPow2, roundName, buildSingleElimination, buildDoubleElimination, buildRoundRobin } from '@/lib/bracketGen'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -206,6 +61,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
   }
 
+  // Liga + Copa: acá solo se genera la fase de liga (round robin). La copa
+  // se genera aparte, cuando la liga termina, con /generar-copa.
+  if (torneo.bracket_type === 'league_cup') {
+    if (!torneo.playoff_cupo || torneo.playoff_cupo < 2) {
+      return NextResponse.json({ error: 'El torneo no tiene configurado un cupo de copa válido.' }, { status: 400 })
+    }
+    if (torneo.playoff_cupo > teamIds.length) {
+      return NextResponse.json({
+        error: `El cupo de copa (${torneo.playoff_cupo}) es mayor a la cantidad de equipos inscriptos (${teamIds.length}).`,
+      }, { status: 400 })
+    }
+  }
+
   // Limpiar matches vacíos de un intento anterior (ninguno jugado, ya lo validamos arriba)
   if (existentes && existentes.length > 0) {
     await supabase.from('matches').delete().eq('torneo_id', torneoId)
@@ -246,19 +114,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       ronda_numero: 1, posicion: 1, equipo_a_id: null, equipo_b_id: null, estado: 'pendiente',
     })
   } else {
-    const rounds = torneo.bracket_type === 'round_robin'
-      ? buildRoundRobin(teamIds)
-      : buildSingleElimination(teamIds, orden)
+    // round_robin y league_cup arrancan igual: se genera la fase de liga.
+    // La diferencia es el nombre de la ronda y, para league_cup, que estos
+    // partidos quedan marcados bracket='league' (la copa se agrega después,
+    // aparte, como bracket='main').
+    const esLiga = torneo.bracket_type === 'round_robin' || torneo.bracket_type === 'league_cup'
+    const rounds = esLiga ? buildRoundRobin(teamIds) : buildSingleElimination(teamIds, orden)
+    const bracketField = torneo.bracket_type === 'league_cup' ? 'league' : 'main'
 
     rounds.forEach((roundMatches, idx) => {
-      const isFinal = torneo.bracket_type !== 'round_robin' && idx === rounds.length - 1
-      const ronda = torneo.bracket_type === 'round_robin'
-        ? `Fecha ${idx + 1}`
-        : roundName(roundMatches.length, isFinal)
+      const isFinal = !esLiga && idx === rounds.length - 1
+      const ronda = esLiga ? `Fecha ${idx + 1}` : roundName(roundMatches.length, isFinal)
       roundMatches.forEach(m => {
         const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
         rows.push({
-          torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
+          torneo_id: torneoId, bracket: bracketField, ronda, ronda_numero: m.round, posicion: m.posicion,
           equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,
           estado: esBye ? 'jugado' : 'pendiente',
           ganador_id: esBye ? (m.equipoA ?? m.equipoB) : null,

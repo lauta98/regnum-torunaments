@@ -20,7 +20,7 @@ export type TournamentStatus =
 
 export type MatchStatus = 'pendiente' | 'jugado' | 'disputa'
 
-export type BracketType = 'single_elimination' | 'double_elimination' | 'round_robin'
+export type BracketType = 'single_elimination' | 'double_elimination' | 'round_robin' | 'league_cup'
 
 export type ReportStatus = 'pendiente' | 'resuelto' | 'rechazado'
 
