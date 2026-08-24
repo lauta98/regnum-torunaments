@@ -162,3 +162,23 @@ export function calcularNuevoMMR(
   const s = ganó ? 1 : 0
   return Math.round(mmrActual + k * (s - esperado))
 }
+
+// ─── Copas personalizadas ───────────────────────────────────────────────────
+// Paleta e íconos curados para que un organizador arme una copa propia sin
+// necesitar diseño gráfico — cualquier combinación de estas dos listas se ve
+// prolija (ver components/TrofeoBadge.tsx).
+export const TROFEO_COLORES = [
+  { nombre: 'Oro', hex: '#d4af37' },
+  { nombre: 'Plata', hex: '#c0c0c0' },
+  { nombre: 'Bronce', hex: '#cd7f32' },
+  { nombre: 'Rubí', hex: '#c0392b' },
+  { nombre: 'Zafiro', hex: '#2980b9' },
+  { nombre: 'Esmeralda', hex: '#27ae60' },
+  { nombre: 'Amatista', hex: '#8e44ad' },
+  { nombre: 'Ónix', hex: '#4a4a4a' },
+] as const
+
+export const TROFEO_ICONOS: Record<string, string> = {
+  espada: '⚔️', escudo: '🛡️', corona: '👑', llama: '🔥', hielo: '❄️',
+  hoja: '🌿', rayo: '⚡', estrella: '⭐', craneo: '💀', luna: '🌙',
+}

@@ -6,6 +6,8 @@ import type { Metadata } from 'next'
 import { REINO_COLOR, REINOS, CLASES, getTier } from '@/lib/constants'
 import type { Reino, Clase } from '@/lib/types'
 import TierLegend from '@/components/TierLegend'
+import TrofeoBadge from '@/components/TrofeoBadge'
+import { agruparTrofeos } from '@/lib/campeonatos'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Ranking — CoR Tournament Stats' }
@@ -46,6 +48,26 @@ const MEDAL_COLORS: Record<number, { main: string; bg: string; glow: string; lab
   3: { main: '#cd7f32', bg: 'linear-gradient(160deg, #0e0a00, #141008)', glow: 'rgba(205,127,50,0.12)', label: '🥉' },
 }
 
+/** Fila compacta de insignias de copa — hasta 3 distintas + "+N" si hay más,
+ *  cada una con su propio contador cuando el mismo personaje repitió esa
+ *  copa varias veces. */
+function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos').TrofeoGrupo[]; size?: 'xs' | 'sm' }) {
+  if (grupos.length === 0) return null
+  const visibles = grupos.slice(0, 3)
+  const restantes = grupos.length - visibles.length
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+      {visibles.map((g, i) => (
+        <TrofeoBadge
+          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} size={size} count={g.count}
+          title={`${g.tipoClan ? 'Campeón de clan' : 'Campeón'} — ${g.nombres.join(', ')}`}
+        />
+      ))}
+      {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>+{restantes}</span>}
+    </span>
+  )
+}
+
 const selectStyle = {
   background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 8, color: 'var(--text-secondary)', padding: '8px 14px',
@@ -82,25 +104,12 @@ export default async function JugadoresPage({
     vista === 'cuentas' ? query.limit(200) : query.range(from, from + PAGE - 1)
   )
 
-  /* ── Campeonatos (para la insignia 🏆) ─────────────── */
+  /* ── Campeonatos (para las insignias de copa) ──────── */
   const personajeIds = (personajes ?? []).map((p: any) => p.id)
   const { data: campeonatosData } = personajeIds.length ? await supabase
-    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, torneo:tournaments(nombre)').in('personaje_id', personajeIds)
+    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color))').in('personaje_id', personajeIds)
     : { data: null }
-  const campeonatosPorPersonaje = new Map<string, string[]>()
-  const campeonatosClanPorPersonaje = new Map<string, string[]>()
-  campeonatosData?.forEach((c: any) => {
-    if (!c.torneo) return
-    if (c.tipo === 'equipo') {
-      const arr = campeonatosClanPorPersonaje.get(c.personaje_id) ?? []
-      arr.push(`${c.torneo.nombre} (${c.equipo_nombre})`)
-      campeonatosClanPorPersonaje.set(c.personaje_id, arr)
-    } else {
-      const arr = campeonatosPorPersonaje.get(c.personaje_id) ?? []
-      arr.push(c.torneo.nombre)
-      campeonatosPorPersonaje.set(c.personaje_id, arr)
-    }
-  })
+  const trofeosPorPersonaje = agruparTrofeos(campeonatosData as any)
 
   /* ── Para vista cuentas: agrupar por player ────────── */
   let cuentas: any[] = []
@@ -218,17 +227,21 @@ export default async function JugadoresPage({
                     <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none', flex: 1, maxWidth: 230 }}>
                       <div style={{ background: m.bg, border: `1px solid ${m.main}44`, borderRadius: '12px 12px 0 0', paddingTop: paddingTop[idx], paddingBottom: 16, paddingLeft: 16, paddingRight: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, boxShadow: `0 0 36px ${m.glow}, inset 0 0 60px rgba(0,0,0,0.4)`, position: 'relative' }}>
                         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${m.main}88, transparent)` }} />
-                        <div style={{ fontSize: rank === 1 ? 26 : 20 }}>{m.label}</div>
+                        <div style={{
+                          width: rank === 1 ? 40 : 32, height: rank === 1 ? 40 : 32, borderRadius: '50%',
+                          background: `radial-gradient(circle, ${m.main}22, transparent 70%)`,
+                          border: `1px solid ${m.main}55`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: rank === 1 ? 22 : 17,
+                        }}>{m.label}</div>
                         <div style={{ position: 'relative' }}>
                           <div style={{ width: rank === 1 ? 50 : 42, height: rank === 1 ? 50 : 42, borderRadius: '50%', background: `${rc}20`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 17 : 14, fontWeight: 700, color: rc }}>
                             {p.nickname_juego?.[0]?.toUpperCase()}
                           </div>
                           <div style={{ position: 'absolute', bottom: -4, right: -6 }}><KingdomShield reino={p.reino} size={14} /></div>
                         </div>
-                        <div style={{ fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 12 : 11, fontWeight: 700, color: rank === 1 ? m.main : 'var(--text-primary)', letterSpacing: 0.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <div style={{ fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 12 : 11, fontWeight: 700, color: rank === 1 ? m.main : 'var(--text-primary)', letterSpacing: 0.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'center' }}>
                           {p.nickname_juego} {p.verificado && <span title="Verificado">✓</span>}
-                          {campeonatosPorPersonaje.get(p.id) && <span title={`Campeón de ${campeonatosPorPersonaje.get(p.id)!.join(', ')}`}>🏆</span>}
-                          {campeonatosClanPorPersonaje.get(p.id) && <span title={`Campeón de clan — ${campeonatosClanPorPersonaje.get(p.id)!.join(', ')}`}>🛡️</span>}
+                          <TrofeoRow grupos={trofeosPorPersonaje.get(p.id) ?? []} />
                         </div>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: rank === 1 ? 16 : 13, fontWeight: 700, color: m.main }}>{p.mmr}</div>
                         <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {tier.name}</span>
@@ -272,7 +285,18 @@ export default async function JugadoresPage({
                     <Link href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
                       <div className={`row-hover ${rankRowClass}`} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 120px 120px 90px 56px', padding: '12px 20px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', cursor: 'pointer', ...(!isTop ? { borderLeft: `3px solid ${tier.color}18` } : {}) }}>
                         {/* Rank */}
-                        <div>{isTop ? <span style={{ fontSize: 18 }}>{['🥇','🥈','🥉'][globalRank - 1]}</span> : <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{globalRank}</span>}</div>
+                        <div>
+                          {isTop ? (
+                            <span style={{
+                              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                              width: 28, height: 28, borderRadius: '50%', fontSize: 15,
+                              background: `radial-gradient(circle, ${MEDAL_COLORS[globalRank].main}22, transparent 70%)`,
+                              border: `1px solid ${MEDAL_COLORS[globalRank].main}55`,
+                            }}>{MEDAL_COLORS[globalRank].label}</span>
+                          ) : (
+                            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{globalRank}</span>
+                          )}
+                        </div>
                         {/* Nombre */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                           <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}${isTop ? 'bb' : '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: rc, flexShrink: 0 }}>
@@ -282,8 +306,7 @@ export default async function JugadoresPage({
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 4 }}>
                               {p.nickname_juego}
                               {p.verificado && <span style={{ fontSize: 10, color: '#2196F3' }} title="Personaje verificado">✓</span>}
-                              {campeonatosPorPersonaje.get(p.id) && <span style={{ fontSize: 11 }} title={`Campeón de ${campeonatosPorPersonaje.get(p.id)!.join(', ')}`}>🏆</span>}
-                              {campeonatosClanPorPersonaje.get(p.id) && <span style={{ fontSize: 11 }} title={`Campeón de clan — ${campeonatosClanPorPersonaje.get(p.id)!.join(', ')}`}>🛡️</span>}
+                              <TrofeoRow grupos={trofeosPorPersonaje.get(p.id) ?? []} />
                             </div>
                             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{p.player?.discord_username ?? '—'}</div>
                           </div>

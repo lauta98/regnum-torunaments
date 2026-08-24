@@ -12,6 +12,7 @@ import GenerarCopaButton from './GenerarCopaButton'
 import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
+import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 
 export const dynamic = 'force-dynamic'
 
@@ -158,6 +159,30 @@ export default async function BracketPage({
   return (
     <>
       <Header />
+
+      {/* Portada del torneo — mismo tratamiento que Salón de la Fama; si
+          no hay foto, no ocupa lugar (no queda un hueco vacío). */}
+      {(torneo.imagen_url || isOrganizer) && (
+        <div style={{
+          height: 200, position: 'relative', overflow: 'hidden',
+          background: torneo.imagen_url
+            ? `url(${torneo.imagen_url}) center/cover`
+            : 'radial-gradient(120% 140% at 15% 0%, #1c1600 0%, #0e0c04 45%, #0a0a0a 100%)',
+        }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(0deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0.1) 100%)' }} />
+          {isOrganizer && (
+            <div style={{ position: 'absolute', top: 14, right: 14, zIndex: 2 }}>
+              <SubirFoto tabla="tournaments" id={torneo.id} campo="imagen_url" label="Cambiar foto del torneo" variant="icon" aspectRatio={5} />
+            </div>
+          )}
+          <div style={{ position: 'absolute', left: 24, right: 24, bottom: 14, zIndex: 1, maxWidth: 1400 - 48, margin: '0 auto' }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.25 }}>
+              {torneo.nombre}
+            </h1>
+          </div>
+        </div>
+      )}
+
       <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
         {/* Top meta bar */}

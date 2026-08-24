@@ -7,7 +7,7 @@ import { canAdmin, canOrganize } from '@/lib/roles'
 // generar-bracket, finalizar) — no se expone acá para no pisarlos.
 const CAMPOS_EDITABLES_ORGANIZADOR = [
   'nombre', 'descripcion', 'formato', 'fecha_inicio', 'fecha_fin',
-  'premio', 'max_equipos', 'reglamento', 'subclases_permitidas',
+  'premio', 'max_equipos', 'reglamento', 'subclases_permitidas', 'trofeo_id',
 ] as const
 
 // Campos de prestigio/curación editorial — solo un admin los toca, sin

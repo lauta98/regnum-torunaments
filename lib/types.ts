@@ -84,6 +84,15 @@ export interface TeamMember {
   personaje?: Personaje
 }
 
+export interface Trofeo {
+  id: string
+  nombre: string
+  icono: string
+  color: string
+  creado_por: string
+  created_at: string
+}
+
 export interface Tournament {
   id: string
   creator_id: string
@@ -99,6 +108,8 @@ export interface Tournament {
   max_equipos: number
   premio: string | null
   organizador_verificado: boolean
+  trofeo_id: string | null
+  trofeo?: Trofeo | null
   created_at: string
   creator?: Player
   equipos_inscritos?: number

@@ -1,8 +1,10 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 import { FORMATS, FORMAT_LABEL, FORMAT_COLOR, CLASES, CLASE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
+import TrofeoPicker from '@/components/TrofeoPicker'
 
 const ESTADOS: TournamentStatus[] = ['draft', 'inscripciones', 'live', 'finalizado']
 const ESTADO_LABEL: Record<TournamentStatus, string> = {
@@ -24,10 +26,21 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
     reglamento: torneo.reglamento ?? '',
     destacado: torneo.destacado ?? false,
     organizador_verificado: torneo.organizador_verificado ?? false,
+    trofeo_id: torneo.trofeo_id ?? null as string | null,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
+  const [miPlayerId, setMiPlayerId] = useState<string | null>(null)
+
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return
+      supabase.from('players').select('id').eq('user_id', user.id).single()
+        .then(({ data }) => setMiPlayerId(data?.id ?? null))
+    })
+  }, [])
 
   const toggleSubclase = (c: Clase) => {
     setForm(f => ({ ...f, subclases: f.subclases.includes(c) ? f.subclases.filter(x => x !== c) : [...f.subclases, c] }))
@@ -52,6 +65,7 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
         max_equipos: form.max_equipos,
         premio: form.premio.trim() || null,
         reglamento: form.reglamento.trim() || null,
+        trofeo_id: form.trofeo_id,
         ...(isAdmin ? { estado: form.estado, destacado: form.destacado, organizador_verificado: form.organizador_verificado } : {}),
       }),
     })
@@ -209,6 +223,18 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
           </button>
         </div>
       )}
+
+      <div>
+        <label style={labelStyle}>COPA DEL TORNEO</label>
+        <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+          Los campeones van a mostrar esta copa en vez del trofeo genérico. Podés reutilizar una que ya creaste o armar una nueva.
+        </p>
+        {miPlayerId ? (
+          <TrofeoPicker playerId={miPlayerId} value={form.trofeo_id} onChange={id => setForm(f => ({ ...f, trofeo_id: id }))} />
+        ) : (
+          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
+        )}
+      </div>
 
       <div>
         <label style={labelStyle}>PREMIO (opcional)</label>

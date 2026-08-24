@@ -6,6 +6,7 @@ import { REINO_COLOR } from '@/lib/constants'
 import type { Reino } from '@/lib/types'
 import { canAdmin } from '@/lib/roles'
 import SubirFoto from './SubirFoto'
+import TrofeoBadge from '@/components/TrofeoBadge'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Salón de la Fama' }
@@ -27,7 +28,7 @@ export default async function SalonDeLaFamaPage() {
     .select(`
       id, foto_url, personaje_id, player_id, tipo, equipo_nombre,
       personaje:personajes(id, nickname_juego, reino, clase),
-      torneo:tournaments(id, nombre, formato, fecha_inicio, imagen_url, creator_id)
+      torneo:tournaments(id, nombre, formato, fecha_inicio, imagen_url, creator_id, trofeo:trofeos(nombre, icono, color))
     `)
     .order('created_at', { ascending: false })
 
@@ -168,8 +169,10 @@ export default async function SalonDeLaFamaPage() {
                             )}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 9, color: esClan ? '#5b8fd4' : 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.85 }}>
-                              {esClan ? `🛡️ CLAN CAMPEÓN — ${c.equipo_nombre}` : '🏆 CAMPEÓN'}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: esClan ? '#5b8fd4' : (c.torneo.trofeo?.color ?? 'var(--gold)'), fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.9 }}>
+                              <TrofeoBadge trofeo={c.torneo.trofeo} tipoClan={esClan} size="xs" />
+                              {c.torneo.trofeo?.nombre ?? (esClan ? `CLAN CAMPEÓN — ${c.equipo_nombre}` : 'CAMPEÓN')}
+                              {c.torneo.trofeo && esClan && ` — ${c.equipo_nombre}`}
                             </div>
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {p.nickname_juego}

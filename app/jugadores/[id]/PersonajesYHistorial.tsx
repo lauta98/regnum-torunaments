@@ -7,6 +7,8 @@ import AgregarPersonaje from './AgregarPersonaje'
 import ReclamarNickname from './ReclamarNickname'
 import ElegirPrincipal from './ElegirPrincipal'
 import EditarNickname from './EditarNickname'
+import TrofeoBadge from '@/components/TrofeoBadge'
+import type { TrofeoGrupo } from '@/lib/campeonatos'
 
 const CLASE_ICON: Record<string, string> = {
   Bárbaro: '⚔️', Caballero: '🛡️', Conjurador: '✨', Brujo: '🔮', Tirador: '🏹', Cazador: '🐺',
@@ -15,19 +17,49 @@ const SHIELD_SRC: Record<string, string> = {
   Syrtis: '/shield-syrtis.png', Ignis: '/shield-ignis.png', Alsius: '/shield-alsius.png',
 }
 
-type Campeonato = { id: string; nombre: string; tipo: string; equipo_nombre: string | null }
+/** Fila compacta de insignias de copa junto al nombre de un personaje —
+ *  hasta 3 distintas + "+N" si hay más, mismo criterio que en el ranking. */
+function TrofeoRow({ grupos, size = 'xs' }: { grupos: TrofeoGrupo[]; size?: 'xs' | 'sm' | 'md' }) {
+  if (!grupos?.length) return null
+  const visibles = grupos.slice(0, 3)
+  const restantes = grupos.length - visibles.length
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+      {visibles.map((g, i) => (
+        <TrofeoBadge
+          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} size={size} count={g.count}
+          title={`${g.tipoClan ? 'Campeón de clan' : 'Campeón'} — ${g.nombres.join(', ')}`}
+        />
+      ))}
+      {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>+{restantes}</span>}
+    </span>
+  )
+}
 
 export default function PersonajesYHistorial({
-  playerId, personajes, isOwner, personajePrincipalId, campeonatosPorPersonaje, historiasPorPersonaje, nicknamesAnterioresPorPersonaje,
+  playerId, personajes, isOwner, personajePrincipalId, trofeosPorPersonaje, historiasPorPersonaje, nicknamesAnterioresPorPersonaje,
 }: {
   playerId: string
   personajes: any[]
   isOwner: boolean
   personajePrincipalId: string | null
-  campeonatosPorPersonaje: Record<string, Campeonato[]>
+  trofeosPorPersonaje: Record<string, TrofeoGrupo[]>
   historiasPorPersonaje: Record<string, any[]>
   nicknamesAnterioresPorPersonaje: Record<string, string[]>
 }) {
+  // Vitrina: todas las copas de todos sus personajes, combinadas por nombre
+  // de copa (o el grupo genérico) — el trofeo es del jugador, no de "un"
+  // personaje puntual, aunque cada campeonato haya sido con uno distinto.
+  const vitrina = (() => {
+    const combinado = new Map<string, TrofeoGrupo>()
+    Object.values(trofeosPorPersonaje).flat().forEach(g => {
+      const key = `${g.tipoClan ? 'clan' : 'ind'}:${g.trofeo?.nombre ?? '__generico'}`
+      const existente = combinado.get(key)
+      if (existente) { existente.count += g.count; existente.nombres.push(...g.nombres) }
+      else combinado.set(key, { ...g, nombres: [...g.nombres] })
+    })
+    return [...combinado.values()].sort((a, b) => b.count - a.count)
+  })()
   const INITIAL_VISIBLE = 20
   const [seleccionadoId, setSeleccionadoId] = useState<string | null>(personajes[0]?.id ?? null)
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
@@ -83,11 +115,7 @@ export default function PersonajesYHistorial({
                   <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
                     {p.verificado && <span style={{ fontSize: 11, color: '#2196F3' }} title="Verificado">✓</span>}
-                    {campeonatosPorPersonaje[p.id]?.map(t => (
-                      <span key={t.id} style={{ fontSize: 12 }} title={t.tipo === 'equipo' ? `Campeón de clan (${t.equipo_nombre}) — ${t.nombre}` : `Campeón de ${t.nombre}`}>
-                        {t.tipo === 'equipo' ? '🛡️' : '🏆'}
-                      </span>
-                    ))}
+                    <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
                   </div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino} · {p.clase}</div>
                   {nicknamesAnterioresPorPersonaje[p.id]?.length > 0 && (
@@ -126,6 +154,28 @@ export default function PersonajesYHistorial({
           )
         })}
       </div>
+
+      {/* Vitrina de trofeos — todas las copas del jugador, combinadas */}
+      {vitrina.length > 0 && (
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>VITRINA DE TROFEOS</span>
+          </div>
+          <div style={{ padding: '18px 20px', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
+            {vitrina.map((g, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 84, textAlign: 'center' }}>
+                <TrofeoBadge trofeo={g.trofeo} tipoClan={g.tipoClan} size="md" count={g.count} title={g.nombres.join(', ')} />
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                  {g.trofeo?.nombre ?? (g.tipoClan ? 'Campeón de clan' : 'Campeón')}
+                </div>
+                <div style={{ fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.3 }}>
+                  {g.count > 1 ? `${g.count} títulos` : g.nombres[0]}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Historial de enfrentamientos del personaje seleccionado */}
       {historial.length > 0 && (

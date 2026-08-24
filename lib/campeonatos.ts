@@ -1,3 +1,40 @@
+export type TrofeoInfo = { nombre: string; icono: string; color: string } | null
+
+export type CampeonatoRaw = {
+  personaje_id: string
+  tipo: string | null
+  equipo_nombre: string | null
+  torneo: { nombre: string; trofeo: TrofeoInfo } | null
+}
+
+export type TrofeoGrupo = { trofeo: TrofeoInfo; tipoClan: boolean; count: number; nombres: string[] }
+
+/** Agrupa los campeonatos de cada personaje por copa (misma copa personalizada
+ *  → un solo badge con contador; sin copa asignada → cae en un grupo
+ *  "genérico" por tipo, también contado). Así se puede distinguir cuántos
+ *  títulos tiene alguien y de cuáles copas, en vez de un ícono suelto que no
+ *  cambia entre 1 y 10 campeonatos — mismo criterio en el ranking y el perfil. */
+export function agruparTrofeos(raw: CampeonatoRaw[] | null | undefined): Map<string, TrofeoGrupo[]> {
+  const porPersonaje = new Map<string, Map<string, TrofeoGrupo>>()
+  raw?.forEach(c => {
+    if (!c.torneo) return
+    const tipoClan = c.tipo === 'equipo'
+    const trofeo = c.torneo.trofeo ?? null
+    const key = `${tipoClan ? 'clan' : 'ind'}:${trofeo?.nombre ?? '__generico'}`
+    const grupos = porPersonaje.get(c.personaje_id) ?? new Map<string, TrofeoGrupo>()
+    const nombre = tipoClan ? `${c.torneo.nombre} (${c.equipo_nombre})` : c.torneo.nombre
+    const existente = grupos.get(key)
+    if (existente) { existente.count++; existente.nombres.push(nombre) }
+    else grupos.set(key, { trofeo, tipoClan, count: 1, nombres: [nombre] })
+    porPersonaje.set(c.personaje_id, grupos)
+  })
+  const resultado = new Map<string, TrofeoGrupo[]>()
+  porPersonaje.forEach((grupos, personajeId) => {
+    resultado.set(personajeId, [...grupos.values()].sort((a, b) => b.count - a.count))
+  })
+  return resultado
+}
+
 /** Detecta el/los campeón/es de un torneo ya jugado.
  *
  * "Campeón" = integrante del equipo ganador de la ronda con mayor
