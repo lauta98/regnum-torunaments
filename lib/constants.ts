@@ -164,21 +164,39 @@ export function calcularNuevoMMR(
 }
 
 // ─── Copas personalizadas ───────────────────────────────────────────────────
-// Paleta e íconos curados para que un organizador arme una copa propia sin
-// necesitar diseño gráfico — cualquier combinación de estas dos listas se ve
-// prolija (ver components/TrofeoBadge.tsx).
+// Paleta, íconos y formas curados para que un organizador arme una copa
+// propia sin necesitar diseño gráfico — cualquier combinación de estas
+// listas se ve prolija (ver components/TrofeoBadge.tsx).
+export const TROFEO_FORMAS = [
+  { id: 'copa', nombre: 'Copa' },
+  { id: 'medalla', nombre: 'Medalla' },
+  { id: 'escudo', nombre: 'Escudo' },
+] as const
+
 export const TROFEO_COLORES = [
   { nombre: 'Oro', hex: '#d4af37' },
   { nombre: 'Plata', hex: '#c0c0c0' },
   { nombre: 'Bronce', hex: '#cd7f32' },
+  { nombre: 'Platino', hex: '#94a3b8' },
   { nombre: 'Rubí', hex: '#c0392b' },
-  { nombre: 'Zafiro', hex: '#2980b9' },
+  { nombre: 'Carmesí', hex: '#7f1d1d' },
+  { nombre: 'Coral', hex: '#ff6b6b' },
+  { nombre: 'Ámbar', hex: '#f39c12' },
   { nombre: 'Esmeralda', hex: '#27ae60' },
+  { nombre: 'Bosque', hex: '#14532d' },
+  { nombre: 'Turquesa', hex: '#16a085' },
+  { nombre: 'Zafiro', hex: '#2980b9' },
+  { nombre: 'Índigo', hex: '#4834d4' },
   { nombre: 'Amatista', hex: '#8e44ad' },
+  { nombre: 'Rosa', hex: '#e84393' },
   { nombre: 'Ónix', hex: '#4a4a4a' },
 ] as const
 
 export const TROFEO_ICONOS: Record<string, string> = {
-  espada: '⚔️', escudo: '🛡️', corona: '👑', llama: '🔥', hielo: '❄️',
-  hoja: '🌿', rayo: '⚡', estrella: '⭐', craneo: '💀', luna: '🌙',
+  espada: '⚔️', escudo: '🛡️', arco: '🏹', hacha: '🪓',
+  corona: '👑', gema: '💎', laurel: '🏵️', estrella: '⭐',
+  llama: '🔥', hielo: '❄️', rayo: '⚡', tormenta: '🌪️',
+  hoja: '🌿', luna: '🌙', sol: '☀️', cometa: '☄️',
+  craneo: '💀', ojo: '👁️', dragon: '🐉', lobo: '🐺',
+  aguila: '🦅', serpiente: '🐍', ancla: '⚓', corazon: '❤️',
 }

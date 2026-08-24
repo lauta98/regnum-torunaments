@@ -107,7 +107,7 @@ export default async function JugadoresPage({
   /* ── Campeonatos (para las insignias de copa) ──────── */
   const personajeIds = (personajes ?? []).map((p: any) => p.id)
   const { data: campeonatosData } = personajeIds.length ? await supabase
-    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, puesto, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color))').in('personaje_id', personajeIds)
+    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, puesto, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color, forma))').in('personaje_id', personajeIds)
     : { data: null }
   const trofeosPorPersonaje = agruparTrofeos(campeonatosData as any)
 

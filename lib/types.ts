@@ -89,6 +89,7 @@ export interface Trofeo {
   nombre: string
   icono: string
   color: string
+  forma: string
   creado_por: string
   created_at: string
 }

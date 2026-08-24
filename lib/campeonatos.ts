@@ -1,4 +1,4 @@
-export type TrofeoInfo = { nombre: string; icono: string; color: string } | null
+export type TrofeoInfo = { nombre: string; icono: string; color: string; forma?: string } | null
 
 export type CampeonatoRaw = {
   personaje_id: string

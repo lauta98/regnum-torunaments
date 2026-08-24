@@ -161,18 +161,30 @@ export default function PersonajesYHistorial({
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>VITRINA DE TROFEOS</span>
           </div>
-          <div style={{ padding: '18px 20px', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
-            {vitrina.map((g, i) => (
-              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 84, textAlign: 'center' }}>
-                <TrofeoBadge trofeo={g.trofeo} tipoClan={g.tipoClan} puesto={g.puesto} size="md" count={g.count} title={g.nombres.join(', ')} />
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                  {g.trofeo?.nombre ?? (g.puesto === 2 ? 'Subcampeón' : (g.tipoClan ? 'Campeón de clan' : 'Campeón'))}
+          <div style={{ padding: '18px 20px', display: 'flex', flexWrap: 'wrap', gap: 24 }}>
+            {vitrina.map((g, i) => {
+              const VISIBLES = 6
+              const visibles = Math.min(g.count, VISIBLES)
+              const restantes = g.count - visibles
+              return (
+                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, maxWidth: 200, textAlign: 'center' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'center' }}>
+                    {Array.from({ length: visibles }).map((_, j) => (
+                      <TrofeoBadge key={j} trofeo={g.trofeo} tipoClan={g.tipoClan} puesto={g.puesto} size="sm" title={g.nombres[j]} />
+                    ))}
+                    {restantes > 0 && (
+                      <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', display: 'flex', alignItems: 'center' }}>+{restantes}</span>
+                    )}
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
+                    {g.trofeo?.nombre ?? (g.puesto === 2 ? 'Subcampeón' : (g.tipoClan ? 'Campeón de clan' : 'Campeón'))}
+                  </div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.4 }}>
+                    {g.nombres.join(' · ')}
+                  </div>
                 </div>
-                <div style={{ fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.3 }}>
-                  {g.count > 1 ? `${g.count} títulos` : g.nombres[0]}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       )}
