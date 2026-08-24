@@ -28,7 +28,7 @@ export default async function EditarTorneoOrganizadorPage({ params }: { params: 
   return (
     <>
       <Header />
-      <main style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px', flex: 1 }}>
+      <main style={{ maxWidth: 1120, margin: '0 auto', padding: '40px 24px', flex: 1 }}>
         <div style={{ marginBottom: 28 }}>
           <Link href="/organizador" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>← Panel organizador</Link>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, color: 'var(--gold)', letterSpacing: 2, marginTop: 8 }}>
@@ -39,9 +39,7 @@ export default async function EditarTorneoOrganizadorPage({ params }: { params: 
           </p>
         </div>
 
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 16, padding: 32 }}>
-          <EditarTorneoForm torneo={torneo} isAdmin={esAdmin} />
-        </div>
+        <EditarTorneoForm torneo={torneo} isAdmin={esAdmin} />
       </main>
       <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>
         CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community

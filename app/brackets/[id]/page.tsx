@@ -263,11 +263,9 @@ export default async function BracketPage({
               </div>
               {isOrganizer && (
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Link href={`/organizador/torneos/${torneo.id}`} style={{
+                  <Link href={`/organizador/torneos/${torneo.id}`} className="btn btn-ghost-gold" style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    background: 'transparent', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 8,
-                    color: 'var(--gold)', padding: '7px 0', fontFamily: 'var(--font-display)', fontSize: 10.5,
-                    letterSpacing: 0.5, textDecoration: 'none',
+                    padding: '7px 0', fontSize: 10.5, textDecoration: 'none',
                   }}>
                     ✎ Editar torneo
                   </Link>

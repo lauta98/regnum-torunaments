@@ -2,9 +2,10 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { FORMATS, FORMAT_LABEL, FORMAT_COLOR, CLASES, CLASE_LABEL } from '@/lib/constants'
+import { FORMATS, FORMAT_LABEL, CLASES, CLASE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
 import TrofeoPicker from '@/components/TrofeoPicker'
+import VistaPreviaTorneo from '@/components/VistaPreviaTorneo'
 
 const ESTADOS: TournamentStatus[] = ['draft', 'inscripciones', 'live', 'finalizado']
 const ESTADO_LABEL: Record<TournamentStatus, string> = {
@@ -76,201 +77,185 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
     router.refresh()
   }
 
-  const inputStyle = {
-    width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)',
-    borderRadius: 8, color: 'var(--text-primary)', padding: '10px 14px',
-    fontSize: 14, fontFamily: 'var(--font-display)', outline: 'none', boxSizing: 'border-box',
-  } as const
-
-  const labelStyle = {
-    display: 'block', fontFamily: 'var(--font-display)', fontSize: 11,
-    color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6,
-  } as const
-
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div>
-        <label style={labelStyle}>NOMBRE DEL TORNEO</label>
-        <input style={inputStyle} value={form.nombre} maxLength={80} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
-      </div>
+    <form onSubmit={handleSubmit} className="cor-editar-torneo" style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 20, alignItems: 'start' }}>
+      <style>{`
+        @media (max-width: 820px) {
+          .cor-editar-torneo { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
 
-      <div>
-        <label style={labelStyle}>DESCRIPCIÓN</label>
-        <textarea
-          style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
-          value={form.descripcion} maxLength={500}
-          onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
-        />
-      </div>
-
-      <div>
-        <label style={labelStyle}>FORMATO</label>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {FORMATS.map(f => {
-            const fc = FORMAT_COLOR[f]
-            const active = form.formato === f
-            return (
-              <button type="button" key={f} onClick={() => setForm(frm => ({ ...frm, formato: f }))} style={{
-                flex: 1, padding: '10px 0', borderRadius: 8, cursor: 'pointer',
-                border: `2px solid ${active ? fc : 'var(--border)'}`,
-                background: active ? `${fc}18` : 'transparent',
-                color: active ? fc : 'var(--text-secondary)',
-                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
-              }}>{FORMAT_LABEL[f]}</button>
-            )
-          })}
-        </div>
-      </div>
-
-      {isAdmin && (
-        <div>
-          <label style={labelStyle}>ESTADO</label>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
-            Override manual — para el flujo normal usá los botones de la página del torneo (abrir inscripciones, generar cuadro, finalizar).
-          </p>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {ESTADOS.map(s => {
-              const active = form.estado === s
-              return (
-                <button type="button" key={s} onClick={() => setForm(f => ({ ...f, estado: s }))} style={{
-                  flex: '1 1 100px', padding: '10px 8px', borderRadius: 8, cursor: 'pointer',
-                  border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-                  background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
-                  color: active ? 'var(--gold)' : 'var(--text-secondary)',
-                  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700,
-                }}>{ESTADO_LABEL[s]}</button>
-              )
-            })}
+        <div className="card-section">
+          <div className="card-section__title">Identidad</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label className="field-label">NOMBRE DEL TORNEO</label>
+              <input className="field" value={form.nombre} maxLength={80} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
+            </div>
+            <div>
+              <label className="field-label">DESCRIPCIÓN</label>
+              <textarea
+                className="field" style={{ resize: 'vertical', minHeight: 80 }}
+                value={form.descripcion} maxLength={500}
+                onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
+              />
+            </div>
           </div>
         </div>
-      )}
 
-      <div>
-        <label style={labelStyle}>SUBCLASES QUE PUEDEN PARTICIPAR</label>
-        <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>Ninguna seleccionada = todas.</p>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {CLASES.map(c => {
-            const active = form.subclases.includes(c)
-            return (
-              <button type="button" key={c} onClick={() => toggleSubclase(c)} style={{
-                padding: '8px 14px', borderRadius: 20, cursor: 'pointer',
-                border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-                background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
-                color: active ? 'var(--gold)' : 'var(--text-secondary)',
-                fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
-              }}>{CLASE_LABEL[c]}</button>
-            )
-          })}
+        <div className="card-section">
+          <div className="card-section__title">Formato y reglas</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label className="field-label">FORMATO</label>
+              <div className="segmented">
+                {FORMATS.map(f => {
+                  const active = form.formato === f
+                  return (
+                    <button type="button" key={f} className={`segmented-btn${active ? ' is-active' : ''}`}
+                      onClick={() => setForm(frm => ({ ...frm, formato: f }))}>
+                      {FORMAT_LABEL[f]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+            <div>
+              <label className="field-label">SUBCLASES QUE PUEDEN PARTICIPAR</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>Ninguna seleccionada = todas.</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {CLASES.map(c => {
+                  const active = form.subclases.includes(c)
+                  return (
+                    <button type="button" key={c} onClick={() => toggleSubclase(c)} style={{
+                      padding: '8px 14px', borderRadius: 20, cursor: 'pointer',
+                      border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                      background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
+                      color: active ? 'var(--gold)' : 'var(--text-secondary)',
+                      fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
+                    }}>{CLASE_LABEL[c]}</button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-        <div>
-          <label style={labelStyle}>FECHA DE INICIO</label>
-          <input type="date" style={inputStyle} value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} />
+        <div className="card-section">
+          <div className="card-section__title">Fechas y cupo</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div>
+                <label className="field-label">FECHA DE INICIO</label>
+                <input type="date" className="field" value={form.fecha_inicio} onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))} />
+              </div>
+              <div>
+                <label className="field-label">FECHA DE FIN (opcional)</label>
+                <input type="date" className="field" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} />
+              </div>
+            </div>
+            <div>
+              <label className="field-label">MÁX. EQUIPOS</label>
+              <select className="field" value={form.max_equipos} onChange={e => setForm(f => ({ ...f, max_equipos: parseInt(e.target.value) }))}>
+                {[4, 8, 16, 32, 64].map(n => <option key={n} value={n}>{n} equipos</option>)}
+              </select>
+            </div>
+          </div>
         </div>
-        <div>
-          <label style={labelStyle}>FECHA DE FIN (opcional)</label>
-          <input type="date" style={inputStyle} value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} />
-        </div>
-      </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr' : '1fr', gap: 16 }}>
-        <div>
-          <label style={labelStyle}>MÁX. EQUIPOS</label>
-          <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.max_equipos} onChange={e => setForm(f => ({ ...f, max_equipos: parseInt(e.target.value) }))}>
-            {[4, 8, 16, 32, 64].map(n => <option key={n} value={n}>{n} equipos</option>)}
-          </select>
-        </div>
         {isAdmin && (
-          <div>
-            <label style={labelStyle}>DESTACADO</label>
-            <button
-              type="button"
-              onClick={() => setForm(f => ({ ...f, destacado: !f.destacado }))}
-              style={{
-                width: '100%', padding: '10px 0', borderRadius: 8, cursor: 'pointer',
-                border: `2px solid ${form.destacado ? 'var(--gold)' : 'var(--border)'}`,
-                background: form.destacado ? 'rgba(212,175,55,0.1)' : 'transparent',
-                color: form.destacado ? 'var(--gold)' : 'var(--text-secondary)',
-                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
-              }}
-            >
-              {form.destacado ? '★ Destacado' : '☆ No destacado'}
-            </button>
+          <div className="card-section">
+            <div className="card-section__title">Panel de administración</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label className="field-label">ESTADO</label>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+                  Override manual — para el flujo normal usá los botones de la página del torneo (abrir inscripciones, generar cuadro, finalizar).
+                </p>
+                <div className="segmented">
+                  {ESTADOS.map(s => {
+                    const active = form.estado === s
+                    return (
+                      <button type="button" key={s} className={`segmented-btn${active ? ' is-active' : ''}`}
+                        onClick={() => setForm(f => ({ ...f, estado: s }))}>
+                        {ESTADO_LABEL[s]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label className="field-label">DESTACADO</label>
+                  <div className="segmented">
+                    <button type="button" className={`segmented-btn${form.destacado ? ' is-active' : ''}`}
+                      onClick={() => setForm(f => ({ ...f, destacado: !f.destacado }))}>
+                      {form.destacado ? '★ Destacado' : '☆ No destacado'}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <label className="field-label">ORGANIZADOR VERIFICADO</label>
+                  <div className="segmented">
+                    <button type="button" className={`segmented-btn${form.organizador_verificado ? ' is-active is-success' : ''}`}
+                      onClick={() => setForm(f => ({ ...f, organizador_verificado: !f.organizador_verificado }))}>
+                      {form.organizador_verificado ? '✓ Verificado' : 'Sin verificar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: 0 }}>
+                &quot;Organizador verificado&quot; es un sello de confianza — no afecta el cálculo de MMR.
+              </p>
+            </div>
           </div>
         )}
-      </div>
 
-      {isAdmin && (
-        <div>
-          <label style={labelStyle}>ORGANIZADOR VERIFICADO</label>
+        <div className="card-section">
+          <div className="card-section__title">Copa del torneo</div>
           <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
-            Sello de confianza sobre el torneo — no afecta el cálculo de MMR.
+            Los campeones van a mostrar esta copa en vez del trofeo genérico. Podés reutilizar una que ya creaste o armar una nueva.
           </p>
-          <button
-            type="button"
-            onClick={() => setForm(f => ({ ...f, organizador_verificado: !f.organizador_verificado }))}
-            style={{
-              width: '100%', padding: '10px 0', borderRadius: 8, cursor: 'pointer',
-              border: `2px solid ${form.organizador_verificado ? '#4CAF50' : 'var(--border)'}`,
-              background: form.organizador_verificado ? 'rgba(76,175,80,0.1)' : 'transparent',
-              color: form.organizador_verificado ? '#4CAF50' : 'var(--text-secondary)',
-              fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
-            }}
-          >
-            {form.organizador_verificado ? '✓ Verificado' : 'Sin verificar'}
+          {miPlayerId ? (
+            <TrofeoPicker playerId={miPlayerId} value={form.trofeo_id} onChange={id => setForm(f => ({ ...f, trofeo_id: id }))} />
+          ) : (
+            <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
+          )}
+        </div>
+
+        <div className="card-section">
+          <div className="card-section__title">Premio y reglamento</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label className="field-label">PREMIO (opcional)</label>
+              <input className="field" value={form.premio} maxLength={100} onChange={e => setForm(f => ({ ...f, premio: e.target.value }))} />
+            </div>
+            <div>
+              <label className="field-label">REGLAMENTO (opcional)</label>
+              <textarea
+                className="field" style={{ resize: 'vertical', minHeight: 80 }}
+                value={form.reglamento} maxLength={2000}
+                onChange={e => setForm(f => ({ ...f, reglamento: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+
+        {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center' }}>{error}</p>}
+        {saved && !error && <p style={{ color: '#5BC98B', fontSize: 13, textAlign: 'center' }}>Guardado.</p>}
+
+        <div style={{ display: 'flex', gap: 12 }}>
+          <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={() => router.push(isAdmin ? '/admin' : '/organizador')}>
+            Volver
+          </button>
+          <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 2, letterSpacing: 1 }}>
+            {loading ? 'Guardando...' : 'GUARDAR CAMBIOS'}
           </button>
         </div>
-      )}
-
-      <div>
-        <label style={labelStyle}>COPA DEL TORNEO</label>
-        <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
-          Los campeones van a mostrar esta copa en vez del trofeo genérico. Podés reutilizar una que ya creaste o armar una nueva.
-        </p>
-        {miPlayerId ? (
-          <TrofeoPicker playerId={miPlayerId} value={form.trofeo_id} onChange={id => setForm(f => ({ ...f, trofeo_id: id }))} />
-        ) : (
-          <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
-        )}
       </div>
 
-      <div>
-        <label style={labelStyle}>PREMIO (opcional)</label>
-        <input style={inputStyle} value={form.premio} maxLength={100} onChange={e => setForm(f => ({ ...f, premio: e.target.value }))} />
-      </div>
-
-      <div>
-        <label style={labelStyle}>REGLAMENTO (opcional)</label>
-        <textarea
-          style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
-          value={form.reglamento} maxLength={2000}
-          onChange={e => setForm(f => ({ ...f, reglamento: e.target.value }))}
-        />
-      </div>
-
-      {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center' }}>{error}</p>}
-      {saved && !error && <p style={{ color: '#5BC98B', fontSize: 13, textAlign: 'center' }}>Guardado.</p>}
-
-      <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-        <button type="button" onClick={() => router.push(isAdmin ? '/admin' : '/organizador')} style={{
-          flex: 1, padding: '12px', borderRadius: 10,
-          background: 'transparent', border: '1px solid var(--border)',
-          color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13, cursor: 'pointer',
-        }}>
-          Volver
-        </button>
-        <button type="submit" disabled={loading} style={{
-          flex: 2, padding: '12px', borderRadius: 10, border: 'none',
-          background: loading ? 'var(--bg-surface)' : 'var(--gold)',
-          color: loading ? 'var(--text-muted)' : '#000',
-          fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 1,
-          cursor: loading ? 'not-allowed' : 'pointer',
-        }}>
-          {loading ? 'Guardando...' : 'GUARDAR CAMBIOS'}
-        </button>
-      </div>
+      <VistaPreviaTorneo form={form} />
     </form>
   )
 }
