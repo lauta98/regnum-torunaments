@@ -1,6 +1,6 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { detectarCampeones } from '@/lib/campeonatos'
+import { detectarCampeones, detectarSegundoPuesto } from '@/lib/campeonatos'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -23,11 +23,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     await svc.from('campeonatos').upsert(
       campeones.map(c => ({
         torneo_id: torneoId, personaje_id: c.personaje_id, player_id: c.player_id,
-        tipo: c.equipo ? 'equipo' : 'individual', equipo_nombre: c.equipo_nombre,
+        tipo: c.equipo ? 'equipo' : 'individual', equipo_nombre: c.equipo_nombre, puesto: 1,
       })),
       { onConflict: 'torneo_id,personaje_id', ignoreDuplicates: true }
     )
   }
 
-  return NextResponse.json({ ok: true, campeones: campeones.length })
+  const subcampeones = await detectarSegundoPuesto(svc, torneoId)
+  if (subcampeones.length > 0) {
+    await svc.from('campeonatos').upsert(
+      subcampeones.map(c => ({
+        torneo_id: torneoId, personaje_id: c.personaje_id, player_id: c.player_id,
+        tipo: c.equipo ? 'equipo' : 'individual', equipo_nombre: c.equipo_nombre, puesto: 2,
+      })),
+      { onConflict: 'torneo_id,personaje_id', ignoreDuplicates: true }
+    )
+  }
+
+  return NextResponse.json({ ok: true, campeones: campeones.length, subcampeones: subcampeones.length })
 }

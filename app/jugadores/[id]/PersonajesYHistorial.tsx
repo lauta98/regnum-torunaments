@@ -27,8 +27,8 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: TrofeoGrupo[]; size?: 'xs'
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
       {visibles.map((g, i) => (
         <TrofeoBadge
-          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} size={size} count={g.count}
-          title={`${g.tipoClan ? 'Campeón de clan' : 'Campeón'} — ${g.nombres.join(', ')}`}
+          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} puesto={g.puesto} size={size} count={g.count}
+          title={`${g.puesto === 2 ? 'Subcampeón' : 'Campeón'}${g.tipoClan ? ' de clan' : ''} — ${g.nombres.join(', ')}`}
         />
       ))}
       {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>+{restantes}</span>}
@@ -53,12 +53,12 @@ export default function PersonajesYHistorial({
   const vitrina = (() => {
     const combinado = new Map<string, TrofeoGrupo>()
     Object.values(trofeosPorPersonaje).flat().forEach(g => {
-      const key = `${g.tipoClan ? 'clan' : 'ind'}:${g.trofeo?.nombre ?? '__generico'}`
+      const key = `${g.tipoClan ? 'clan' : 'ind'}:${g.puesto}:${g.trofeo?.nombre ?? '__generico'}`
       const existente = combinado.get(key)
       if (existente) { existente.count += g.count; existente.nombres.push(...g.nombres) }
       else combinado.set(key, { ...g, nombres: [...g.nombres] })
     })
-    return [...combinado.values()].sort((a, b) => b.count - a.count)
+    return [...combinado.values()].sort((a, b) => a.puesto - b.puesto || b.count - a.count)
   })()
   const INITIAL_VISIBLE = 20
   const [seleccionadoId, setSeleccionadoId] = useState<string | null>(personajes[0]?.id ?? null)
@@ -164,9 +164,9 @@ export default function PersonajesYHistorial({
           <div style={{ padding: '18px 20px', display: 'flex', flexWrap: 'wrap', gap: 20 }}>
             {vitrina.map((g, i) => (
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: 84, textAlign: 'center' }}>
-                <TrofeoBadge trofeo={g.trofeo} tipoClan={g.tipoClan} size="md" count={g.count} title={g.nombres.join(', ')} />
+                <TrofeoBadge trofeo={g.trofeo} tipoClan={g.tipoClan} puesto={g.puesto} size="md" count={g.count} title={g.nombres.join(', ')} />
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                  {g.trofeo?.nombre ?? (g.tipoClan ? 'Campeón de clan' : 'Campeón')}
+                  {g.trofeo?.nombre ?? (g.puesto === 2 ? 'Subcampeón' : (g.tipoClan ? 'Campeón de clan' : 'Campeón'))}
                 </div>
                 <div style={{ fontSize: 9, color: 'var(--text-muted)', lineHeight: 1.3 }}>
                   {g.count > 1 ? `${g.count} títulos` : g.nombres[0]}

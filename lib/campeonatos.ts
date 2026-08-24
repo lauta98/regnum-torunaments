@@ -4,64 +4,53 @@ export type CampeonatoRaw = {
   personaje_id: string
   tipo: string | null
   equipo_nombre: string | null
+  puesto: number | null
   torneo: { nombre: string; trofeo: TrofeoInfo } | null
 }
 
-export type TrofeoGrupo = { trofeo: TrofeoInfo; tipoClan: boolean; count: number; nombres: string[] }
+export type TrofeoGrupo = { trofeo: TrofeoInfo; tipoClan: boolean; puesto: 1 | 2; count: number; nombres: string[] }
 
-/** Agrupa los campeonatos de cada personaje por copa (misma copa personalizada
- *  → un solo badge con contador; sin copa asignada → cae en un grupo
- *  "genérico" por tipo, también contado). Así se puede distinguir cuántos
- *  títulos tiene alguien y de cuáles copas, en vez de un ícono suelto que no
- *  cambia entre 1 y 10 campeonatos — mismo criterio en el ranking y el perfil. */
+/** Agrupa los campeonatos/subcampeonatos de cada personaje por copa (misma
+ *  copa personalizada → un solo badge con contador; sin copa asignada → cae
+ *  en un grupo "genérico" por tipo+puesto, también contado). Así se puede
+ *  distinguir cuántos títulos tiene alguien y de cuáles copas, en vez de un
+ *  ícono suelto que no cambia entre 1 y 10 campeonatos — mismo criterio en
+ *  el ranking y el perfil. El segundo puesto SIEMPRE cae en el grupo
+ *  genérico (medalla de plata) — la copa personalizada es un premio de
+ *  campeón, no se le asigna a quien salió subcampeón. */
 export function agruparTrofeos(raw: CampeonatoRaw[] | null | undefined): Map<string, TrofeoGrupo[]> {
   const porPersonaje = new Map<string, Map<string, TrofeoGrupo>>()
   raw?.forEach(c => {
     if (!c.torneo) return
     const tipoClan = c.tipo === 'equipo'
-    const trofeo = c.torneo.trofeo ?? null
-    const key = `${tipoClan ? 'clan' : 'ind'}:${trofeo?.nombre ?? '__generico'}`
+    const puesto: 1 | 2 = c.puesto === 2 ? 2 : 1
+    const trofeo = puesto === 1 ? (c.torneo.trofeo ?? null) : null
+    const key = `${tipoClan ? 'clan' : 'ind'}:${puesto}:${trofeo?.nombre ?? '__generico'}`
     const grupos = porPersonaje.get(c.personaje_id) ?? new Map<string, TrofeoGrupo>()
     const nombre = tipoClan ? `${c.torneo.nombre} (${c.equipo_nombre})` : c.torneo.nombre
     const existente = grupos.get(key)
     if (existente) { existente.count++; existente.nombres.push(nombre) }
-    else grupos.set(key, { trofeo, tipoClan, count: 1, nombres: [nombre] })
+    else grupos.set(key, { trofeo, tipoClan, puesto, count: 1, nombres: [nombre] })
     porPersonaje.set(c.personaje_id, grupos)
   })
   const resultado = new Map<string, TrofeoGrupo[]>()
   porPersonaje.forEach((grupos, personajeId) => {
-    resultado.set(personajeId, [...grupos.values()].sort((a, b) => b.count - a.count))
+    resultado.set(personajeId, [...grupos.values()].sort((a, b) => a.puesto - b.puesto || b.count - a.count))
   })
   return resultado
 }
 
-/** Detecta el/los campeón/es de un torneo ya jugado.
- *
- * "Campeón" = integrante del equipo ganador de la ronda con mayor
- * ronda_numero entre los partidos jugados. Si esa ronda tiene más de un
- * partido (torneos con final por clase, ej. Cazador/Tirador separados en
- * vez de una final cruzada única) se cuentan todos los ganadores de esa
- * ronda como co-campeones.
- *
- * Para 2v2 el equipo tiene team_members con personaje_id ya cargado. Para
- * 1v1 cargados retroactivamente (MACUCAP, Brujos#1, Arqueros1v1) el equipo
- * es "de una persona" y solo tiene capitan_id — ahí se resuelve el
- * personaje por player_id (y si el jugador tiene más de un personaje, por
- * coincidencia de nombre con el nombre del equipo).
- */
+/** Campeón (puesto 1) o subcampeón (puesto 2) de un torneo ya jugado. */
 export type Campeon = { personaje_id: string; player_id: string | null; equipo: boolean; equipo_nombre: string | null }
 
 function normalizar(s: string) {
   return s.normalize('NFC').replace(/[‘’ʼ´`]/g, "'").replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim().toLowerCase()
 }
 
-/** Para torneos round_robin no hay "final": el campeón es quien queda
- *  primero en la tabla de posiciones (más victorias, después diferencia
- *  de puntos a favor/contra, después puntos a favor). Si dos o más
- *  equipos quedan exactamente empatados en los tres criterios, se
- *  devuelven todos como co-campeones. */
-function tablaDePosiciones(matches: { equipo_a_id: string | null; equipo_b_id: string | null; ganador_id: string | null; resultado: string | null }[]): string[] {
-  const stats: Record<string, { w: number; d: number; for: number; against: number }> = {}
+type StatsPorEquipo = Record<string, { w: number; d: number; for: number; against: number }>
+
+function calcularStats(matches: { equipo_a_id: string | null; equipo_b_id: string | null; ganador_id: string | null; resultado: string | null }[]): StatsPorEquipo {
+  const stats: StatsPorEquipo = {}
   const ensure = (id: string) => (stats[id] ??= { w: 0, d: 0, for: 0, against: 0 })
 
   for (const m of matches) {
@@ -83,8 +72,15 @@ function tablaDePosiciones(matches: { equipo_a_id: string | null; equipo_b_id: s
       if (scores) { a.for += scores[0]; a.against += scores[1]; b.for += scores[1]; b.against += scores[0] }
     }
   }
+  return stats
+}
 
-  const entries = Object.entries(stats)
+/** Devuelve los ids del mejor "escalón" entre los candidatos que no están ya
+ *  en `excluir` — mismo criterio de desempate que el resto: más victorias,
+ *  después diferencia de puntos, después puntos a favor. Empate exacto en
+ *  los tres criterios = co-campeones/co-subcampeones. */
+function mejorEscalon(stats: StatsPorEquipo, excluir: Set<string>): string[] {
+  const entries = Object.entries(stats).filter(([id]) => !excluir.has(id))
   if (entries.length === 0) return []
   entries.sort(([, x], [, y]) => y.w - x.w || (y.for - y.against) - (x.for - x.against) || y.for - x.for)
   const [, top] = entries[0]
@@ -93,22 +89,14 @@ function tablaDePosiciones(matches: { equipo_a_id: string | null; equipo_b_id: s
     .map(([id]) => id)
 }
 
-export async function detectarCampeones(supabase: any, torneoId: string): Promise<Campeon[]> {
-  const { data: torneo } = await supabase.from('tournaments').select('bracket_type').eq('id', torneoId).single()
-  const { data: matches } = await supabase
-    .from('matches')
-    .select('ronda_numero, ganador_id, equipo_a_id, equipo_b_id, resultado')
-    .eq('torneo_id', torneoId)
-    .eq('estado', 'jugado')
-  if (!matches || matches.length === 0) return []
-
-  let teamIds: string[]
-  if (torneo?.bracket_type === 'round_robin') {
-    teamIds = tablaDePosiciones(matches)
-  } else {
-    const maxRonda = Math.max(...matches.map((m: any) => m.ronda_numero))
-    teamIds = [...new Set(matches.filter((m: any) => m.ronda_numero === maxRonda && m.ganador_id).map((m: any) => m.ganador_id))] as string[]
-  }
+/** Resuelve team_id -> Campeon[] para un conjunto de equipos ganadores,
+ *  compartido entre la detección de campeón y de subcampeón. Para 2v2+ el
+ *  equipo tiene team_members con personaje_id ya cargado. Para 1v1 cargados
+ *  retroactivamente (MACUCAP, Brujos#1, Arqueros1v1) el equipo es "de una
+ *  persona" y solo tiene capitan_id — ahí se resuelve el personaje por
+ *  player_id (y si el jugador tiene más de un personaje, por coincidencia
+ *  de nombre con el nombre del equipo). */
+async function resolverCampeonesDeEquipos(supabase: any, teamIds: string[]): Promise<Campeon[]> {
   if (teamIds.length === 0) return []
 
   const { data: members } = await supabase
@@ -116,10 +104,6 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
     .select('team_id, player_id, personaje_id')
     .in('team_id', teamIds)
 
-  // personaje_id + de qué team_id salió, para poder decidir después si
-  // ese team aportó 1 solo campeón (torneo individual/1v1/2v2) o varios
-  // (torneo de equipo grande tipo clan) — eso determina si se marca
-  // "equipo" en vez de "individual".
   const porTeam: { personaje_id: string; player_id: string | null; team_id: string }[] = []
   const equiposSinMembers = teamIds.filter(id => !members?.some((m: any) => m.team_id === id))
 
@@ -135,11 +119,6 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
         const res = await supabase.from('personajes').select('id, nickname_juego, player_id').eq('player_id', team.capitan_id)
         personajes = res.data
       }
-      // Si el capitan_id no resuelve a ningun personaje (ej. el personaje se
-      // reasigno a otra cuenta despues de jugado el torneo, quedando el
-      // capitan_id viejo huerfano) o directamente no hay capitan_id (equipos
-      // de clan en formatos grandes, sin roster individual) se intenta por
-      // coincidencia exacta de nombre de equipo == nickname del personaje.
       if (!personajes || personajes.length === 0) {
         const res = await supabase.from('personajes').select('id, nickname_juego, player_id').ilike('nickname_juego', team.nombre)
         personajes = res.data
@@ -161,7 +140,45 @@ export async function detectarCampeones(supabase: any, torneoId: string): Promis
     equipo_nombre: (countPorTeam.get(c.team_id) ?? 0) > 1 ? ((nombrePorTeam.get(c.team_id) as string) ?? null) : null,
   }))
 
-  // dedup por personaje_id (por si el mismo personaje aparece 2 veces por algún dato inconsistente)
   const vistos = new Set<string>()
   return campeones.filter(c => { if (vistos.has(c.personaje_id)) return false; vistos.add(c.personaje_id); return true })
+}
+
+async function equiposFinalYPenultimos(supabase: any, torneoId: string) {
+  const { data: torneo } = await supabase.from('tournaments').select('bracket_type').eq('id', torneoId).single()
+  const { data: matches } = await supabase
+    .from('matches')
+    .select('ronda_numero, ganador_id, equipo_a_id, equipo_b_id, resultado')
+    .eq('torneo_id', torneoId)
+    .eq('estado', 'jugado')
+  if (!matches || matches.length === 0) return { primeros: [] as string[], segundos: [] as string[] }
+
+  if (torneo?.bracket_type === 'round_robin') {
+    const stats = calcularStats(matches)
+    const primeros = mejorEscalon(stats, new Set())
+    const segundos = mejorEscalon(stats, new Set(primeros))
+    return { primeros, segundos }
+  }
+
+  // Eliminación simple/doble/liga+copa: el campeón es quien ganó la ronda
+  // con mayor ronda_numero; el subcampeón es quien perdió esa(s) misma(s)
+  // final(es) — el rival directo de cada ganador en esa ronda.
+  const maxRonda = Math.max(...matches.map((m: any) => m.ronda_numero))
+  const finales = matches.filter((m: any) => m.ronda_numero === maxRonda && m.ganador_id)
+  const primeros = [...new Set(finales.map((m: any) => m.ganador_id))] as string[]
+  const segundos = [...new Set(finales.map((m: any) => m.ganador_id === m.equipo_a_id ? m.equipo_b_id : m.equipo_a_id).filter(Boolean))] as string[]
+  return { primeros, segundos: segundos.filter(id => !primeros.includes(id)) }
+}
+
+export async function detectarCampeones(supabase: any, torneoId: string): Promise<Campeon[]> {
+  const { primeros } = await equiposFinalYPenultimos(supabase, torneoId)
+  return resolverCampeonesDeEquipos(supabase, primeros)
+}
+
+/** Subcampeón(es) — puesto 2. En eliminación es quien pierde la final (o
+ *  las finales, si el torneo tiene varias en simultáneo); en round robin es
+ *  el escalón inmediatamente debajo del primero en la tabla de posiciones. */
+export async function detectarSegundoPuesto(supabase: any, torneoId: string): Promise<Campeon[]> {
+  const { segundos } = await equiposFinalYPenultimos(supabase, torneoId)
+  return resolverCampeonesDeEquipos(supabase, segundos)
 }

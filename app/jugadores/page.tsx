@@ -59,8 +59,8 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos'
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2 }}>
       {visibles.map((g, i) => (
         <TrofeoBadge
-          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} size={size} count={g.count}
-          title={`${g.tipoClan ? 'Campeón de clan' : 'Campeón'} — ${g.nombres.join(', ')}`}
+          key={i} trofeo={g.trofeo} tipoClan={g.tipoClan} puesto={g.puesto} size={size} count={g.count}
+          title={`${g.puesto === 2 ? 'Subcampeón' : 'Campeón'}${g.tipoClan ? ' de clan' : ''} — ${g.nombres.join(', ')}`}
         />
       ))}
       {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>+{restantes}</span>}
@@ -107,7 +107,7 @@ export default async function JugadoresPage({
   /* ── Campeonatos (para las insignias de copa) ──────── */
   const personajeIds = (personajes ?? []).map((p: any) => p.id)
   const { data: campeonatosData } = personajeIds.length ? await supabase
-    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color))').in('personaje_id', personajeIds)
+    .from('campeonatos').select('personaje_id, tipo, equipo_nombre, puesto, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color))').in('personaje_id', personajeIds)
     : { data: null }
   const trofeosPorPersonaje = agruparTrofeos(campeonatosData as any)
 

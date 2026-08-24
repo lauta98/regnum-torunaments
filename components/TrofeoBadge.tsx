@@ -15,22 +15,28 @@ const SIZES = {
  *  todo lo cargado históricamente) cae al look genérico de siempre — 🏆
  *  dorado para individual, 🛡️ azul para clan — cero regresión visual. */
 export default function TrofeoBadge({
-  trofeo, tipoClan = false, size = 'sm', count, title,
+  trofeo, tipoClan = false, puesto = 1, size = 'sm', count, title,
 }: {
   trofeo: TrofeoInfo
   tipoClan?: boolean
+  puesto?: 1 | 2
   size?: keyof typeof SIZES
   count?: number
   title?: string
 }) {
   const s = SIZES[size]
 
-  if (!trofeo) {
+  // El subcampeón (puesto 2) siempre cae en el look genérico de medalla de
+  // plata — la copa personalizada es un premio de campeón, no se le pone al
+  // que salió segundo.
+  if (!trofeo || puesto === 2) {
     const emojiSize = Math.round(s.box * 0.62)
+    const emoji = puesto === 2 ? '🥈' : (tipoClan ? '🛡️' : '🏆')
+    const bubbleColor = puesto === 2 ? '#c0c0c0' : (tipoClan ? '#5b8fd4' : '#d4af37')
     return (
       <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: s.box, height: s.box, fontSize: emojiSize, lineHeight: 1 }} title={title}>
-        {tipoClan ? '🛡️' : '🏆'}
-        {count && count > 1 && <CountBubble count={count} size={size} color={tipoClan ? '#5b8fd4' : '#d4af37'} />}
+        {emoji}
+        {count && count > 1 && <CountBubble count={count} size={size} color={bubbleColor} />}
       </span>
     )
   }

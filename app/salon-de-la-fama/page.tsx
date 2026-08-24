@@ -30,6 +30,7 @@ export default async function SalonDeLaFamaPage() {
       personaje:personajes(id, nickname_juego, reino, clase),
       torneo:tournaments(id, nombre, formato, fecha_inicio, imagen_url, creator_id, trofeo:trofeos(nombre, icono, color))
     `)
+    .eq('puesto', 1)
     .order('created_at', { ascending: false })
 
   const torneos = new Map<string, { torneo: any; campeones: any[] }>()
