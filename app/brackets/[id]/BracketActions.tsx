@@ -18,23 +18,22 @@ function prefillScores(resultado: string | null | undefined, teamA: { nombre: st
 }
 
 export default function BracketActions({
-  matchId,
-  teamA,
-  teamB,
-  isPlayed,
-  resultadoActual,
+  matchId, teamA, teamB, isPlayed, resultadoActual, equiposDisponibles,
 }: {
   matchId: string
   teamA: { id: string; nombre: string }
   teamB: { id: string; nombre: string }
   isPlayed?: boolean
   resultadoActual?: string | null
+  equiposDisponibles?: { id: string; nombre: string }[]
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
-  const [view, setView] = useState<'closed' | 'score' | 'ko' | 'revertir'>('closed')
+  const [view, setView] = useState<'closed' | 'score' | 'ko' | 'revertir' | 'cambiar'>('closed')
   const [scoreA, setScoreA] = useState('')
   const [scoreB, setScoreB] = useState('')
+  const [selA, setSelA] = useState(teamA.id)
+  const [selB, setSelB] = useState(teamB.id)
   const [error, setError] = useState('')
 
   const abrirEdicion = () => {
@@ -44,7 +43,7 @@ export default function BracketActions({
   }
 
   const reset = () => {
-    setView('closed'); setScoreA(''); setScoreB(''); setError('')
+    setView('closed'); setScoreA(''); setScoreB(''); setSelA(teamA.id); setSelB(teamB.id); setError('')
   }
 
   const submit = async (body: Record<string, unknown>) => {
@@ -96,31 +95,66 @@ export default function BracketActions({
     }
   }
 
+  const cambiarEquipo = async () => {
+    if (selA === teamA.id && selB === teamB.id) { setView('closed'); return }
+    setLoading(true); setError('')
+    try {
+      const cambios: { slot: 'a' | 'b'; nuevo_team_id: string }[] = []
+      if (selA !== teamA.id) cambios.push({ slot: 'a', nuevo_team_id: selA })
+      if (selB !== teamB.id) cambios.push({ slot: 'b', nuevo_team_id: selB })
+      for (const cambio of cambios) {
+        const res = await fetch(`/api/matches/${matchId}/reemplazar-equipo`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cambio),
+        })
+        if (!res.ok) {
+          const d = await res.json().catch(() => null)
+          setError(d?.error ?? `Error al cambiar el equipo (${res.status})`)
+          setLoading(false)
+          return
+        }
+      }
+      router.refresh()
+      reset()
+    } catch {
+      setError('No se pudo conectar con el servidor — probá de nuevo')
+      setLoading(false)
+    }
+  }
+
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
-      {isPlayed ? (
-        <div style={{ display: 'flex', gap: 4 }}>
-          <button onClick={abrirEdicion} aria-label="Corregir resultado" style={editBtnStyle}>
-            ✎ Corregir
+      <div style={{ display: 'flex', gap: 4 }}>
+        {isPlayed ? (
+          <>
+            <button onClick={abrirEdicion} aria-label="Corregir resultado" style={editBtnStyle}>
+              ✎ Corregir
+            </button>
+            <button onClick={() => setView('revertir')} aria-label="Revertir resultado" title="Revertir a pendiente" style={{ ...editBtnStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.35)' }}>
+              ↺
+            </button>
+          </>
+        ) : (
+          <button onClick={() => setView('score')} style={{
+            background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
+            color: 'var(--gold)', padding: '2px 8px', borderRadius: 6,
+            fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
+          }}>
+            RESULTADO
           </button>
-          <button onClick={() => setView('revertir')} aria-label="Revertir resultado" title="Revertir a pendiente" style={{ ...editBtnStyle, color: '#f87171', borderColor: 'rgba(244,113,113,0.35)' }}>
-            ↺
+        )}
+        {equiposDisponibles && equiposDisponibles.length > 0 && (
+          <button onClick={() => setView('cambiar')} aria-label="Cambiar equipo" title="Cambiar qué equipo juega este partido" style={editBtnStyle}>
+            🔁
           </button>
-        </div>
-      ) : (
-        <button onClick={() => setView('score')} style={{
-          background: 'var(--gold-muted)', border: '1px solid var(--border-gold-strong)',
-          color: 'var(--gold)', padding: '2px 8px', borderRadius: 6,
-          fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 1, cursor: 'pointer',
-        }}>
-          RESULTADO
-        </button>
-      )}
+        )}
+      </div>
 
       {view !== 'closed' && (
-      <div style={popoverStyle} onClick={e => e.stopPropagation()}>
+      <div style={{ ...popoverStyle, width: view === 'cambiar' ? 260 : 230 }} onClick={e => e.stopPropagation()}>
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: view === 'revertir' ? '#f87171' : 'var(--gold)', letterSpacing: 1, marginBottom: 10 }}>
-          {view === 'revertir' ? 'REVERTIR RESULTADO' : isPlayed ? 'CORREGIR RESULTADO' : 'CARGAR RESULTADO'}
+          {view === 'revertir' ? 'REVERTIR RESULTADO' : view === 'cambiar' ? 'CAMBIAR EQUIPO' : isPlayed ? 'CORREGIR RESULTADO' : 'CARGAR RESULTADO'}
         </div>
 
         {view === 'revertir' && (
@@ -133,6 +167,38 @@ export default function BracketActions({
             ) : (
               <div style={{ display: 'flex', gap: 6 }}>
                 <button onClick={revertir} style={{ ...btnStyle, flex: 1, color: '#f87171', borderColor: 'rgba(244,113,113,0.4)' }}>Sí, revertir</button>
+                <button onClick={reset} style={ghostBtnStyle}>Cancelar</button>
+              </div>
+            )}
+          </>
+        )}
+
+        {view === 'cambiar' && (
+          <>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 10, lineHeight: 1.5 }}>
+              {isPlayed
+                ? 'Este partido ya tiene resultado — si cambiás un equipo se revierte el MMR y queda pendiente de nuevo para cargar el resultado real.'
+                : 'Elegí qué equipo va en cada lado de este cruce.'}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 10 }}>
+              <select value={selA} onChange={e => setSelA(e.target.value)} style={selectStyle}>
+                <option value={teamA.id}>{teamA.nombre}</option>
+                {equiposDisponibles?.filter(e => e.id !== teamA.id && e.id !== selB).map(e => (
+                  <option key={e.id} value={e.id}>{e.nombre}</option>
+                ))}
+              </select>
+              <select value={selB} onChange={e => setSelB(e.target.value)} style={selectStyle}>
+                <option value={teamB.id}>{teamB.nombre}</option>
+                {equiposDisponibles?.filter(e => e.id !== teamB.id && e.id !== selA).map(e => (
+                  <option key={e.id} value={e.id}>{e.nombre}</option>
+                ))}
+              </select>
+            </div>
+            {loading ? (
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: '6px 0' }}>Guardando…</div>
+            ) : (
+              <div style={{ display: 'flex', gap: 6 }}>
+                <button onClick={cambiarEquipo} style={{ ...btnStyle, flex: 1 }}>Guardar</button>
                 <button onClick={reset} style={ghostBtnStyle}>Cancelar</button>
               </div>
             )}
@@ -208,7 +274,7 @@ const editBtnStyle = {
 
 const popoverStyle = {
   position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
-  width: 230, padding: '12px 14px', borderRadius: 10,
+  padding: '12px 14px', borderRadius: 10,
   background: '#141414', border: '1px solid var(--border-gold)',
   boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
 } as const
@@ -227,4 +293,10 @@ const numInputStyle = {
   width: 44, padding: '5px 4px', borderRadius: 6, border: '1px solid var(--border-gold)',
   background: '#0f0f0f', color: 'var(--text-primary)',
   fontFamily: 'var(--font-display)', fontSize: 13, textAlign: 'center',
+} as const
+
+const selectStyle = {
+  width: '100%', padding: '7px 8px', borderRadius: 6, border: '1px solid var(--border-gold)',
+  background: '#0f0f0f', color: 'var(--text-primary)',
+  fontFamily: 'var(--font-sans)', fontSize: 11, boxSizing: 'border-box',
 } as const

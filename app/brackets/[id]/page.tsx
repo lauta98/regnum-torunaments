@@ -95,6 +95,11 @@ export default async function BracketPage({
 
   const inscritosActivos = (inscritos ?? []).filter((r: any) => r.estado !== 'expulsado')
   const teamIdsEnEsteTorneo = inscritosActivos.map((r: any) => r.team?.id).filter(Boolean)
+  // Para el selector de "cambiar equipo" en cada partido — cualquier
+  // equipo activo del torneo, no solo los dos que ya están en ese cruce.
+  const equiposParaCambio = inscritosActivos
+    .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre }))
+    .filter((e: any) => e.id)
 
   if (user) {
     const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
@@ -328,21 +333,21 @@ export default async function BracketPage({
                   </div>
                 )
               ) : torneo.bracket_type === 'round_robin' ? (
-                <LigaFechas entries={roundEntries} isOrganizer={isOrganizer} fc={fc} />
+                <LigaFechas entries={roundEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
               ) : torneo.bracket_type === 'league_cup' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
                   <div>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
                       Fase de Liga
                     </div>
-                    <LigaFechas entries={ligaEntries} isOrganizer={isOrganizer} fc={fc} />
+                    <LigaFechas entries={ligaEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
                   </div>
                   <div>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
                       Copa
                     </div>
                     {copaEntries.length > 0 ? (
-                      <BracketTree roundEntries={copaEntries} isOrganizer={isOrganizer} fc={fc} />
+                      <BracketTree roundEntries={copaEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
                     ) : ligaCompleta ? (
                       isOrganizer ? (
                         <GenerarCopaButton torneoId={torneo.id} cupo={torneo.playoff_cupo ?? 0} />
@@ -359,7 +364,7 @@ export default async function BracketPage({
                   </div>
                 </div>
               ) : (
-                <BracketTree roundEntries={roundEntries} isOrganizer={isOrganizer} fc={fc} />
+                <BracketTree roundEntries={roundEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
               )
             )}
 
@@ -537,7 +542,7 @@ const SECTION_LABEL: Record<string, string> = {
 /** Fase de liga (round robin puro, o la fase de liga de Liga + Copa):
  *  lista simple de fechas, sin árbol de conectores — acá no hay "quién
  *  avanza a quién", cada fecha es independiente. */
-function LigaFechas({ entries, isOrganizer, fc }: { entries: [string, any[]][]; isOrganizer: boolean; fc: string }) {
+function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   if (entries.length === 0) {
     return (
       <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
@@ -557,7 +562,7 @@ function LigaFechas({ entries, isOrganizer, fc }: { entries: [string, any[]][]; 
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
                 {roundMatches.map((match: any) => (
-                  <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} />
+                  <MatchCard key={match.id} match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
                 ))}
               </div>
             </div>
@@ -568,7 +573,7 @@ function LigaFechas({ entries, isOrganizer, fc }: { entries: [string, any[]][]; 
   )
 }
 
-function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string }) {
+function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const sections: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }[] = []
   roundEntries.forEach(([key, matches]) => {
     const bracket = matches[0]?.bracket ?? 'main'
@@ -582,13 +587,13 @@ function BracketTree({ roundEntries, isOrganizer, fc }: { roundEntries: [string,
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
       {sections.map(section => (
-        <BracketSection key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} />
+        <BracketSection key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
       ))}
     </div>
   )
 }
 
-function BracketSection({ section, isOrganizer, fc }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string }) {
+function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
   // Posición vertical (en "filas") de cada partido. En vez de adivinar la
@@ -697,7 +702,7 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
               </div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={{ position: 'absolute', left: colIdx * COL_W + CARD_PAD, top: HEADER_H + yByRound[colIdx][i] * ROW, width: COL_W - CARD_PAD * 2 }}>
-                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} />
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
                 </div>
               ))}
             </div>
@@ -709,7 +714,7 @@ function BracketSection({ section, isOrganizer, fc }: { section: { bracket: stri
 }
 
 /* ── Match Card ─────────────────────────────────────────────── */
-function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolean; fc: string }) {
+function MatchCard({ match, isOrganizer, fc, equiposDisponibles }: { match: any; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const teamA = match.equipo_a
   const teamB = match.equipo_b
   const ganadorId = match.ganador_id
@@ -772,7 +777,7 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
             {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
           {isOrganizer && teamA && teamB && (
-            <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} isPlayed={isPlayed} resultadoActual={match.resultado} />
+            <BracketActions matchId={match.id} teamA={teamA} teamB={teamB} isPlayed={isPlayed} resultadoActual={match.resultado} equiposDisponibles={equiposDisponibles} />
           )}
         </div>
       )}
