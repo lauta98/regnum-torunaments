@@ -108,7 +108,7 @@ export default function ImageCropModal({
   // navegación de ese link.
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }} onClick={onCancel}>
-      <div style={{ background: '#141414', border: '1px solid var(--border-gold)', borderRadius: 14, padding: 24, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: 24, maxWidth: 420, width: '100%' }} onClick={e => e.stopPropagation()}>
         <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', marginBottom: 14, letterSpacing: 0.5 }}>
           Ajustá el encuadre
         </h3>
@@ -117,8 +117,8 @@ export default function ImageCropModal({
           ref={frameRef}
           style={{
             width: FRAME_W, height: FRAME_H, margin: '0 auto', position: 'relative', overflow: 'hidden',
-            borderRadius: aspectRatio === 1 ? 12 : 8, border: '1px solid rgba(212,175,55,0.4)',
-            cursor: dragState.current ? 'grabbing' : 'grab', background: '#0a0a0a', touchAction: 'none',
+            borderRadius: aspectRatio === 1 ? 'var(--radius-md)' : 'var(--radius-sm)', border: '1px solid rgba(212,175,55,0.4)',
+            cursor: dragState.current ? 'grabbing' : 'grab', background: 'var(--bg-input)', touchAction: 'none',
           }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -148,10 +148,10 @@ export default function ImageCropModal({
         </p>
 
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button onClick={onCancel} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12, cursor: 'pointer' }}>
+          <button onClick={onCancel} className="btn btn-ghost" style={{ flex: 1 }}>
             Cancelar
           </button>
-          <button onClick={confirmar} disabled={busy} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: busy ? 'var(--bg-surface)' : 'var(--gold)', color: busy ? 'var(--text-muted)' : '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: busy ? 'not-allowed' : 'pointer' }}>
+          <button onClick={confirmar} disabled={busy} className="btn btn-primary" style={{ flex: 1 }}>
             {busy ? 'Aplicando…' : 'Usar esta foto'}
           </button>
         </div>

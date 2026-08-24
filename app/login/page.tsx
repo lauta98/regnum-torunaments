@@ -28,7 +28,8 @@ function LoginPage() {
       <div style={{
         background: 'var(--bg-card)',
         border: '1px solid var(--border-gold)',
-        borderRadius: 16,
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: 'var(--shadow-card)',
         padding: '40px 48px',
         width: '100%', maxWidth: 420,
         textAlign: 'center',

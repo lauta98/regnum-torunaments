@@ -85,13 +85,13 @@ export default function TrofeoPicker({
       {creando && (
         <div style={{
           background: 'linear-gradient(160deg, rgba(212,175,55,0.06), rgba(212,175,55,0.015))',
-          border: '1px solid var(--border-gold)', borderRadius: 14, padding: 20,
+          border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', padding: 20,
           display: 'flex', flexDirection: 'column', gap: 22,
         }}>
           {/* ── Vista previa grande ─────────────────────────── */}
           <div style={{
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
-            padding: '22px 16px', background: 'rgba(0,0,0,0.25)', borderRadius: 12,
+            padding: '22px 16px', background: 'rgba(0,0,0,0.25)', borderRadius: 'var(--radius-md)',
             border: '1px solid rgba(255,255,255,0.06)',
           }}>
             <TrofeoBadge trofeo={{ nombre: nombre || 'Vista previa', icono, color, forma }} size="lg" />
@@ -102,17 +102,17 @@ export default function TrofeoPicker({
 
           {/* ── Nombre ──────────────────────────────────────── */}
           <div>
-            <label style={labelStyle}>NOMBRE</label>
+            <label className="field-label">NOMBRE</label>
             <input
               value={nombre} onChange={e => { setNombre(e.target.value); setError('') }} maxLength={40}
               placeholder="Ej: Copa de Bárbaros"
-              style={inputStyle}
+              className="field"
             />
           </div>
 
           {/* ── Color ───────────────────────────────────────── */}
           <div>
-            <label style={labelStyle}>COLOR</label>
+            <label className="field-label">COLOR</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 8 }}>
               {TROFEO_COLORES.map(c => {
                 const active = color === c.hex
@@ -142,7 +142,7 @@ export default function TrofeoPicker({
 
           {/* ── Ícono ───────────────────────────────────────── */}
           <div>
-            <label style={labelStyle}>ÍCONO</label>
+            <label className="field-label">ÍCONO</label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 6 }}>
               {Object.entries(TROFEO_ICONOS).map(([key, emoji]) => {
                 const active = icono === key
@@ -150,7 +150,7 @@ export default function TrofeoPicker({
                   <button
                     type="button" key={key} onClick={() => setIcono(key)}
                     style={{
-                      aspectRatio: '1', borderRadius: 8, cursor: 'pointer', fontSize: 16,
+                      aspectRatio: '1', borderRadius: 'var(--radius-sm)', cursor: 'pointer', fontSize: 16,
                       border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
                       background: active ? 'rgba(212,175,55,0.14)' : 'rgba(255,255,255,0.02)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -166,10 +166,10 @@ export default function TrofeoPicker({
 
           <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', paddingTop: 4, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
             {error && <span style={{ color: '#f87171', fontSize: 11, flex: 1, alignSelf: 'center' }}>{error}</span>}
-            <button type="button" onClick={() => setCreando(false)} style={{ background: 'transparent', border: '1px solid var(--border)', borderRadius: 8, color: 'var(--text-muted)', padding: '9px 16px', fontFamily: 'var(--font-display)', fontSize: 11, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setCreando(false)} className="btn btn-ghost">
               Cancelar
             </button>
-            <button type="button" onClick={crearCopa} disabled={guardando} style={{ background: 'var(--gold)', border: 'none', borderRadius: 8, color: '#000', padding: '9px 20px', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, cursor: guardando ? 'not-allowed' : 'pointer' }}>
+            <button type="button" onClick={crearCopa} disabled={guardando} className="btn btn-primary">
               {guardando ? 'Creando...' : 'Crear y usar'}
             </button>
           </div>
@@ -185,14 +185,3 @@ export default function TrofeoPicker({
     </div>
   )
 }
-
-const labelStyle = {
-  display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)',
-  letterSpacing: 1, marginBottom: 8,
-} as const
-
-const inputStyle = {
-  width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 8,
-  color: 'var(--text-primary)', padding: '9px 12px', fontSize: 13, fontFamily: 'var(--font-sans)',
-  outline: 'none', boxSizing: 'border-box',
-} as const

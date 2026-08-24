@@ -73,10 +73,9 @@ export default function SubirFoto({ tabla, id, campo, label, variant = 'label', 
       )}
     </label>
   ) : (
-    <label style={{
+    <label className="btn btn-ghost-gold" style={{
       display: 'inline-flex', alignItems: 'center', gap: 5, cursor: loading ? 'not-allowed' : 'pointer',
-      background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 6,
-      color: 'var(--gold)', padding: '5px 12px', fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5,
+      padding: '5px 12px', fontSize: 10,
     }}>
       {loading ? 'Subiendo…' : `📷 ${label}`}
       <input type="file" accept="image/*" onChange={pickFile} disabled={loading} style={{ display: 'none' }} />

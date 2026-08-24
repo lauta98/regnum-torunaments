@@ -55,7 +55,7 @@ export default async function AdminPersonajesPage({ searchParams }: { searchPara
         )}
 
         {personajes.length > 0 && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden', marginTop: 20 }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden', marginTop: 20 }}>
             {personajes.map((p, i) => (
               <PersonajeRow key={p.id} personaje={p} borderBottom={i < personajes.length - 1} />
             ))}

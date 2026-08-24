@@ -68,12 +68,6 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos'
   )
 }
 
-const selectStyle = {
-  background: '#0c0c0c', border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 8, color: 'var(--text-secondary)', padding: '8px 14px',
-  fontSize: 12, fontFamily: 'var(--font-sans)', cursor: 'pointer', outline: 'none',
-} as const
-
 export default async function JugadoresPage({
   searchParams,
 }: {
@@ -174,19 +168,14 @@ export default async function JugadoresPage({
         </div>
 
         {/* Vista toggle */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.12)', borderRadius: 10, padding: 4, width: 'fit-content' }}>
+        <div className="segmented" style={{ marginBottom: 20 }}>
           {[
             { id: 'personajes', label: 'Personajes' },
             { id: 'cuentas',    label: 'Jugadores'  },
           ].map(({ id, label }) => (
-            <Link key={id} href={buildUrl({ vista: id, page: '1' })} style={{
-              padding: '7px 20px', borderRadius: 7, textDecoration: 'none',
-              fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5,
-              background: vista === id ? 'rgba(212,175,55,0.15)' : 'transparent',
-              color: vista === id ? 'var(--gold)' : 'var(--text-muted)',
-              border: `1px solid ${vista === id ? 'rgba(212,175,55,0.35)' : 'transparent'}`,
-              transition: 'all 0.15s',
-            }}>{label}</Link>
+            <Link key={id} href={buildUrl({ vista: id, page: '1' })} className={`segmented-btn${vista === id ? ' is-active' : ''}`} style={{ textDecoration: 'none' }}>
+              {label}
+            </Link>
           ))}
         </div>
 
@@ -194,20 +183,18 @@ export default async function JugadoresPage({
         <form method="GET" style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
           <input type="hidden" name="vista" value={vista} />
           <input name="q" defaultValue={params.q} placeholder="Buscar personaje..."
-            style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 8, color: 'var(--text-primary)', padding: '8px 14px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none', minWidth: 200, flex: 1 }} />
-          <select name="reino" defaultValue={params.reino || ''} style={selectStyle}>
+            className="field" style={{ width: 'auto', minWidth: 200, flex: 1 }} />
+          <select name="reino" defaultValue={params.reino || ''} className="field" style={{ width: 'auto' }}>
             <option value="">Todos los reinos</option>
             {REINOS.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          <select name="clase" defaultValue={params.clase || ''} style={selectStyle}>
+          <select name="clase" defaultValue={params.clase || ''} className="field" style={{ width: 'auto' }}>
             <option value="">Todas las clases</option>
             {CLASES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
-          <button type="submit" style={{ background: 'rgba(212,175,55,0.10)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 8, color: 'var(--gold)', padding: '8px 18px', fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: 0.5, cursor: 'pointer' }}>
-            Filtrar
-          </button>
+          <button type="submit" className="btn btn-ghost-gold">Filtrar</button>
           {isFiltered && (
-            <Link href={buildUrl({ q: undefined, reino: undefined, clase: undefined, page: '1' })} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 8, color: 'var(--text-muted)', padding: '8px 14px', fontFamily: 'var(--font-sans)', fontSize: 12, textDecoration: 'none' }}>✕ Limpiar</Link>
+            <Link href={buildUrl({ q: undefined, reino: undefined, clase: undefined, page: '1' })} className="btn btn-ghost" style={{ textDecoration: 'none' }}>✕ Limpiar</Link>
           )}
         </form>
 
@@ -256,7 +243,7 @@ export default async function JugadoresPage({
             <div className="divider-gold" style={{ marginBottom: 16 }} />
 
             {/* Tabla */}
-            <div style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 120px 120px 90px 56px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
                 {['#', 'PERSONAJE', 'REINO', 'CLASE', 'MMR / TIER', 'WINRATE', 'PJ'].map(col => (
                   <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
@@ -340,7 +327,7 @@ export default async function JugadoresPage({
             {totalPages > 1 && (
               <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 20 }}>
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-                  <Link key={pg} href={buildUrl({ page: String(pg) })} style={{ width: 34, height: 34, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, textDecoration: 'none', background: pg === page ? 'rgba(212,175,55,0.15)' : '#0a0a0a', border: `1px solid ${pg === page ? 'rgba(212,175,55,0.4)' : 'rgba(255,255,255,0.07)'}`, color: pg === page ? 'var(--gold)' : 'var(--text-muted)' }}>{pg}</Link>
+                  <Link key={pg} href={buildUrl({ page: String(pg) })} style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, textDecoration: 'none', background: pg === page ? 'var(--gold-muted)' : 'var(--bg-card)', border: `1px solid ${pg === page ? 'var(--border-gold-strong)' : 'var(--border)'}`, color: pg === page ? 'var(--gold)' : 'var(--text-muted)' }}>{pg}</Link>
                 ))}
               </div>
             )}
@@ -349,7 +336,7 @@ export default async function JugadoresPage({
 
         {/* ── VISTA CUENTAS ────────────────────────────────── */}
         {vista === 'cuentas' && (
-          <div style={{ background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 80px 80px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
               {['#', 'JUGADOR', 'MEJOR PERSONAJE', 'PERSONAJES', 'BEST MMR'].map(col => (
                 <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>

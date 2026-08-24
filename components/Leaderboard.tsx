@@ -44,14 +44,8 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
     return true
   })
 
-  const selectStyle = {
-    background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 7,
-    color: 'var(--text-secondary)', padding: '5px 10px', fontSize: 11,
-    fontFamily: 'var(--font-display)', cursor: 'pointer', outline: 'none',
-  }
-
   return (
-    <div style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 14, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
 
       {/* Header */}
       <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
@@ -59,11 +53,11 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
           Top Personajes
         </div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <select style={selectStyle} value={filterReino} onChange={e => setFilterReino(e.target.value as Reino | '')}>
+          <select className="field" style={{ width: 'auto', padding: '5px 10px', fontSize: 11 }} value={filterReino} onChange={e => setFilterReino(e.target.value as Reino | '')}>
             <option value="">Todos los reinos</option>
             {REINOS.map(r => <option key={r} value={r}>{r}</option>)}
           </select>
-          <select style={selectStyle} value={filterClase} onChange={e => setFilterClase(e.target.value as Clase | '')}>
+          <select className="field" style={{ width: 'auto', padding: '5px 10px', fontSize: 11 }} value={filterClase} onChange={e => setFilterClase(e.target.value as Clase | '')}>
             <option value="">Todas las clases</option>
             {CLASES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>

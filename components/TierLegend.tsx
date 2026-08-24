@@ -16,9 +16,9 @@ export default function TierLegend() {
         onClick={() => setOpen(o => !o)}
         style={{
           display: 'flex', alignItems: 'center', gap: 6,
-          background: open ? 'rgba(212,175,55,0.1)' : '#0a0a0a',
-          border: `1px solid ${open ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.1)'}`,
-          borderRadius: 8, padding: '8px 14px', cursor: 'pointer',
+          background: open ? 'var(--gold-muted)' : 'var(--bg-card)',
+          border: `1px solid ${open ? 'var(--border-gold-strong)' : 'var(--border)'}`,
+          borderRadius: 'var(--radius-sm)', padding: '8px 14px', cursor: 'pointer',
           fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5,
           color: open ? 'var(--gold)' : 'var(--text-muted)',
         }}
@@ -29,9 +29,9 @@ export default function TierLegend() {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 8px)', right: 0, zIndex: 20,
-          background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 12,
+          background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)',
           padding: '14px 16px', width: 260,
-          boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
+          boxShadow: 'var(--shadow-elevated)',
         }}>
           <p style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 10 }}>
             Todo personaje arranca en <b style={{ color: 'var(--text-secondary)' }}>{MMR_INITIAL}</b>. Cada partida suma o resta puntos según qué tan probable era el resultado — vencer a alguien mejor rankeado da más puntos que vencer a alguien peor rankeado. Después de {ELO_VETERAN_THRESHOLD} partidas los cambios se achican (de {ELO_K_DEFAULT} a {ELO_K_VETERAN} puntos por partida) para que el ranking se estabilice.

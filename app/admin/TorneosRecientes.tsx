@@ -28,7 +28,7 @@ export default function TorneosRecientes({ torneos }: { torneos: Torneo[] }) {
 
   return (
     <div>
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
         {paginados.map((t, i) => {
           const creator = Array.isArray(t.creator) ? t.creator[0] : t.creator
           const sc = STATUS_COLOR[t.estado] ?? '#606060'
@@ -56,11 +56,9 @@ export default function TorneosRecientes({ torneos }: { torneos: Torneo[] }) {
                 </span>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <Link href={`/admin/torneos/${t.id}`} style={{
+                <Link href={`/admin/torneos/${t.id}`} className="btn btn-ghost-gold" style={{
                   flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-                  fontSize: 11, padding: '7px 10px', borderRadius: 6,
-                  background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.35)', color: 'var(--gold)',
-                  fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: 0.3, textDecoration: 'none',
+                  fontSize: 11, padding: '7px 10px', textDecoration: 'none',
                 }}>
                   ✎ Editar
                 </Link>

@@ -29,9 +29,9 @@ export default function Pagination({ page, totalPages, onChange }: { page: numbe
 
 function btnStyle(activa: boolean, deshabilitada: boolean): React.CSSProperties {
   return {
-    minWidth: 28, padding: '5px 8px', borderRadius: 6,
-    border: `1px solid ${activa ? 'var(--gold)' : 'rgba(255,255,255,0.12)'}`,
-    background: activa ? 'rgba(212,175,55,0.15)' : 'transparent',
+    minWidth: 28, padding: '5px 8px', borderRadius: 'var(--radius-sm)',
+    border: `1px solid ${activa ? 'var(--gold)' : 'var(--border)'}`,
+    background: activa ? 'var(--gold-muted)' : 'transparent',
     color: deshabilitada ? 'var(--text-muted)' : activa ? 'var(--gold)' : 'var(--text-secondary)',
     fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: activa ? 700 : 400,
     cursor: deshabilitada ? 'not-allowed' : 'pointer', opacity: deshabilitada ? 0.4 : 1,

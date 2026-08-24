@@ -48,19 +48,20 @@ export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }:
           backgroundImage: bg
             ? `linear-gradient(0deg, rgba(6,5,4,0.88) 0%, rgba(6,5,4,0.62) 45%, rgba(6,5,4,0.4) 100%), url('${bg}')`
             : undefined,
-          backgroundColor: bg ? undefined : '#0f0f0f',
+          backgroundColor: bg ? undefined : 'var(--bg-card)',
           backgroundSize: bgSize,
           backgroundPosition: bgPos,
           backgroundRepeat: 'no-repeat',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 12, padding: '18px 20px',
+          border: '1px solid var(--border)',
+          borderRadius: 'var(--radius-md)', padding: '18px 20px',
+          boxShadow: 'var(--shadow-card)',
           transition: 'border-color 0.2s',
         }}
           onMouseEnter={e => (e.currentTarget.style.borderColor = `${color}44`)}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--border)')}
         >
           <div style={{
-            width: 36, height: 36, borderRadius: 8,
+            width: 36, height: 36, borderRadius: 'var(--radius-sm)',
             background: `${color}15`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color, marginBottom: 12,

@@ -94,48 +94,35 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
           value={q}
           onChange={e => cambiarQuery(e.target.value)}
           placeholder="Buscar jugador por nombre o Discord..."
-          style={{
-            flex: '1 1 220px', background: '#0f0f0f', border: '1px solid var(--border-gold)', borderRadius: 8,
-            color: 'var(--text-primary)', padding: '8px 12px', fontSize: 12, fontFamily: 'var(--font-sans)', outline: 'none',
-          }}
+          className="field"
+          style={{ flex: '1 1 220px' }}
         />
-        <div style={{ display: 'flex', gap: 6 }}>
+        <div className="segmented">
           {FILTROS.map(f => (
             <button
               key={f.value}
               onClick={() => cambiarFiltro(f.value)}
-              style={{
-                padding: '7px 12px', borderRadius: 8, cursor: 'pointer',
-                background: filtro === f.value ? 'rgba(212,175,55,0.12)' : 'transparent',
-                border: `1px solid ${filtro === f.value ? 'var(--border-gold)' : 'rgba(255,255,255,0.12)'}`,
-                color: filtro === f.value ? 'var(--gold)' : 'var(--text-muted)',
-                fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, whiteSpace: 'nowrap',
-              }}
+              className={`segmented-btn${filtro === f.value ? ' is-active' : ''}`}
+              style={{ whiteSpace: 'nowrap' }}
             >
               {f.label}
             </button>
           ))}
         </div>
         {selected.size > 0 && (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, padding: '6px 10px' }}>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 'var(--radius-sm)', padding: '6px 10px' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 0.5 }}>{selected.size} seleccionados</span>
             <select
               value={bulkRole}
               onChange={e => setBulkRole(e.target.value as UserRole)}
-              style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'var(--text-primary)', padding: '4px 6px', fontSize: 11, fontFamily: 'var(--font-display)' }}
+              style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'var(--text-primary)', padding: '4px 6px', fontSize: 11, fontFamily: 'var(--font-display)' }}
             >
               {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
             </select>
-            <button onClick={aplicarEnLote} disabled={applying} style={{
-              padding: '5px 12px', borderRadius: 6, border: 'none', cursor: applying ? 'not-allowed' : 'pointer',
-              background: 'var(--gold)', color: '#000', fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700,
-            }}>
+            <button onClick={aplicarEnLote} disabled={applying} className="btn btn-primary" style={{ padding: '5px 12px', fontSize: 10 }}>
               {applying ? '...' : 'Aplicar'}
             </button>
-            <button onClick={() => setSelected(new Set())} style={{
-              padding: '5px 10px', borderRadius: 6, cursor: 'pointer',
-              background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 10,
-            }}>
+            <button onClick={() => setSelected(new Set())} className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 10 }}>
               Cancelar
             </button>
           </div>
@@ -143,7 +130,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
       </div>
       {error && <p style={{ color: '#f87171', fontSize: 11, marginBottom: 10 }}>{error}</p>}
 
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 120px 140px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', alignItems: 'center' }}>
           <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} disabled={seleccionables.length === 0} style={{ cursor: seleccionables.length === 0 ? 'not-allowed' : 'pointer' }} />
           {['JUGADOR', 'ROL ACTUAL', 'CAMBIAR ROL'].map(col => (

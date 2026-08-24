@@ -86,33 +86,33 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} style={{ background: 'rgba(212,175,55,0.1)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 6, color: 'var(--gold)', padding: '5px 12px', fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, cursor: 'pointer' }}>
+      <button onClick={() => setOpen(true)} className="btn btn-ghost-gold" style={{ padding: '5px 12px', fontSize: 10 }}>
         + Agregar personaje
       </button>
 
       {open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setOpen(false)}>
-          <div style={{ background: '#141414', border: '1px solid var(--border-gold)', borderRadius: 14, padding: '32px 40px', width: '100%', maxWidth: 440 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '32px 40px', width: '100%', maxWidth: 440 }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--gold)', marginBottom: 20, letterSpacing: 1 }}>Nuevo personaje</h2>
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>NICKNAME EN EL JUEGO</label>
+                <label className="field-label">NICKNAME EN EL JUEGO</label>
                 <input value={nickname} onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }} maxLength={32} placeholder="Nombre exacto en Regnum"
-                  style={{ width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none' }} />
+                  className="field" />
               </div>
               <div>
-                <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 8 }}>REINO</label>
+                <label className="field-label">REINO</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {REINOS.map(r => (
-                    <button type="button" key={r} onClick={() => setReino(r)} style={{ flex: 1, padding: '8px 0', borderRadius: 7, cursor: 'pointer', border: `2px solid ${reino === r ? REINO_COLOR[r] : 'var(--border)'}`, background: reino === r ? `${REINO_COLOR[r]}18` : 'transparent', color: reino === r ? REINO_COLOR[r] : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700 }}>{r}</button>
+                    <button type="button" key={r} onClick={() => setReino(r)} style={{ flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: `2px solid ${reino === r ? REINO_COLOR[r] : 'var(--border)'}`, background: reino === r ? `${REINO_COLOR[r]}18` : 'transparent', color: reino === r ? REINO_COLOR[r] : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700 }}>{r}</button>
                   ))}
                 </div>
               </div>
               <div>
-                <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 8 }}>CLASE</label>
+                <label className="field-label">CLASE</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                   {CLASES.map(c => (
-                    <button type="button" key={c} onClick={() => setClase(c)} style={{ padding: '8px 4px', borderRadius: 7, cursor: 'pointer', border: `2px solid ${clase === c ? 'var(--gold)' : 'var(--border)'}`, background: clase === c ? 'var(--gold-muted)' : 'transparent', color: clase === c ? 'var(--gold)' : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
+                    <button type="button" key={c} onClick={() => setClase(c)} style={{ padding: '8px 4px', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: `2px solid ${clase === c ? 'var(--gold)' : 'var(--border)'}`, background: clase === c ? 'var(--gold-muted)' : 'transparent', color: clase === c ? 'var(--gold)' : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 10, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                       <span style={{ fontSize: 16 }}>{CLASE_ICON[c]}</span>{c}
                     </button>
                   ))}
@@ -120,18 +120,18 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
               </div>
               {error && <p style={{ color: '#f87171', fontSize: 12, textAlign: 'center' }}>{error}</p>}
               {claimable ? (
-                <div style={{ border: '1px solid var(--border-gold)', borderRadius: 8, padding: '12px 14px', background: 'var(--gold-muted)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-sm)', padding: '12px 14px', background: 'var(--gold-muted)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <p style={{ fontSize: 12, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                     Ese nickname existe en el historial de torneos y nadie lo reclamó. Si es tuyo, reclamalo para heredar sus estadísticas.
                   </p>
-                  <button type="button" onClick={handleReclamar} disabled={claiming} style={{ padding: '9px', borderRadius: 7, border: 'none', background: claiming ? 'var(--bg-surface)' : 'var(--gold)', color: claiming ? 'var(--text-muted)' : '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: claiming ? 'not-allowed' : 'pointer' }}>
+                  <button type="button" onClick={handleReclamar} disabled={claiming} className="btn btn-primary">
                     {claiming ? 'Reclamando...' : `RECLAMAR "${nickname.trim()}"`}
                   </button>
                 </div>
               ) : (
                 <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                  <button type="button" onClick={() => setOpen(false)} style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12, cursor: 'pointer' }}>Cancelar</button>
-                  <button type="submit" disabled={loading} style={{ flex: 1, padding: '10px', borderRadius: 8, border: 'none', background: 'var(--gold)', color: '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, cursor: loading ? 'not-allowed' : 'pointer' }}>
+                  <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
+                  <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 1 }}>
                     {loading ? 'Guardando...' : 'AGREGAR'}
                   </button>
                 </div>

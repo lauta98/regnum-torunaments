@@ -30,7 +30,7 @@ export default function ReportarNickname({ personajeId, nickname }: { personajeI
 
       {open && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setOpen(false)}>
-          <div style={{ background: '#141414', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 14, padding: '28px 32px', width: '100%', maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 400 }} onClick={e => e.stopPropagation()}>
             {done ? (
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
                 <div style={{ fontSize: 32, marginBottom: 10 }}>✓</div>
@@ -44,10 +44,10 @@ export default function ReportarNickname({ personajeId, nickname }: { personajeI
                 </p>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <textarea value={motivo} onChange={e => setMotivo(e.target.value)} placeholder="Explicá por qué este nickname fue apropiado indebidamente..." rows={3}
-                    style={{ background: 'var(--bg-surface)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none', resize: 'vertical' }} />
+                    className="field" style={{ resize: 'vertical', borderColor: 'rgba(244,67,54,0.3)' }} />
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" onClick={() => setOpen(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 11, cursor: 'pointer' }}>Cancelar</button>
-                    <button type="submit" disabled={loading || !motivo.trim()} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: '#F44336', color: '#fff', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, cursor: 'pointer' }}>
+                    <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost" style={{ flex: 1 }}>Cancelar</button>
+                    <button type="submit" disabled={loading || !motivo.trim()} className="btn" style={{ flex: 1, background: '#F44336', color: '#fff' }}>
                       {loading ? 'Enviando...' : 'REPORTAR'}
                     </button>
                   </div>

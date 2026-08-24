@@ -55,7 +55,7 @@ export default function ExpulsarButton({ torneoId, teamId, teamNombre }: { torne
   }
 
   return (
-    <div style={{ background: '#1a0f0f', border: '1px solid rgba(244,67,54,0.35)', borderRadius: 8, padding: 12, minWidth: 220 }}>
+    <div style={{ background: '#1a0f0f', border: '1px solid rgba(244,67,54,0.35)', borderRadius: 'var(--radius-sm)', padding: 12, minWidth: 220 }}>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: '#f87171', marginBottom: 8, letterSpacing: 0.5 }}>
         EXPULSAR A {teamNombre.toUpperCase()}
       </div>
@@ -81,23 +81,16 @@ export default function ExpulsarButton({ torneoId, teamId, teamNombre }: { torne
         onChange={e => { setNota(e.target.value); setError('') }}
         placeholder="Nota adicional (opcional)"
         maxLength={300}
-        style={{
-          width: '100%', minHeight: 44, background: 'var(--bg-surface)', border: '1px solid var(--border)',
-          borderRadius: 6, color: 'var(--text-primary)', padding: '8px 10px', fontSize: 12,
-          fontFamily: 'inherit', resize: 'vertical', marginBottom: 8, boxSizing: 'border-box',
-        }}
+        className="field"
+        style={{ minHeight: 44, fontSize: 12, resize: 'vertical', marginBottom: 8 }}
       />
       <div style={{ display: 'flex', gap: 6 }}>
-        <button onClick={confirmar} disabled={loading} style={{
-          background: '#f44336', color: '#fff', border: 'none', padding: '6px 14px', borderRadius: 6,
-          fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, cursor: 'pointer', flex: 1,
+        <button onClick={confirmar} disabled={loading} className="btn" style={{
+          background: '#f44336', color: '#fff', padding: '6px 14px', fontSize: 10, flex: 1,
         }}>
           {loading ? 'Expulsando...' : 'Confirmar expulsión'}
         </button>
-        <button onClick={() => { setOpen(false); setError('') }} disabled={loading} style={{
-          background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)',
-          padding: '6px 12px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 10, cursor: 'pointer',
-        }}>
+        <button onClick={() => { setOpen(false); setError('') }} disabled={loading} className="btn btn-ghost" style={{ padding: '6px 12px', fontSize: 10 }}>
           Cancelar
         </button>
       </div>

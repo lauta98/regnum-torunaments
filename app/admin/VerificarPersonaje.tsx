@@ -34,15 +34,11 @@ export default function VerificarPersonaje({
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <button onClick={toggle} disabled={isPending} style={{
-        padding: '6px 12px', borderRadius: 6, cursor: 'pointer',
-        background: verificado ? 'rgba(33,150,243,0.15)' : 'rgba(212,175,55,0.1)',
-        color: verificado ? '#2196F3' : 'var(--gold)',
-        fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5,
-        border: `1px solid ${verificado ? 'rgba(33,150,243,0.3)' : 'rgba(212,175,55,0.3)'}`
-      }}>
-        {verificado ? '✓ Verificado' : 'Marcar verificado'}
-      </button>
+      <div className="segmented">
+        <button type="button" onClick={toggle} disabled={isPending} className={`segmented-btn${verificado ? ' is-active is-success' : ''}`}>
+          {verificado ? '✓ Verificado' : 'Marcar verificado'}
+        </button>
+      </div>
       {status === 'ok'    && <span style={{ fontSize: 10, color: '#4CAF50', fontFamily: 'var(--font-display)' }}>Guardado</span>}
       {status === 'error' && <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)' }}>Error</span>}
     </div>

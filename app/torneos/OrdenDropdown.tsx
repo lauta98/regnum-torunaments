@@ -19,18 +19,13 @@ export default function OrdenDropdown() {
             else next.set('orden', e.target.value)
             router.push(`/torneos${next.toString() ? `?${next.toString()}` : ''}`)
           }}
+          className="field"
           style={{
             appearance: 'none',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-gold)',
-            borderRadius: 8,
-            color: 'var(--text-primary)',
+            width: 'auto',
             padding: '8px 32px 8px 14px',
-            fontSize: 12,
             fontFamily: 'var(--font-display)',
             fontWeight: 600,
-            cursor: 'pointer',
-            outline: 'none',
           }}
         >
           <option value="recientes">Más recientes</option>

@@ -75,7 +75,7 @@ export default function PersonajesYHistorial({
   return (
     <>
       {/* Personajes */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
         <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>PERSONAJES</span>
           {isOwner && <AgregarPersonaje playerId={playerId} />}
@@ -157,7 +157,7 @@ export default function PersonajesYHistorial({
 
       {/* Vitrina de trofeos — todas las copas del jugador, combinadas */}
       {vitrina.length > 0 && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>VITRINA DE TROFEOS</span>
           </div>
@@ -191,7 +191,7 @@ export default function PersonajesYHistorial({
 
       {/* Historial de enfrentamientos del personaje seleccionado */}
       {historial.length > 0 && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>
               HISTORIAL DE ENFRENTAMIENTOS — {seleccionado?.nickname_juego}
@@ -272,11 +272,8 @@ export default function PersonajesYHistorial({
             {historial.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(v => v + INITIAL_VISIBLE)}
-                style={{
-                  margin: '10px 0 14px', padding: '8px', borderRadius: 8, cursor: 'pointer',
-                  background: 'transparent', border: '1px solid rgba(212,175,55,0.25)', color: 'var(--gold)',
-                  fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5,
-                }}
+                className="btn btn-ghost-gold"
+                style={{ margin: '10px 0 14px', width: '100%' }}
               >
                 Cargar más ({historial.length - visibleCount} restantes)
               </button>

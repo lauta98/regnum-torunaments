@@ -49,48 +49,43 @@ export default function PersonajeRow({ personaje, borderBottom }: { personaje: P
     router.refresh()
   }
 
-  const inputStyle = {
-    background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 6,
-    color: 'var(--text-primary)', padding: '5px 8px', fontSize: 12, fontFamily: 'var(--font-display)', outline: 'none',
-  } as const
-
   if (editando) {
     return (
       <div style={{ padding: '16px 20px', borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Nickname
-            <input style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.nickname_juego} onChange={e => setForm(f => ({ ...f, nickname_juego: e.target.value }))} />
+            <input className="field" style={{ marginTop: 3 }} value={form.nickname_juego} onChange={e => setForm(f => ({ ...f, nickname_juego: e.target.value }))} />
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             MMR
-            <input type="number" style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.mmr} onChange={e => setForm(f => ({ ...f, mmr: Number(e.target.value) }))} />
+            <input type="number" className="field" style={{ marginTop: 3 }} value={form.mmr} onChange={e => setForm(f => ({ ...f, mmr: Number(e.target.value) }))} />
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Clase
-            <select style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.clase} onChange={e => setForm(f => ({ ...f, clase: e.target.value as Clase }))}>
+            <select className="field" style={{ marginTop: 3 }} value={form.clase} onChange={e => setForm(f => ({ ...f, clase: e.target.value as Clase }))}>
               {CLASES.map(c => <option key={c} value={c}>{CLASE_LABEL[c]}</option>)}
               <option value="Desconocido">Desconocido</option>
             </select>
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Reino
-            <select style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.reino} onChange={e => setForm(f => ({ ...f, reino: e.target.value as Reino }))}>
+            <select className="field" style={{ marginTop: 3 }} value={form.reino} onChange={e => setForm(f => ({ ...f, reino: e.target.value as Reino }))}>
               {REINOS.map(r => <option key={r} value={r}>{r}</option>)}
               <option value="Desconocido">Desconocido</option>
             </select>
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Partidas jugadas
-            <input type="number" min={0} style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.partidas_jugadas} onChange={e => setForm(f => ({ ...f, partidas_jugadas: Number(e.target.value) }))} />
+            <input type="number" min={0} className="field" style={{ marginTop: 3 }} value={form.partidas_jugadas} onChange={e => setForm(f => ({ ...f, partidas_jugadas: Number(e.target.value) }))} />
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Partidas ganadas
-            <input type="number" min={0} style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.partidas_ganadas} onChange={e => setForm(f => ({ ...f, partidas_ganadas: Number(e.target.value) }))} />
+            <input type="number" min={0} className="field" style={{ marginTop: 3 }} value={form.partidas_ganadas} onChange={e => setForm(f => ({ ...f, partidas_ganadas: Number(e.target.value) }))} />
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)' }}>
             Winstreak
-            <input type="number" min={0} style={{ ...inputStyle, width: '100%', marginTop: 3, boxSizing: 'border-box' }} value={form.winstreak} onChange={e => setForm(f => ({ ...f, winstreak: Number(e.target.value) }))} />
+            <input type="number" min={0} className="field" style={{ marginTop: 3 }} value={form.winstreak} onChange={e => setForm(f => ({ ...f, winstreak: Number(e.target.value) }))} />
           </label>
           <label style={{ fontSize: 10, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 16 }}>
             <input type="checkbox" checked={form.verificado} onChange={e => setForm(f => ({ ...f, verificado: e.target.checked }))} />
@@ -99,17 +94,10 @@ export default function PersonajeRow({ personaje, borderBottom }: { personaje: P
         </div>
         {error && <p style={{ color: '#f87171', fontSize: 11, marginBottom: 8 }}>{error}</p>}
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={guardar} disabled={loading} style={{
-            padding: '6px 14px', borderRadius: 6, border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
-            background: 'var(--gold)', color: '#000', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700,
-          }}>
+          <button onClick={guardar} disabled={loading} className="btn btn-primary" style={{ padding: '6px 14px', fontSize: 11 }}>
             {loading ? 'Guardando...' : 'Guardar'}
           </button>
-          <button onClick={() => { setEditando(false); setError('') }} style={{
-            padding: '6px 14px', borderRadius: 6, cursor: 'pointer',
-            background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)',
-            fontFamily: 'var(--font-display)', fontSize: 11,
-          }}>
+          <button onClick={() => { setEditando(false); setError('') }} className="btn btn-ghost" style={{ padding: '6px 14px', fontSize: 11 }}>
             Cancelar
           </button>
         </div>
@@ -143,19 +131,13 @@ export default function PersonajeRow({ personaje, borderBottom }: { personaje: P
             }}>
               {loading ? '...' : 'Confirmar'}
             </button>
-            <button onClick={() => { setConfirmandoBorrado(false); setError('') }} style={{
-              fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
-              background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)', fontFamily: 'var(--font-display)',
-            }}>
+            <button onClick={() => { setConfirmandoBorrado(false); setError('') }} className="btn btn-ghost" style={{ fontSize: 9, padding: '3px 8px' }}>
               Cancelar
             </button>
           </>
         ) : (
           <>
-            <button onClick={() => setEditando(true)} style={{
-              fontSize: 9, padding: '3px 8px', borderRadius: 4, cursor: 'pointer',
-              background: 'transparent', border: '1px solid rgba(212,175,55,0.3)', color: 'var(--gold)', fontFamily: 'var(--font-display)',
-            }}>
+            <button onClick={() => setEditando(true)} className="btn btn-ghost-gold" style={{ fontSize: 9, padding: '3px 8px' }}>
               Editar
             </button>
             <button onClick={() => setConfirmandoBorrado(true)} style={{

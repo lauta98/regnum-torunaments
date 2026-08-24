@@ -16,11 +16,7 @@ export default function FinalizarTorneoButton({ torneoId }: { torneoId: string }
 
   return (
     <div style={{ display: 'inline-flex', flexDirection: 'column', gap: 4 }}>
-      <button onClick={finalizar} disabled={loading} style={{
-        background: 'transparent', border: '1px solid var(--border)', color: 'var(--text-muted)',
-        padding: '4px 10px', borderRadius: 6,
-        fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, cursor: 'pointer',
-      }}>
+      <button onClick={finalizar} disabled={loading} className="btn btn-ghost" style={{ padding: '4px 10px', fontSize: 9 }}>
         {loading ? 'Cerrando…' : '🏁 Dar por finalizado'}
       </button>
       {error && <span style={{ fontSize: 10, color: '#f87171' }}>{error}</span>}

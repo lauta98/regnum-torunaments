@@ -19,7 +19,7 @@ export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: 
   return (
     <Link href={`/brackets/${t.id}`} style={{ textDecoration: 'none' }}>
       <div className="card-hover torneo-card" style={{
-        position: 'relative', overflow: 'hidden', borderRadius: 14,
+        position: 'relative', overflow: 'hidden', borderRadius: 'var(--radius-md)',
         background: t.destacado
           ? `radial-gradient(120% 100% at 100% 0%, ${mainColor}14 0%, #0d0d0d 55%), #0a0a0a`
           : `radial-gradient(120% 100% at 100% 0%, ${mainColor}0d 0%, #0a0a0a 55%)`,

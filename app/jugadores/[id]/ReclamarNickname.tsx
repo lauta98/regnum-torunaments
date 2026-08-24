@@ -47,7 +47,7 @@ export default function ReclamarNickname({ personajeId, nickname }: { personajeI
           onClick={close}
         >
           <div
-            style={{ background: '#141414', border: '1px solid rgba(255,165,0,0.3)', borderRadius: 14, padding: '28px 32px', width: '100%', maxWidth: 420 }}
+            style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.3)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 420 }}
             onClick={e => e.stopPropagation()}
           >
             {done ? (
@@ -73,14 +73,15 @@ export default function ReclamarNickname({ personajeId, nickname }: { personajeI
                     placeholder="Ej: Es mi personaje principal desde hace 3 años, mi Discord es el mismo que uso en el foro del juego..."
                     rows={4}
                     maxLength={500}
-                    style={{ background: 'var(--bg-surface)', border: '1px solid rgba(255,165,0,0.3)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none', resize: 'vertical' }}
+                    className="field"
+                    style={{ resize: 'vertical', borderColor: 'rgba(255,165,0,0.3)' }}
                   />
                   {error && <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>}
                   <div style={{ display: 'flex', gap: 8 }}>
-                    <button type="button" onClick={close} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 11, cursor: 'pointer' }}>
+                    <button type="button" onClick={close} className="btn btn-ghost" style={{ flex: 1 }}>
                       Cancelar
                     </button>
-                    <button type="submit" disabled={loading || !motivo.trim()} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: motivo.trim() ? '#FFA500' : 'rgba(255,165,0,0.3)', color: motivo.trim() ? '#000' : 'rgba(0,0,0,0.4)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, cursor: motivo.trim() ? 'pointer' : 'not-allowed', transition: 'all 0.15s' }}>
+                    <button type="submit" disabled={loading || !motivo.trim()} className="btn" style={{ flex: 1, background: motivo.trim() ? '#FFA500' : 'rgba(255,165,0,0.3)', color: motivo.trim() ? '#000' : 'rgba(0,0,0,0.4)' }}>
                       {loading ? 'Enviando...' : 'RECLAMAR'}
                     </button>
                   </div>

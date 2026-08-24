@@ -275,8 +275,8 @@ const editBtnStyle = {
 const popoverStyle = {
   position: 'absolute', top: 'calc(100% + 6px)', right: 0, zIndex: 50,
   padding: '12px 14px', borderRadius: 10,
-  background: '#141414', border: '1px solid var(--border-gold)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+  background: 'var(--bg-card)', border: '1px solid var(--border-gold)',
+  boxShadow: 'var(--shadow-elevated)',
 } as const
 
 const btnStyle = {
@@ -291,12 +291,12 @@ const ghostBtnStyle = {
 
 const numInputStyle = {
   width: 44, padding: '5px 4px', borderRadius: 6, border: '1px solid var(--border-gold)',
-  background: '#0f0f0f', color: 'var(--text-primary)',
+  background: 'var(--bg-input)', color: 'var(--text-primary)',
   fontFamily: 'var(--font-display)', fontSize: 13, textAlign: 'center',
 } as const
 
 const selectStyle = {
   width: '100%', padding: '7px 8px', borderRadius: 6, border: '1px solid var(--border-gold)',
-  background: '#0f0f0f', color: 'var(--text-primary)',
+  background: 'var(--bg-input)', color: 'var(--text-primary)',
   fontFamily: 'var(--font-sans)', fontSize: 11, boxSizing: 'border-box',
 } as const

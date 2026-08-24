@@ -77,10 +77,8 @@ export default async function AdminPage() {
           <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
             Bienvenido, <span style={{ color: 'var(--gold)' }}>{me.nickname_juego}</span> — control total del sistema
           </p>
-          <Link href="/admin/personajes" style={{
-            display: 'inline-block', marginTop: 12, padding: '7px 16px', borderRadius: 8,
-            background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.3)', color: 'var(--gold)',
-            fontFamily: 'var(--font-display)', fontSize: 11, letterSpacing: 0.5, textDecoration: 'none',
+          <Link href="/admin/personajes" className="btn btn-ghost-gold" style={{
+            display: 'inline-block', marginTop: 12, padding: '7px 16px', fontSize: 11, textDecoration: 'none',
           }}>
             Gestionar personajes →
           </Link>
@@ -94,7 +92,7 @@ export default async function AdminPage() {
             { label: 'ORGANIZADORES',    value: counts.organizers, color: '#2196F3' },
             { label: 'JUGADORES',        value: counts.jugadores,  color: '#909090' },
           ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, padding: '20px 24px', textAlign: 'center' }}>
+            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 8 }}>{label}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 900, color }}>{value}</div>
             </div>
@@ -129,7 +127,7 @@ export default async function AdminPage() {
                 {reports!.length} pendiente{reports!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
               {reports!.map((r: any, i: number) => (
                 <div key={r.id} style={{ padding: '14px 20px', borderBottom: i < reports!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'grid', gridTemplateColumns: '1fr 160px 160px', alignItems: 'center', gap: 16 }}>
                   <div>
@@ -162,7 +160,7 @@ export default async function AdminPage() {
                 {reclamos!.length} pendiente{reclamos!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: 12, overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
               {reclamos!.map((r: any, i: number) => (
                 <div key={r.id} style={{ padding: '16px 20px', borderBottom: i < reclamos!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'grid', gridTemplateColumns: '1fr 1fr 120px', alignItems: 'start', gap: 16 }}>
 

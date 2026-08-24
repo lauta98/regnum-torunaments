@@ -133,13 +133,6 @@ function CompletarPerfilPage() {
     }
   }
 
-  const inputStyle = {
-    width: '100%', background: 'var(--bg-surface)',
-    border: '1px solid var(--border-gold)', borderRadius: 8,
-    color: 'var(--text-primary)', padding: '10px 14px',
-    fontSize: 14, fontFamily: 'var(--font-display)', outline: 'none',
-  } as const
-
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -147,7 +140,7 @@ function CompletarPerfilPage() {
     }}>
       <div style={{
         background: 'var(--bg-card)', border: '1px solid var(--border-gold)',
-        borderRadius: 16, padding: '40px 48px', width: '100%', maxWidth: 480,
+        borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', padding: '40px 48px', width: '100%', maxWidth: 480,
       }}>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, color: 'var(--gold)', marginBottom: 6, letterSpacing: 1 }}>
           Tu primer personaje
@@ -158,18 +151,18 @@ function CompletarPerfilPage() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div>
-            <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>
+            <label className="field-label">
               NICKNAME EN EL JUEGO
             </label>
             <input
-              style={inputStyle} value={nickname} maxLength={32}
+              className="field" value={nickname} maxLength={32}
               placeholder="Tu nombre exacto en Regnum"
               onChange={e => { setNickname(e.target.value); setClaimable(null); setError('') }}
             />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 10 }}>
+            <label className="field-label" style={{ marginBottom: 10 }}>
               REINO
             </label>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -186,19 +179,13 @@ function CompletarPerfilPage() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 10 }}>
+            <label className="field-label" style={{ marginBottom: 10 }}>
               CLASE
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
               {CLASES.map(c => (
-                <button type="button" key={c} onClick={() => setClase(c)} style={{
-                  padding: '10px 6px', borderRadius: 8, cursor: 'pointer',
-                  border: `2px solid ${clase === c ? 'var(--gold)' : 'var(--border)'}`,
-                  background: clase === c ? 'var(--gold-muted)' : 'transparent',
-                  color: clase === c ? 'var(--gold)' : 'var(--text-secondary)',
-                  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
+                <button type="button" key={c} onClick={() => setClase(c)} className={`segmented-btn${clase === c ? ' is-active' : ''}`} style={{
                   display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                  transition: 'all 0.15s',
                 }}>
                   <span style={{ fontSize: 20 }}>{CLASE_ICON[c]}</span>
                   {c}
@@ -211,31 +198,19 @@ function CompletarPerfilPage() {
 
           {claimable ? (
             <div style={{
-              border: '1px solid var(--border-gold)', borderRadius: 10, padding: '14px 16px',
+              border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', padding: '14px 16px',
               background: 'var(--gold-muted)', display: 'flex', flexDirection: 'column', gap: 10,
             }}>
               <p style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.5 }}>
                 Ese nickname ya existe en el historial de torneos pero nadie lo reclamó todavía.
                 Si sos vos, reclamalo para heredar tus estadísticas y tu MMR.
               </p>
-              <button type="button" onClick={handleReclamar} disabled={claiming} style={{
-                padding: '10px', borderRadius: 8, border: 'none',
-                background: claiming ? 'var(--bg-surface)' : 'var(--gold)',
-                color: claiming ? 'var(--text-muted)' : '#000',
-                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 0.5,
-                cursor: claiming ? 'not-allowed' : 'pointer',
-              }}>
+              <button type="button" onClick={handleReclamar} disabled={claiming} className="btn btn-primary" style={{ padding: 10, fontSize: 13, letterSpacing: 0.5 }}>
                 {claiming ? 'Reclamando...' : `RECLAMAR "${nickname.trim()}"`}
               </button>
             </div>
           ) : (
-            <button type="submit" disabled={loading} style={{
-              padding: '12px', borderRadius: 10, border: 'none',
-              background: loading ? 'var(--bg-surface)' : 'var(--gold)',
-              color: loading ? 'var(--text-muted)' : '#000',
-              fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: 1,
-              cursor: loading ? 'not-allowed' : 'pointer', transition: 'opacity 0.15s',
-            }}>
+            <button type="submit" disabled={loading} className="btn btn-primary" style={{ padding: 12, fontSize: 14, letterSpacing: 1 }}>
               {loading ? 'Guardando...' : 'EMPEZAR A COMPETIR'}
             </button>
           )}

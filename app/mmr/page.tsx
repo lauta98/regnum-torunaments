@@ -23,8 +23,8 @@ export default function MMRPage() {
   const tiersDesc = [...MMR_TIERS] // ya vienen de mayor a menor en MMR_TIERS
 
   const sectionStyle: React.CSSProperties = {
-    background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 16,
-    padding: '26px 28px', marginBottom: 20,
+    background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)',
+    boxShadow: 'var(--shadow-card)', padding: '26px 28px', marginBottom: 20,
   }
   const hStyle: React.CSSProperties = {
     fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 800, color: 'var(--gold)',
@@ -32,7 +32,7 @@ export default function MMRPage() {
   }
   const pStyle: React.CSSProperties = { fontSize: 13.5, color: 'var(--text-secondary)', lineHeight: 1.7 }
   const formulaBox: React.CSSProperties = {
-    background: '#0a0a0a', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 10,
+    background: 'var(--bg-input)', border: '1px solid rgba(212,175,55,0.2)', borderRadius: 'var(--radius-sm)',
     padding: '14px 18px', fontFamily: 'var(--font-mono, monospace)', fontSize: 13,
     color: 'var(--text-primary)', margin: '12px 0', overflowX: 'auto',
   }
@@ -86,14 +86,14 @@ export default function MMRPage() {
           <div style={hStyle}>🔢 En números</div>
           <p style={pStyle}>Dos personajes, 1300 MMR contra 1200 MMR (K={ELO_K_DEFAULT}):</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-            <div style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ background: 'rgba(76,175,80,0.06)', border: '1px solid rgba(76,175,80,0.25)', borderRadius: 'var(--radius-sm)', padding: '14px 16px' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#4CAF50', letterSpacing: 0.5, marginBottom: 6 }}>GANA EL FAVORITO (1300)</div>
               <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                 Se esperaba con {favoritoGana.esperado}% de probabilidad — gana "lo justo":
                 <br /><b style={{ color: '#4CAF50' }}>+{favoritoGana.delta} MMR</b>
               </div>
             </div>
-            <div style={{ background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 10, padding: '14px 16px' }}>
+            <div style={{ background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 'var(--radius-sm)', padding: '14px 16px' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: '#f87171', letterSpacing: 0.5, marginBottom: 6 }}>GANA EL RIVAL (1200)</div>
               <div style={{ fontSize: 12.5, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
                 Upset — el favorito solo tenía {favoritoGana.esperado}% de perder:

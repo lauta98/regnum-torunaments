@@ -57,7 +57,7 @@ export default async function SalonDeLaFamaPage() {
         </div>
 
         {filas.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '70px 20px', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13, border: '1px dashed rgba(212,175,55,0.2)', borderRadius: 16 }}>
+          <div style={{ textAlign: 'center', padding: '70px 20px', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13, border: '1px dashed rgba(212,175,55,0.2)', borderRadius: 'var(--radius-lg)' }}>
             Todavía no hay campeones registrados.
           </div>
         ) : (
@@ -72,8 +72,8 @@ export default async function SalonDeLaFamaPage() {
                 <article
                   key={torneo.id}
                   style={{
-                    background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 18,
-                    overflow: 'hidden', boxShadow: '0 12px 32px -16px rgba(0,0,0,0.6)',
+                    background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)',
+                    overflow: 'hidden', boxShadow: 'var(--shadow-card)',
                   }}
                 >
                   {/* ── Portada del torneo ─────────────────────── */}
@@ -145,7 +145,7 @@ export default async function SalonDeLaFamaPage() {
                               ? 'linear-gradient(135deg, rgba(91,143,212,0.08), rgba(91,143,212,0.02))'
                               : 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))',
                             border: `1px solid ${esClan ? 'rgba(91,143,212,0.28)' : 'rgba(212,175,55,0.22)'}`,
-                            borderRadius: 12,
+                            borderRadius: 'var(--radius-md)',
                             padding: '10px 18px 10px 10px', minWidth: 190, flex: '1 1 190px',
                             transition: 'border-color 0.15s, background 0.15s',
                           }}

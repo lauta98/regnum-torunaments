@@ -68,7 +68,7 @@ export default function RoleManager({
         onChange={e => handleChange(e.target.value as UserRole)}
         title={isSelf ? 'No podés cambiar tu propio rol' : undefined}
         style={{
-          background: '#0f0f0f',
+          background: 'var(--bg-input)',
           border: `1px solid ${selectColor}44`,
           borderRadius: 6,
           color: selectColor,

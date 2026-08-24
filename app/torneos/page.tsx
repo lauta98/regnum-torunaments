@@ -32,9 +32,9 @@ function Pill({ href, active, color, children }: { href: string; active: boolean
   const c = color ?? 'rgba(212,175,55,1)'
   return (
     <Link href={href} style={{
-      padding: '7px 18px', borderRadius: 8, textDecoration: 'none',
+      padding: '7px 18px', borderRadius: 'var(--radius-sm)', textDecoration: 'none',
       fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, letterSpacing: 0.5,
-      border: `1px solid ${active ? c : 'rgba(255,255,255,0.1)'}`,
+      border: `1px solid ${active ? c : 'var(--border-input)'}`,
       background: active ? `${c}18` : 'transparent',
       color: active ? c : 'var(--text-muted)',
       transition: 'all 0.15s', whiteSpace: 'nowrap',
@@ -145,7 +145,7 @@ export default async function TorneosPage({
 
 function Footer() {
   return (
-    <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
+    <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
       CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
     </footer>
   )

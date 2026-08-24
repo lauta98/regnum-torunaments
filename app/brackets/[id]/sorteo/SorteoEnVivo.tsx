@@ -79,7 +79,7 @@ export default function SorteoEnVivo({
 
       {/* Zona de reveal */}
       <div style={{
-        background: 'var(--bg-card)', border: '2px solid var(--border-gold)', borderRadius: 16,
+        background: 'var(--bg-card)', border: '2px solid var(--border-gold)', borderRadius: 'var(--radius-lg)',
         padding: '48px 24px', textAlign: 'center', marginBottom: 28, minHeight: 140,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -98,10 +98,7 @@ export default function SorteoEnVivo({
             </div>
           </div>
         ) : (
-          <button onClick={sortearSiguiente} style={{
-            background: 'var(--gold)', color: '#000', padding: '16px 40px', borderRadius: 10, border: 'none',
-            fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: 16, letterSpacing: 1, cursor: 'pointer',
-          }}>
+          <button onClick={sortearSiguiente} className="btn btn-primary" style={{ padding: '16px 40px', fontWeight: 900, fontSize: 16 }}>
             🎲 SORTEAR SIGUIENTE
           </button>
         )}
@@ -113,9 +110,9 @@ export default function SorteoEnVivo({
           const e = revelados[i]
           return (
             <div key={i} style={{
-              background: e ? 'rgba(212,175,55,0.08)' : '#0a0a0a',
+              background: e ? 'rgba(212,175,55,0.08)' : 'var(--bg-surface)',
               border: `1px solid ${e ? 'rgba(212,175,55,0.35)' : 'rgba(255,255,255,0.06)'}`,
-              borderRadius: 8, padding: '10px 14px',
+              borderRadius: 'var(--radius-sm)', padding: '10px 14px',
             }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 4 }}>
                 POSICIÓN {i + 1}
@@ -130,13 +127,7 @@ export default function SorteoEnVivo({
 
       {terminado && (
         <div style={{ textAlign: 'center' }}>
-          <button onClick={confirmar} disabled={confirmando} style={{
-            background: confirmando ? 'var(--bg-surface)' : 'var(--gold)',
-            color: confirmando ? 'var(--text-muted)' : '#000',
-            padding: '14px 36px', borderRadius: 10, border: 'none',
-            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: 1,
-            cursor: confirmando ? 'not-allowed' : 'pointer',
-          }}>
+          <button onClick={confirmar} disabled={confirmando} className="btn btn-primary" style={{ padding: '14px 36px', fontSize: 14 }}>
             {confirmando ? 'Creando cuadro...' : '✓ Confirmar y crear el cuadro'}
           </button>
           {error && <p style={{ color: '#f87171', fontSize: 13, marginTop: 12 }}>{error}</p>}

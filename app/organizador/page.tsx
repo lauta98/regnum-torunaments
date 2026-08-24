@@ -69,11 +69,7 @@ export default async function OrganizadorPage() {
               Bienvenido, <span style={{ color: 'var(--gold)' }}>{player.nickname_juego}</span>
             </p>
           </div>
-          <Link href="/organizador/nuevo" style={{
-            background: 'var(--gold)', color: '#000', padding: '10px 22px', borderRadius: 8, border: 'none',
-            fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: 1, textDecoration: 'none',
-            display: 'flex', alignItems: 'center', gap: 8,
-          }}>
+          <Link href="/organizador/nuevo" className="btn btn-primary" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
             + CREAR TORNEO
           </Link>
         </div>
@@ -86,7 +82,7 @@ export default async function OrganizadorPage() {
             { label: 'INSCRITOS',    value: stats.inscritos, color: '#4CAF50' },
             { label: 'PARTIDOS',     value: stats.partidos, color: '#2196F3' },
           ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, padding: '20px 24px', textAlign: 'center' }}>
+            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', textAlign: 'center' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 8 }}>{label}</div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 900, color }}>{value}</div>
             </div>
@@ -97,15 +93,15 @@ export default async function OrganizadorPage() {
         <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>MIS TORNEOS</div>
 
         {!torneos?.length ? (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: '60px 24px', textAlign: 'center' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '60px 24px', textAlign: 'center' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>🏆</div>
             <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--text-muted)', marginBottom: 20 }}>Aún no creaste ningún torneo.</p>
-            <Link href="/organizador/nuevo" style={{ background: 'var(--gold)', color: '#000', padding: '10px 24px', borderRadius: 8, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, textDecoration: 'none', letterSpacing: 1 }}>
+            <Link href="/organizador/nuevo" className="btn btn-primary" style={{ textDecoration: 'none' }}>
               CREAR MI PRIMER TORNEO
             </Link>
           </div>
         ) : (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, overflow: 'hidden' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 100px 80px 80px 120px', padding: '10px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
               {['TORNEO', 'FORMATO', 'ESTADO', 'EQUIPOS', 'PARTIDOS', 'ACCIONES'].map(col => (
                 <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{col}</div>

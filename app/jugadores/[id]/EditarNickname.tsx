@@ -57,7 +57,7 @@ export default function EditarNickname({ personajeId, nicknameActual }: { person
           onClick={() => setOpen(false)}
         >
           <div
-            style={{ background: '#141414', border: '1px solid var(--border-gold)', borderRadius: 14, padding: '28px 32px', width: '100%', maxWidth: 400 }}
+            style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 400 }}
             onClick={e => e.stopPropagation()}
           >
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', marginBottom: 6, letterSpacing: 1 }}>
@@ -72,14 +72,14 @@ export default function EditarNickname({ personajeId, nicknameActual }: { person
                 onChange={e => setNickname(e.target.value)}
                 maxLength={32}
                 autoFocus
-                style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-gold)', borderRadius: 8, color: 'var(--text-primary)', padding: '9px 13px', fontSize: 13, fontFamily: 'var(--font-sans)', outline: 'none' }}
+                className="field"
               />
               {error && <p style={{ fontSize: 12, color: '#f87171', margin: 0 }}>{error}</p>}
               <div style={{ display: 'flex', gap: 8 }}>
-                <button type="button" onClick={() => setOpen(false)} style={{ flex: 1, padding: '9px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 11, cursor: 'pointer' }}>
+                <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost" style={{ flex: 1 }}>
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading || !nickname.trim()} style={{ flex: 1, padding: '9px', borderRadius: 8, border: 'none', background: nickname.trim() ? 'var(--gold)' : 'rgba(212,175,55,0.3)', color: '#000', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11, cursor: nickname.trim() ? 'pointer' : 'not-allowed' }}>
+                <button type="submit" disabled={loading || !nickname.trim()} className="btn btn-primary" style={{ flex: 1 }}>
                   {loading ? 'Guardando...' : 'GUARDAR'}
                 </button>
               </div>

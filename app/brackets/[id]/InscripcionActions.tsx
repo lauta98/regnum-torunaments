@@ -41,7 +41,7 @@ export default function InscripcionActions({
 
   if (yaInscritoTeamId) {
     return (
-      <div style={{ background: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.3)', borderRadius: 10, padding: '14px 18px', marginBottom: 20, color: '#4CAF50', fontFamily: 'var(--font-display)', fontSize: 12 }}>
+      <div style={{ background: 'rgba(76,175,80,0.1)', border: '1px solid rgba(76,175,80,0.3)', borderRadius: 'var(--radius-md)', padding: '14px 18px', marginBottom: 20, color: '#4CAF50', fontFamily: 'var(--font-display)', fontSize: 12 }}>
         ✓ Ya estás inscripto en este torneo.
       </div>
     )
@@ -49,7 +49,7 @@ export default function InscripcionActions({
 
   if (personajesElegibles.length === 0) {
     return (
-      <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 10, padding: '14px 18px', marginBottom: 20, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+      <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 'var(--radius-md)', padding: '14px 18px', marginBottom: 20, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
         Ninguno de tus personajes puede inscribirse en este torneo (subclase no habilitada). Si tenés uno de la clase correcta que todavía no cargaste, agregalo acá:
         <AgregarPersonaje playerId={playerId} />
       </div>
@@ -92,29 +92,14 @@ export default function InscripcionActions({
     window.location.reload()
   }
 
-  const selectStyle = {
-    width: '100%', background: 'var(--bg-surface)', border: '1px solid var(--border-gold)',
-    borderRadius: 8, color: 'var(--text-primary)', padding: '9px 12px',
-    fontSize: 13, fontFamily: 'var(--font-display)', outline: 'none', marginBottom: 10,
-  } as const
-
-  const btnStyle = {
-    background: 'var(--gold)', color: '#000', padding: '10px 20px', borderRadius: 8, border: 'none',
-    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 12, letterSpacing: 1, cursor: 'pointer',
-  } as const
-
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--gold)', marginBottom: 12 }}>
-        INSCRIPCIÓN
-      </div>
+    <div className="card-section" style={{ marginBottom: 20 }}>
+      <div className="card-section__title">Inscripción</div>
 
       {personajesElegibles.length > 1 && (
         <>
-          <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>
-            PERSONAJE
-          </label>
-          <select style={selectStyle} value={personajeId} onChange={e => setPersonajeId(e.target.value)}>
+          <label className="field-label">PERSONAJE</label>
+          <select className="field" style={{ marginBottom: 10 }} value={personajeId} onChange={e => setPersonajeId(e.target.value)}>
             {personajesElegibles.map(p => (
               <option key={p.id} value={p.id}>{p.nickname_juego} — {CLASE_LABEL[p.clase]}</option>
             ))}
@@ -123,7 +108,7 @@ export default function InscripcionActions({
       )}
 
       {teamSize === 1 ? (
-        <button onClick={crearEquipo} disabled={loading} style={btnStyle}>
+        <button onClick={crearEquipo} disabled={loading} className="btn btn-primary">
           {loading ? 'Inscribiendo...' : 'Inscribirme'}
         </button>
       ) : (
@@ -135,11 +120,11 @@ export default function InscripcionActions({
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {equiposConCupo.map(t => (
-                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, padding: '8px 12px' }}>
+                  <div key={t.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 12px' }}>
                     <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-primary)' }}>
                       {t.nombre} <span style={{ color: 'var(--text-muted)' }}>({t.miembros}/{teamSize})</span>
                     </span>
-                    <button onClick={() => unirseA(t.id)} disabled={loading} style={{ ...btnStyle, padding: '5px 12px', fontSize: 10 }}>
+                    <button onClick={() => unirseA(t.id)} disabled={loading} className="btn btn-primary" style={{ padding: '5px 12px', fontSize: 10 }}>
                       Unirme
                     </button>
                   </div>
@@ -153,14 +138,12 @@ export default function InscripcionActions({
 
           {(equiposConCupo.length === 0 || modo === 'crear') && (
             <>
-              <label style={{ display: 'block', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>
-                NOMBRE DEL EQUIPO
-              </label>
+              <label className="field-label">NOMBRE DEL EQUIPO</label>
               <input
-                style={selectStyle} value={nombreEquipo} maxLength={40} placeholder="Ej: Los Invencibles"
+                className="field" style={{ marginBottom: 10 }} value={nombreEquipo} maxLength={40} placeholder="Ej: Los Invencibles"
                 onChange={e => setNombreEquipo(e.target.value)}
               />
-              <button onClick={crearEquipo} disabled={loading} style={btnStyle}>
+              <button onClick={crearEquipo} disabled={loading} className="btn btn-primary">
                 {loading ? 'Creando...' : 'Crear equipo e inscribirme'}
               </button>
             </>

@@ -41,16 +41,6 @@ export default async function HomePage({
     supabase.from('matches').select('*', { count: 'exact', head: true }),
   ])
 
-  const btnOutline = {
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.15)',
-    color: 'var(--text-secondary)',
-    padding: '10px 18px', borderRadius: 8,
-    fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 12, letterSpacing: 0.5,
-    textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 7,
-    transition: 'all 0.15s',
-  } as const
-
   return (
     <>
       <Header />
@@ -59,7 +49,7 @@ export default async function HomePage({
         {error === 'organizador' && (
           <div style={{
             background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.3)',
-            borderRadius: 10, padding: '12px 18px', marginBottom: 20,
+            borderRadius: 'var(--radius-sm)', padding: '12px 18px', marginBottom: 20,
             color: '#f87171', fontSize: 13, fontFamily: 'var(--font-display)',
           }}>
             Todavía no tenés permisos de organizador para crear torneos — pedile a un admin que te los otorgue.
@@ -75,7 +65,7 @@ export default async function HomePage({
             backgroundSize: 'cover',
             backgroundPosition: 'center 38%',
             border: '1px solid rgba(255,255,255,0.07)',
-            borderRadius: 16, padding: '44px 40px',
+            borderRadius: 'var(--radius-lg)', padding: '44px 40px',
             position: 'relative', overflow: 'hidden',
             display: 'flex', flexDirection: 'column', justifyContent: 'center',
             minHeight: 420,
@@ -101,10 +91,10 @@ export default async function HomePage({
 
             {/* CTA buttons */}
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <Link href="/salon-de-la-fama" style={{ ...btnOutline, color: 'var(--gold)', borderColor: 'rgba(212,175,55,0.35)' }}>
+              <Link href="/salon-de-la-fama" className="btn btn-ghost-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
                 <IconMedal /> Salón de la Fama
               </Link>
-              <Link href="/organizador/nuevo" style={{ ...btnOutline, color: '#d4af37', borderColor: 'rgba(212,175,55,0.3)' }}>
+              <Link href="/organizador/nuevo" className="btn btn-ghost-gold" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
                 <IconTrophy /> Crear Torneo
               </Link>
             </div>

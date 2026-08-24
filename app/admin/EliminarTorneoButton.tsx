@@ -27,10 +27,8 @@ export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: s
           }}>
             {loading ? '...' : 'Confirmar'}
           </button>
-          <button onClick={() => setConfirmando(false)} disabled={loading} style={{
-            flex: 1, fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: 'pointer',
-            background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--text-muted)',
-            fontFamily: 'var(--font-display)',
+          <button onClick={() => setConfirmando(false)} disabled={loading} className="btn btn-ghost" style={{
+            flex: 1, fontSize: 11, padding: '7px 10px',
           }}>
             Cancelar
           </button>

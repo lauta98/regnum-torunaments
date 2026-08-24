@@ -26,18 +26,13 @@ export default function SubclaseDropdown({
             const v = e.target.value
             router.push(v ? `/torneos?formato=${formato}&sub=${v}` : `/torneos?formato=${formato}`)
           }}
+          className="field"
           style={{
             appearance: 'none',
-            background: 'var(--bg-card)',
-            border: '1px solid var(--border-gold)',
-            borderRadius: 8,
-            color: 'var(--text-primary)',
+            width: 'auto',
             padding: '8px 32px 8px 14px',
-            fontSize: 12,
             fontFamily: 'var(--font-display)',
             fontWeight: 600,
-            cursor: 'pointer',
-            outline: 'none',
           }}
         >
           <option value="">Todas</option>
