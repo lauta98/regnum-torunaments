@@ -126,14 +126,21 @@ export const WINSTREAK_BONUS     = 1.2  // ×1.2 MMR gained after this many cons
 export const WINSTREAK_THRESHOLD = 3
 
 // ─── Tier system ────────────────────────────────────────────────────────────
+// Umbrales recalibrados a la escala real de la comunidad (ago 2026): con
+// ELO siendo un sistema relativo (converge según la ventaja sobre el
+// segundo mejor del pool, no un numero absoluto), un jugador dominante
+// sin rivales cercanos se estabiliza bien por debajo de los umbrales
+// genericos originales aunque juegue indefinidamente -- 1800 nunca iba a
+// ser alcanzable en esta escala. Distribucion real al recalibrar: casi
+// todo el pool entre 1050-1350, el tope actual ~1440.
 export const MMR_TIERS = [
-  { name: 'Legendario', min: 1800, color: '#ff6b35', cssClass: 'tier-legendary', icon: '🔥' },
-  { name: 'Diamante',   min: 1500, color: '#00d4ff', cssClass: 'tier-diamond',   icon: '💎' },
-  { name: 'Platino',    min: 1350, color: '#b060ff', cssClass: 'tier-platinum',  icon: '⬡'  },
-  { name: 'Oro',        min: 1200, color: '#d4af37', cssClass: 'tier-gold',      icon: '⭐' },
-  { name: 'Plata',      min: 1050, color: '#9e9e9e', cssClass: 'tier-silver',    icon: '🥈' },
-  { name: 'Bronce',     min: 900,  color: '#8d6e63', cssClass: 'tier-bronze',    icon: '🥉' },
-  { name: 'Hierro',     min: 0,    color: '#606060', cssClass: 'tier-iron',      icon: '⚒️' },
+  { name: 'Raptor de Almas', min: 1520, color: '#ff6b35', cssClass: 'tier-legendary', icon: '🔥' },
+  { name: 'Evendim',         min: 1420, color: '#00d4ff', cssClass: 'tier-diamond',   icon: '💎' },
+  { name: 'Daen Rah',        min: 1320, color: '#b060ff', cssClass: 'tier-platinum',  icon: '⬡'  },
+  { name: 'Thorkul',         min: 1200, color: '#d4af37', cssClass: 'tier-gold',      icon: '⭐' },
+  { name: 'Aquantis',        min: 1050, color: '#9e9e9e', cssClass: 'tier-silver',    icon: '🥈' },
+  { name: 'Mercenario',      min: 900,  color: '#8d6e63', cssClass: 'tier-bronze',    icon: '🥉' },
+  { name: 'Entrenamiento',   min: 0,    color: '#606060', cssClass: 'tier-iron',      icon: '⚒️' },
 ] as const
 
 export type Tier = typeof MMR_TIERS[number]

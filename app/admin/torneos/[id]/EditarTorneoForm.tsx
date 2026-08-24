@@ -9,7 +9,7 @@ const ESTADO_LABEL: Record<TournamentStatus, string> = {
   draft: 'Borrador', inscripciones: 'Inscripciones', live: 'En vivo', finalizado: 'Finalizado',
 }
 
-export default function EditarTorneoForm({ torneo }: { torneo: any }) {
+export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: any; isAdmin?: boolean }) {
   const router = useRouter()
   const [form, setForm] = useState({
     nombre: torneo.nombre ?? '',
@@ -23,6 +23,7 @@ export default function EditarTorneoForm({ torneo }: { torneo: any }) {
     premio: torneo.premio ?? '',
     reglamento: torneo.reglamento ?? '',
     destacado: torneo.destacado ?? false,
+    organizador_verificado: torneo.organizador_verificado ?? false,
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -45,14 +46,13 @@ export default function EditarTorneoForm({ torneo }: { torneo: any }) {
         nombre: form.nombre.trim(),
         descripcion: form.descripcion.trim() || null,
         formato: form.formato,
-        estado: form.estado,
         subclases_permitidas: form.subclases.length > 0 ? form.subclases : null,
         fecha_inicio: form.fecha_inicio,
         fecha_fin: form.fecha_fin || null,
         max_equipos: form.max_equipos,
         premio: form.premio.trim() || null,
         reglamento: form.reglamento.trim() || null,
-        destacado: form.destacado,
+        ...(isAdmin ? { estado: form.estado, destacado: form.destacado, organizador_verificado: form.organizador_verificado } : {}),
       }),
     })
     const data = await res.json()
@@ -108,23 +108,28 @@ export default function EditarTorneoForm({ torneo }: { torneo: any }) {
         </div>
       </div>
 
-      <div>
-        <label style={labelStyle}>ESTADO</label>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {ESTADOS.map(s => {
-            const active = form.estado === s
-            return (
-              <button type="button" key={s} onClick={() => setForm(f => ({ ...f, estado: s }))} style={{
-                flex: '1 1 100px', padding: '10px 8px', borderRadius: 8, cursor: 'pointer',
-                border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-                background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
-                color: active ? 'var(--gold)' : 'var(--text-secondary)',
-                fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700,
-              }}>{ESTADO_LABEL[s]}</button>
-            )
-          })}
+      {isAdmin && (
+        <div>
+          <label style={labelStyle}>ESTADO</label>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+            Override manual — para el flujo normal usá los botones de la página del torneo (abrir inscripciones, generar cuadro, finalizar).
+          </p>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {ESTADOS.map(s => {
+              const active = form.estado === s
+              return (
+                <button type="button" key={s} onClick={() => setForm(f => ({ ...f, estado: s }))} style={{
+                  flex: '1 1 100px', padding: '10px 8px', borderRadius: 8, cursor: 'pointer',
+                  border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+                  background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
+                  color: active ? 'var(--gold)' : 'var(--text-secondary)',
+                  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700,
+                }}>{ESTADO_LABEL[s]}</button>
+              )
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <div>
         <label style={labelStyle}>SUBCLASES QUE PUEDEN PARTICIPAR</label>
@@ -156,30 +161,54 @@ export default function EditarTorneoForm({ torneo }: { torneo: any }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isAdmin ? '1fr 1fr' : '1fr', gap: 16 }}>
         <div>
           <label style={labelStyle}>MÁX. EQUIPOS</label>
           <select style={{ ...inputStyle, cursor: 'pointer' }} value={form.max_equipos} onChange={e => setForm(f => ({ ...f, max_equipos: parseInt(e.target.value) }))}>
             {[4, 8, 16, 32, 64].map(n => <option key={n} value={n}>{n} equipos</option>)}
           </select>
         </div>
+        {isAdmin && (
+          <div>
+            <label style={labelStyle}>DESTACADO</label>
+            <button
+              type="button"
+              onClick={() => setForm(f => ({ ...f, destacado: !f.destacado }))}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 8, cursor: 'pointer',
+                border: `2px solid ${form.destacado ? 'var(--gold)' : 'var(--border)'}`,
+                background: form.destacado ? 'rgba(212,175,55,0.1)' : 'transparent',
+                color: form.destacado ? 'var(--gold)' : 'var(--text-secondary)',
+                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
+              }}
+            >
+              {form.destacado ? '★ Destacado' : '☆ No destacado'}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {isAdmin && (
         <div>
-          <label style={labelStyle}>DESTACADO</label>
+          <label style={labelStyle}>ORGANIZADOR VERIFICADO</label>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+            Sello de confianza sobre el torneo — no afecta el cálculo de MMR.
+          </p>
           <button
             type="button"
-            onClick={() => setForm(f => ({ ...f, destacado: !f.destacado }))}
+            onClick={() => setForm(f => ({ ...f, organizador_verificado: !f.organizador_verificado }))}
             style={{
               width: '100%', padding: '10px 0', borderRadius: 8, cursor: 'pointer',
-              border: `2px solid ${form.destacado ? 'var(--gold)' : 'var(--border)'}`,
-              background: form.destacado ? 'rgba(212,175,55,0.1)' : 'transparent',
-              color: form.destacado ? 'var(--gold)' : 'var(--text-secondary)',
+              border: `2px solid ${form.organizador_verificado ? '#4CAF50' : 'var(--border)'}`,
+              background: form.organizador_verificado ? 'rgba(76,175,80,0.1)' : 'transparent',
+              color: form.organizador_verificado ? '#4CAF50' : 'var(--text-secondary)',
               fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700,
             }}
           >
-            {form.destacado ? '★ Destacado' : '☆ No destacado'}
+            {form.organizador_verificado ? '✓ Verificado' : 'Sin verificar'}
           </button>
         </div>
-      </div>
+      )}
 
       <div>
         <label style={labelStyle}>PREMIO (opcional)</label>
@@ -199,7 +228,7 @@ export default function EditarTorneoForm({ torneo }: { torneo: any }) {
       {saved && !error && <p style={{ color: '#5BC98B', fontSize: 13, textAlign: 'center' }}>Guardado.</p>}
 
       <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-        <button type="button" onClick={() => router.push('/admin')} style={{
+        <button type="button" onClick={() => router.push(isAdmin ? '/admin' : '/organizador')} style={{
           flex: 1, padding: '12px', borderRadius: 10,
           background: 'transparent', border: '1px solid var(--border)',
           color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 13, cursor: 'pointer',

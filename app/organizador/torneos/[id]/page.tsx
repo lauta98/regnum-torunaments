@@ -1,0 +1,51 @@
+import { createServerSupabase } from '@/lib/supabase-server'
+import Header from '@/components/Header'
+import Link from 'next/link'
+import { redirect, notFound } from 'next/navigation'
+import type { Metadata } from 'next'
+import { canAdmin, canOrganize } from '@/lib/roles'
+import EditarTorneoForm from '@/app/admin/torneos/[id]/EditarTorneoForm'
+
+export const dynamic = 'force-dynamic'
+export const metadata: Metadata = { title: 'Editar Torneo' }
+
+export default async function EditarTorneoOrganizadorPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const supabase = await createServerSupabase()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
+  if (!me || !canOrganize(me.role)) redirect('/')
+
+  const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', id).single()
+  if (!torneo) notFound()
+
+  const esAdmin = canAdmin(me.role)
+  if (!esAdmin && torneo.creator_id !== me.id) redirect('/organizador')
+
+  return (
+    <>
+      <Header />
+      <main style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px', flex: 1 }}>
+        <div style={{ marginBottom: 28 }}>
+          <Link href="/organizador" style={{ fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none' }}>← Panel organizador</Link>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, color: 'var(--gold)', letterSpacing: 2, marginTop: 8 }}>
+            EDITAR TORNEO
+          </h1>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
+            {torneo.nombre}
+          </p>
+        </div>
+
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 16, padding: 32 }}>
+          <EditarTorneoForm torneo={torneo} isAdmin={esAdmin} />
+        </div>
+      </main>
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>
+        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      </footer>
+    </>
+  )
+}

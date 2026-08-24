@@ -106,6 +106,11 @@ export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: 
                   : <span style={{ fontSize: 8, color: mainColor }}>{t.creator.nickname_juego?.[0]}</span>}
               </div>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>por <span style={{ color: 'var(--text-secondary)' }}>{t.creator.nickname_juego}</span></span>
+              {t.organizador_verificado && (
+                <span title="Organizador verificado" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#4CAF50' }}>
+                  ✓ Verificado
+                </span>
+              )}
             </div>
           )}
         </div>

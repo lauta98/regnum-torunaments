@@ -174,6 +174,11 @@ export default async function BracketPage({
           {torneo.creator && (
             <span>👤 Organizado por <span style={{ color: 'var(--gold)' }}>{torneo.creator.nickname_juego}</span></span>
           )}
+          {torneo.organizador_verificado && (
+            <span title="Torneo verificado por la administración" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#4CAF50' }}>
+              ✓ Verificado
+            </span>
+          )}
         </div>
 
         <style>{`
@@ -202,6 +207,9 @@ export default async function BracketPage({
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                 {torneo.nombre}
+                {torneo.organizador_verificado && (
+                  <span title="Torneo verificado por la administración" style={{ color: '#4CAF50', marginLeft: 6, fontSize: 12 }}>✓</span>
+                )}
               </div>
               <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
                 <div>
@@ -648,7 +656,11 @@ function MatchCard({ match, isOrganizer, fc }: { match: any; isOrganizer: boolea
     const resultadoLower = match.resultado.toLowerCase()
     const idxA = teamA ? resultadoLower.indexOf(teamA.nombre.toLowerCase()) : -1
     const idxB = teamB ? resultadoLower.indexOf(teamB.nombre.toLowerCase()) : -1
-    const aApareceAntes = idxA !== -1 && (idxB === -1 || idxA <= idxB)
+    // Si el texto no tiene ningun nombre de equipo (marcador plano tipo
+    // "3-1"), no hay forma de comparar posiciones -- se asume el orden
+    // de guardado equipo_a - equipo_b en vez de caer por defecto en "B
+    // primero", que invertía el marcador de estos partidos.
+    const aApareceAntes = idxA === -1 && idxB === -1 ? true : idxA !== -1 && (idxB === -1 || idxA <= idxB)
     scoreA = Number(aApareceAntes ? scoreMatch[1] : scoreMatch[2])
     scoreB = Number(aApareceAntes ? scoreMatch[2] : scoreMatch[1])
   }

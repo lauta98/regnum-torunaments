@@ -29,7 +29,7 @@ export default async function AdminPage() {
   /* ── Datos globales ─────────────────────────────────────────── */
   const { data: players } = await supabase
     .from('players')
-    .select('id, nickname_juego, reino, clase_principal, role, discord_username, discord_avatar, mmr_global, created_at')
+    .select('id, user_id, nickname_juego, reino, clase_principal, role, discord_username, discord_avatar, mmr_global, created_at')
     .order('created_at', { ascending: false })
 
   const { data: reports } = await supabase

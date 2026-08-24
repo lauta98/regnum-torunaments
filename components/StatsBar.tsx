@@ -36,21 +36,22 @@ interface StatsBarProps {
 
 export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }: StatsBarProps) {
   const stats = [
-    { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: '#d4af37' },
-    { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: '#4CAF50' },
-    { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: '#F44336' },
+    { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: '#d4af37', bg: '/hero-torneos.jpg',   bgSize: '160%', bgPos: '53% 30%' },
+    { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: '#4CAF50', bg: '/hero-jugadores.jpg', bgSize: '150%', bgPos: '58% 26%' },
+    { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: '#F44336', bg: '/hero-combates.jpg',  bgSize: '160%', bgPos: '50% 62%' },
   ]
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-      {stats.map(({ icon, label, value, delta, color }, i) => (
+      {stats.map(({ icon, label, value, delta, color, bg, bgSize, bgPos }) => (
         <div key={label} style={{
-          backgroundImage: i === 0
-            ? "linear-gradient(0deg, rgba(6,5,4,0.88) 0%, rgba(6,5,4,0.62) 45%, rgba(6,5,4,0.4) 100%), url('/hero-torneos.jpg')"
+          backgroundImage: bg
+            ? `linear-gradient(0deg, rgba(6,5,4,0.88) 0%, rgba(6,5,4,0.62) 45%, rgba(6,5,4,0.4) 100%), url('${bg}')`
             : undefined,
-          backgroundColor: i === 0 ? undefined : '#0f0f0f',
-          backgroundSize: i === 0 ? '230%' : undefined,
-          backgroundPosition: i === 0 ? '53% 30%' : undefined,
+          backgroundColor: bg ? undefined : '#0f0f0f',
+          backgroundSize: bgSize,
+          backgroundPosition: bgPos,
+          backgroundRepeat: 'no-repeat',
           border: '1px solid rgba(255,255,255,0.07)',
           borderRadius: 12, padding: '18px 20px',
           transition: 'border-color 0.2s',

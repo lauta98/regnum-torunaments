@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { REINO_COLOR, REINOS, CLASES, getTier } from '@/lib/constants'
 import type { Reino, Clase } from '@/lib/types'
+import TierLegend from '@/components/TierLegend'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Ranking — CoR Tournament Stats' }
@@ -146,18 +147,21 @@ export default async function JugadoresPage({
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Título */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 1.5 }}>
-              Ranking
-            </h1>
-            <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>
-              {count ?? 0} personajes registrados
-            </span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 20, marginBottom: 28, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 14 }}>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 1.5 }}>
+                Ranking
+              </h1>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>
+                {count ?? 0} personajes registrados
+              </span>
+            </div>
+            <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>
+              Champions of Regnum — Rankings y estadísticas
+            </p>
           </div>
-          <p style={{ fontFamily: 'var(--font-body)', fontSize: 14, color: 'var(--text-muted)', marginTop: 4, fontStyle: 'italic' }}>
-            Champions of Regnum — Rankings y estadísticas
-          </p>
+          <TierLegend />
         </div>
 
         {/* Vista toggle */}

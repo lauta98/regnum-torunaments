@@ -1,11 +1,18 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { canAdmin } from '@/lib/roles'
+import { canAdmin, canOrganize } from '@/lib/roles'
 
-const CAMPOS_EDITABLES = [
-  'nombre', 'descripcion', 'formato', 'estado', 'fecha_inicio', 'fecha_fin',
-  'premio', 'max_equipos', 'destacado', 'reglamento', 'subclases_permitidas',
+// Campos que puede tocar el organizador dueño del torneo. La transición de
+// estado tiene sus propios flujos dedicados (AbrirInscripcionesButton,
+// generar-bracket, finalizar) — no se expone acá para no pisarlos.
+const CAMPOS_EDITABLES_ORGANIZADOR = [
+  'nombre', 'descripcion', 'formato', 'fecha_inicio', 'fecha_fin',
+  'premio', 'max_equipos', 'reglamento', 'subclases_permitidas',
 ] as const
+
+// Campos de prestigio/curación editorial — solo un admin los toca, sin
+// importar quién creó el torneo.
+const CAMPOS_EDITABLES_ADMIN = ['destacado', 'organizador_verificado'] as const
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -13,13 +20,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-  const { data: me } = await supabase.from('players').select('role').eq('user_id', user.id).single()
-  if (!me || !canAdmin(me.role)) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+  const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
+  if (!me) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
+
+  const { data: torneoActual } = await supabase.from('tournaments').select('creator_id').eq('id', torneoId).single()
+  if (!torneoActual) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
+
+  const esDueño = canOrganize(me.role) && torneoActual.creator_id === me.id
+  const esAdmin = canAdmin(me.role)
+  if (!esDueño && !esAdmin) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   const body = await req.json()
   const patch: Record<string, unknown> = {}
-  for (const campo of CAMPOS_EDITABLES) {
+  for (const campo of CAMPOS_EDITABLES_ORGANIZADOR) {
     if (campo in body) patch[campo] = body[campo]
+  }
+  if (esAdmin) {
+    for (const campo of CAMPOS_EDITABLES_ADMIN) {
+      if (campo in body) patch[campo] = body[campo]
+    }
   }
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })
 

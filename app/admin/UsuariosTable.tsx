@@ -7,16 +7,25 @@ import RoleManager from './RoleManager'
 import Pagination from '@/components/Pagination'
 
 type Player = {
-  id: string; nickname_juego: string; reino: string; clase_principal: string
+  id: string; user_id: string | null; nickname_juego: string; reino: string; clase_principal: string
   role: UserRole; discord_username: string | null; discord_avatar: string | null
 }
 
 const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
 const PAGE_SIZE = 25
 
+type FiltroEstado = 'todos' | 'registrados' | 'no_registrados' | 'admins'
+const FILTROS: { value: FiltroEstado; label: string }[] = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'registrados', label: 'Registrados' },
+  { value: 'no_registrados', label: 'No registrados' },
+  { value: 'admins', label: 'Admins' },
+]
+
 export default function UsuariosTable({ players, meId }: { players: Player[]; meId: string }) {
   const router = useRouter()
   const [q, setQ] = useState('')
+  const [filtro, setFiltro] = useState<FiltroEstado>('todos')
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkRole, setBulkRole] = useState<UserRole>('organizer')
   const [applying, setApplying] = useState(false)
@@ -25,18 +34,21 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
 
   const filtrados = useMemo(() => {
     const term = q.trim().toLowerCase()
-    if (!term) return players
-    return players.filter(p =>
-      p.nickname_juego?.toLowerCase().includes(term) ||
-      p.discord_username?.toLowerCase().includes(term)
-    )
-  }, [players, q])
+    return players.filter(p => {
+      if (term && !p.nickname_juego?.toLowerCase().includes(term) && !p.discord_username?.toLowerCase().includes(term)) return false
+      if (filtro === 'registrados' && !p.user_id) return false
+      if (filtro === 'no_registrados' && p.user_id) return false
+      if (filtro === 'admins' && p.role !== 'admin') return false
+      return true
+    })
+  }, [players, q, filtro])
 
   const totalPaginas = Math.max(1, Math.ceil(filtrados.length / PAGE_SIZE))
   const paginaActual = Math.min(page, totalPaginas)
   const paginados = filtrados.slice((paginaActual - 1) * PAGE_SIZE, paginaActual * PAGE_SIZE)
 
   const cambiarQuery = (val: string) => { setQ(val); setPage(1) }
+  const cambiarFiltro = (val: FiltroEstado) => { setFiltro(val); setPage(1) }
 
   // Solo se pueden seleccionar los que un cambio en lote realmente podría
   // tocar — no tiene sentido ofrecer tildar a uno mismo o a un admin
@@ -87,6 +99,23 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
             color: 'var(--text-primary)', padding: '8px 12px', fontSize: 12, fontFamily: 'var(--font-sans)', outline: 'none',
           }}
         />
+        <div style={{ display: 'flex', gap: 6 }}>
+          {FILTROS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => cambiarFiltro(f.value)}
+              style={{
+                padding: '7px 12px', borderRadius: 8, cursor: 'pointer',
+                background: filtro === f.value ? 'rgba(212,175,55,0.12)' : 'transparent',
+                border: `1px solid ${filtro === f.value ? 'var(--border-gold)' : 'rgba(255,255,255,0.12)'}`,
+                color: filtro === f.value ? 'var(--gold)' : 'var(--text-muted)',
+                fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, whiteSpace: 'nowrap',
+              }}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
         {selected.size > 0 && (
           <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 8, padding: '6px 10px' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 0.5 }}>{selected.size} seleccionados</span>
@@ -124,7 +153,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
 
         {filtrados.length === 0 && (
           <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)' }}>
-            Sin resultados para "{q}".
+            {q ? `Sin resultados para "${q}".` : 'Sin resultados para este filtro.'}
           </div>
         )}
 
@@ -156,6 +185,11 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
                     </span>
                     {p.id === meId && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', flexShrink: 0 }}>(tú)</span>}
                     {isSuperAdmin(p.nickname_juego) && <span style={{ fontSize: 9, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 0.5, flexShrink: 0 }}>🔒</span>}
+                    {!p.user_id && (
+                      <span style={{ fontSize: 9, color: '#8A8A8A', background: 'rgba(138,138,138,0.12)', border: '1px solid rgba(138,138,138,0.3)', padding: '1px 6px', borderRadius: 4, fontFamily: 'var(--font-display)', letterSpacing: 0.5, flexShrink: 0 }}>
+                        SIN REGISTRAR
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
                     {p.reino} · {p.clase_principal}

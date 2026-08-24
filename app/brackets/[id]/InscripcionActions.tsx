@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase'
 import { FORMAT_TEAM_SIZE, CLASE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, Clase } from '@/lib/types'
+import AgregarPersonaje from '@/app/jugadores/[id]/AgregarPersonaje'
 
 interface Personaje {
   id: string
@@ -48,8 +49,9 @@ export default function InscripcionActions({
 
   if (personajesElegibles.length === 0) {
     return (
-      <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 10, padding: '14px 18px', marginBottom: 20, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 12 }}>
-        Ninguno de tus personajes puede inscribirse en este torneo (subclase no habilitada).
+      <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 10, padding: '14px 18px', marginBottom: 20, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 12, display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'flex-start' }}>
+        Ninguno de tus personajes puede inscribirse en este torneo (subclase no habilitada). Si tenés uno de la clase correcta que todavía no cargaste, agregalo acá:
+        <AgregarPersonaje playerId={playerId} />
       </div>
     )
   }

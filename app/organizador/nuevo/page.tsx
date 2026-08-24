@@ -2,8 +2,8 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { FORMATS, FORMAT_LABEL, FORMAT_COLOR, BRACKET_TYPES, BRACKET_TYPE_LABEL, CLASES, CLASE_LABEL } from '@/lib/constants'
-import type { TournamentFormat, BracketType, Clase } from '@/lib/types'
+import { FORMATS, FORMAT_LABEL, FORMAT_COLOR, BRACKET_TYPES, BRACKET_TYPE_LABEL } from '@/lib/constants'
+import type { TournamentFormat, BracketType } from '@/lib/types'
 import Header from '@/components/Header'
 import dynamic from 'next/dynamic'
 
@@ -11,25 +11,14 @@ function NuevoTorneoPage() {
   const router = useRouter()
   const [form, setForm] = useState({
     nombre: '',
-    descripcion: '',
     formato: '1v1' as TournamentFormat,
     bracket_type: 'single_elimination' as BracketType,
-    subclases: [] as Clase[],
     fecha_inicio: '',
-    max_equipos: 8,
-    premio: '',
     playoff_cupo: 4,
     playoff_bracket_type: 'single_elimination' as 'single_elimination' | 'double_elimination',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-
-  const toggleSubclase = (c: Clase) => {
-    setForm(f => ({
-      ...f,
-      subclases: f.subclases.includes(c) ? f.subclases.filter(x => x !== c) : [...f.subclases, c],
-    }))
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,26 +45,25 @@ function NuevoTorneoPage() {
       return
     }
 
-    const { error: err } = await supabase.from('tournaments').insert({
+    const { data: torneo, error: err } = await supabase.from('tournaments').insert({
       creator_id: player.id,
       nombre: form.nombre.trim().toUpperCase(),
-      descripcion: form.descripcion.trim() || null,
       formato: form.formato,
       bracket_type: form.bracket_type,
-      subclases_permitidas: form.subclases.length > 0 ? form.subclases : null,
       estado: 'draft',
       fecha_inicio: form.fecha_inicio,
-      max_equipos: form.max_equipos,
-      premio: form.premio.trim() || null,
+      max_equipos: 8,
       playoff_cupo: form.bracket_type === 'league_cup' ? form.playoff_cupo : null,
       playoff_bracket_type: form.bracket_type === 'league_cup' ? form.playoff_bracket_type : null,
-    })
+    }).select('id').single()
 
     if (err) {
       setError(err.message)
       setLoading(false)
     } else {
-      router.push('/organizador')
+      // El resto (descripción, subclases, cupo real, premio, reglamento) se
+      // completa después — la creación solo pide lo estructural.
+      router.push(`/organizador/torneos/${torneo.id}`)
     }
   }
 
@@ -99,7 +87,7 @@ function NuevoTorneoPage() {
             CREAR TORNEO
           </h1>
           <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
-            Configurá los detalles del nuevo torneo.
+            Con esto alcanza para publicarlo — descripción, cupo, premio y reglamento se completan después.
           </p>
         </div>
 
@@ -111,15 +99,6 @@ function NuevoTorneoPage() {
               <input
                 style={inputStyle} value={form.nombre} maxLength={80} placeholder="Ej: GRAN TORNEO DE PRIMAVERA"
                 onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
-              />
-            </div>
-
-            <div>
-              <label style={labelStyle}>DESCRIPCIÓN (opcional)</label>
-              <textarea
-                style={{ ...inputStyle, resize: 'vertical', minHeight: 80 }}
-                value={form.descripcion} maxLength={500} placeholder="Describe las reglas o características del torneo..."
-                onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
               />
             </div>
 
@@ -195,52 +174,10 @@ function NuevoTorneoPage() {
             )}
 
             <div>
-              <label style={labelStyle}>SUBCLASES QUE PUEDEN PARTICIPAR</label>
-              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
-                Ninguna seleccionada = todas las subclases pueden inscribirse.
-              </p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {CLASES.map(c => {
-                  const active = form.subclases.includes(c)
-                  return (
-                    <button type="button" key={c} onClick={() => toggleSubclase(c)} style={{
-                      padding: '8px 14px', borderRadius: 20, cursor: 'pointer',
-                      border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-                      background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
-                      color: active ? 'var(--gold)' : 'var(--text-secondary)',
-                      fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
-                      transition: 'all 0.15s',
-                    }}>{CLASE_LABEL[c]}</button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              <div>
-                <label style={labelStyle}>FECHA DE INICIO</label>
-                <input
-                  type="datetime-local" style={inputStyle} value={form.fecha_inicio}
-                  onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))}
-                />
-              </div>
-              <div>
-                <label style={labelStyle}>MÁX. EQUIPOS</label>
-                <select
-                  style={{ ...inputStyle, cursor: 'pointer' }}
-                  value={form.max_equipos}
-                  onChange={e => setForm(f => ({ ...f, max_equipos: parseInt(e.target.value) }))}
-                >
-                  {[4, 8, 16, 32].map(n => <option key={n} value={n}>{n} equipos</option>)}
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label style={labelStyle}>PREMIO (opcional)</label>
+              <label style={labelStyle}>FECHA DE INICIO</label>
               <input
-                style={inputStyle} value={form.premio} maxLength={100} placeholder="Ej: 1000 Gold coins + título de campeón"
-                onChange={e => setForm(f => ({ ...f, premio: e.target.value }))}
+                type="datetime-local" style={inputStyle} value={form.fecha_inicio}
+                onChange={e => setForm(f => ({ ...f, fecha_inicio: e.target.value }))}
               />
             </div>
 
@@ -261,7 +198,7 @@ function NuevoTorneoPage() {
                 fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: 1,
                 cursor: loading ? 'not-allowed' : 'pointer',
               }}>
-                {loading ? 'Creando...' : 'CREAR TORNEO'}
+                {loading ? 'Creando...' : 'CREAR Y CONTINUAR'}
               </button>
             </div>
           </form>

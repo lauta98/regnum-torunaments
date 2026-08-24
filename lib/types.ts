@@ -98,6 +98,7 @@ export interface Tournament {
   imagen_url: string | null
   max_equipos: number
   premio: string | null
+  organizador_verificado: boolean
   created_at: string
   creator?: Player
   equipos_inscritos?: number

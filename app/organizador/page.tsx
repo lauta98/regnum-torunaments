@@ -121,7 +121,10 @@ export default async function OrganizadorPage() {
                   </span>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--text-primary)' }}>{inscritos}/{t.max_equipos}</div>
                   <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, color: 'var(--text-primary)' }}>{nPartidos}</div>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <Link href={`/organizador/torneos/${t.id}`} style={{ fontSize: 11, color: 'var(--text-secondary)', fontFamily: 'var(--font-display)', textDecoration: 'none', letterSpacing: 0.5 }}>
+                      EDITAR
+                    </Link>
                     <Link href={`/brackets/${t.id}`} style={{ fontSize: 11, color: 'var(--gold)', fontFamily: 'var(--font-display)', textDecoration: 'none', letterSpacing: 0.5 }}>
                       VER →
                     </Link>

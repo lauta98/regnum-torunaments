@@ -51,6 +51,19 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
     campeonatosPorPersonaje[c.personaje_id] = arr
   })
 
+  /* ── Nicknames anteriores (personajes fusionados que cambiaron de nombre) ── */
+  const { data: nicknamesAnteriores } = personajeIds.length ? await supabase
+    .from('personaje_nicknames_anteriores')
+    .select('personaje_id, nickname')
+    .in('personaje_id', personajeIds)
+    : { data: null }
+  const nicknamesAnterioresPorPersonaje: Record<string, string[]> = {}
+  nicknamesAnteriores?.forEach((n: any) => {
+    const arr = nicknamesAnterioresPorPersonaje[n.personaje_id] ?? []
+    arr.push(n.nickname)
+    nicknamesAnterioresPorPersonaje[n.personaje_id] = arr
+  })
+
   /* ── Sesión actual ────────────────────────────────── */
   const { data: { user } } = await supabase.auth.getUser()
   const isOwner = user ? player.user_id === user.id : false
@@ -80,7 +93,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
     .sort((a: any, b: any) => (b.torneo?.fecha_inicio ?? '').localeCompare(a.torneo?.fecha_inicio ?? ''))
     .forEach((entry: any) => {
       const arr = historiasPorPersonaje[entry.personaje_id] ?? []
-      if (arr.length < 15) arr.push(entry)
+      if (arr.length < 100) arr.push(entry)
       historiasPorPersonaje[entry.personaje_id] = arr
     })
 
@@ -150,6 +163,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               personajePrincipalId={player.personaje_principal_id}
               campeonatosPorPersonaje={campeonatosPorPersonaje}
               historiasPorPersonaje={historiasPorPersonaje}
+              nicknamesAnterioresPorPersonaje={nicknamesAnterioresPorPersonaje}
             />
 
           </div>

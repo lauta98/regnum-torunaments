@@ -18,7 +18,7 @@ const SHIELD_SRC: Record<string, string> = {
 type Campeonato = { id: string; nombre: string; tipo: string; equipo_nombre: string | null }
 
 export default function PersonajesYHistorial({
-  playerId, personajes, isOwner, personajePrincipalId, campeonatosPorPersonaje, historiasPorPersonaje,
+  playerId, personajes, isOwner, personajePrincipalId, campeonatosPorPersonaje, historiasPorPersonaje, nicknamesAnterioresPorPersonaje,
 }: {
   playerId: string
   personajes: any[]
@@ -26,10 +26,19 @@ export default function PersonajesYHistorial({
   personajePrincipalId: string | null
   campeonatosPorPersonaje: Record<string, Campeonato[]>
   historiasPorPersonaje: Record<string, any[]>
+  nicknamesAnterioresPorPersonaje: Record<string, string[]>
 }) {
+  const INITIAL_VISIBLE = 20
   const [seleccionadoId, setSeleccionadoId] = useState<string | null>(personajes[0]?.id ?? null)
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE)
   const seleccionado = personajes.find(p => p.id === seleccionadoId) ?? personajes[0]
   const historial = seleccionadoId ? (historiasPorPersonaje[seleccionadoId] ?? []) : []
+  const historialVisible = historial.slice(0, visibleCount)
+
+  const elegirPersonaje = (id: string) => {
+    setSeleccionadoId(id)
+    setVisibleCount(INITIAL_VISIBLE)
+  }
 
   return (
     <>
@@ -49,7 +58,7 @@ export default function PersonajesYHistorial({
           return (
             <div
               key={p.id}
-              onClick={() => setSeleccionadoId(p.id)}
+              onClick={() => elegirPersonaje(p.id)}
               title="Ver historial de este personaje"
               style={{
                 display: 'grid', gridTemplateColumns: `1fr 90px 90px 90px ${isOwner ? '58px' : '36px'}`,
@@ -81,6 +90,11 @@ export default function PersonajesYHistorial({
                     ))}
                   </div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino} · {p.clase}</div>
+                  {nicknamesAnterioresPorPersonaje[p.id]?.length > 0 && (
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)', fontStyle: 'italic', marginTop: 2 }}>
+                      antes: {nicknamesAnterioresPorPersonaje[p.id].join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
               {/* MMR */}
@@ -122,7 +136,7 @@ export default function PersonajesYHistorial({
             </span>
           </div>
           <div style={{ padding: '10px 20px 4px', display: 'flex', flexDirection: 'column' }}>
-            {historial.map((entry: any, i: number) => {
+            {historialVisible.map((entry: any, i: number) => {
               const match = entry.match
               // El equipo de este personaje es el ganador o el
               // perdedor según `entry.gano` — el rival es el otro
@@ -141,7 +155,7 @@ export default function PersonajesYHistorial({
               // encabezado propio en vez de repetir el nombre en cada
               // fila — así se distingue de un vistazo a qué torneo
               // pertenece cada tanda de partidos.
-              const prevTorneoId = i > 0 ? historial[i - 1].torneo?.id : null
+              const prevTorneoId = i > 0 ? historialVisible[i - 1].torneo?.id : null
               const esNuevoGrupo = entry.torneo?.id !== prevTorneoId
 
               const content = (
@@ -193,6 +207,18 @@ export default function PersonajesYHistorial({
                 </div>
               )
             })}
+            {historial.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount(v => v + INITIAL_VISIBLE)}
+                style={{
+                  margin: '10px 0 14px', padding: '8px', borderRadius: 8, cursor: 'pointer',
+                  background: 'transparent', border: '1px solid rgba(212,175,55,0.25)', color: 'var(--gold)',
+                  fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5,
+                }}
+              >
+                Cargar más ({historial.length - visibleCount} restantes)
+              </button>
+            )}
           </div>
         </div>
       )}
