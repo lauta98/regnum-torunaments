@@ -2,6 +2,7 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import SorteoEnVivo from './SorteoEnVivo'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,7 +18,7 @@ export default async function SorteoPage({ params }: { params: Promise<{ id: str
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', id).single()
   if (!torneo) notFound()
 
-  const esOrganizador = !!player && (torneo.creator_id === player.id || player.role === 'admin')
+  const esOrganizador = !!player && await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, player)
   if (!esOrganizador) redirect(`/brackets/${id}`)
 
   if (torneo.bracket_type === 'double_elimination') {

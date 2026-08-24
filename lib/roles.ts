@@ -51,3 +51,20 @@ export const canOrganize = (role?: string | null) => hasRole(role, 'organizer')
 
 /** Puede gestionar TODOS los torneos y asignar roles */
 export const canAdmin    = (role?: string | null) => hasRole(role, 'admin')
+
+/** Dueño de un torneo puntual: el creador, un admin, o un co-organizador
+ *  agregado a ESE torneo (tabla `tournament_organizers`) — sin importar
+ *  su rol global. Da acceso a gestionar el cuadro/resultados/datos del
+ *  torneo, pero NO a expulsar jugadores ni a gestionar la lista de
+ *  co-organizadores — esas dos acciones siguen chequeando
+ *  `creator_id === player.id || role === 'admin'` directo, sin este
+ *  helper. */
+export async function esOrganizadorDelTorneo(
+  supabase: any, torneoId: string, creatorId: string, player: { id: string; role: string }
+): Promise<boolean> {
+  if (player.role === 'admin' || creatorId === player.id) return true
+  const { data } = await supabase
+    .from('tournament_organizers').select('player_id')
+    .eq('tournament_id', torneoId).eq('player_id', player.id).maybeSingle()
+  return !!data
+}

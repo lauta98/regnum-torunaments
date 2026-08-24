@@ -1,6 +1,7 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { detectarCampeones, detectarSegundoPuesto } from '@/lib/campeonatos'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -9,9 +10,10 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
   const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
+  if (!me) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   const { data: torneo } = await supabase.from('tournaments').select('creator_id').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
-  const puede = me && (me.id === torneo.creator_id || me.role === 'admin')
+  const puede = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, me)
   if (!puede) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
   const svc = createServiceSupabase()

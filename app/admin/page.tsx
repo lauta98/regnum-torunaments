@@ -48,7 +48,7 @@ export default async function AdminPage() {
 
   const { data: allTournaments } = await supabase
     .from('tournaments')
-    .select('id, nombre, estado, formato, created_at, creator:players(nickname_juego), registros:tournament_registrations(count)')
+    .select('id, nombre, estado, formato, created_at, creator:players!tournaments_creator_id_fkey(nickname_juego), registros:tournament_registrations(count)')
     .order('created_at', { ascending: false })
     .limit(100)
 

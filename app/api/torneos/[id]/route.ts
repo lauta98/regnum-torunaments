@@ -1,6 +1,6 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
-import { canAdmin, canOrganize } from '@/lib/roles'
+import { canAdmin, esOrganizadorDelTorneo } from '@/lib/roles'
 
 // Campos que puede tocar el organizador dueño del torneo. La transición de
 // estado tiene sus propios flujos dedicados (AbrirInscripcionesButton,
@@ -27,9 +27,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data: torneoActual } = await supabase.from('tournaments').select('creator_id, bracket_type').eq('id', torneoId).single()
   if (!torneoActual) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esDueño = canOrganize(me.role) && torneoActual.creator_id === me.id
   const esAdmin = canAdmin(me.role)
-  if (!esDueño && !esAdmin) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
+  const puedeEditar = await esOrganizadorDelTorneo(supabase, torneoId, torneoActual.creator_id, me)
+  if (!puedeEditar) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   const body = await req.json()
   const patch: Record<string, unknown> = {}

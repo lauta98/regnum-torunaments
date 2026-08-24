@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { roundName, buildSingleElimination, buildDoubleElimination, standingsFromMatches, nextPow2 } from '@/lib/bracketGen'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 /** Orden de siembra estándar de bracket (1 vs N, 2 vs N-1 en llaves
  *  opuestas, etc.) para `size` potencia de 2 — así los mejores puestos de
@@ -26,7 +27,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esOrganizador = torneo.creator_id === player.id || player.role === 'admin'
+  const esOrganizador = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   if (torneo.bracket_type !== 'league_cup') {

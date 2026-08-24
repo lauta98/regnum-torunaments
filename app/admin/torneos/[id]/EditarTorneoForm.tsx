@@ -6,6 +6,7 @@ import { FORMATS, FORMAT_LABEL, CLASES, CLASE_LABEL, BRACKET_TYPES, BRACKET_TYPE
 import type { TournamentFormat, TournamentStatus, Clase, BracketType } from '@/lib/types'
 import TrofeoPicker from '@/components/TrofeoPicker'
 import VistaPreviaTorneo from '@/components/VistaPreviaTorneo'
+import CoOrganizadoresPicker from '@/components/CoOrganizadoresPicker'
 
 const ESTADOS: TournamentStatus[] = ['draft', 'inscripciones', 'live', 'finalizado']
 const ESTADO_LABEL: Record<TournamentStatus, string> = {
@@ -265,6 +266,16 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
                 &quot;Organizador verificado&quot; es un sello de confianza — no afecta el cálculo de MMR.
               </p>
             </div>
+          </div>
+        )}
+
+        {(isAdmin || (miPlayerId && miPlayerId === torneo.creator_id)) && (
+          <div className="card-section">
+            <div className="card-section__title">Co-organizadores</div>
+            <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+              Colaboradores puntuales de este torneo — pueden generar el cuadro, cargar resultados y editar estos datos, pero no pueden expulsar jugadores ni gestionar esta lista.
+            </p>
+            <CoOrganizadoresPicker torneoId={torneo.id} />
           </div>
         )}
 

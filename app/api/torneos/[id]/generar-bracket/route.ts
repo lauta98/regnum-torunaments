@@ -1,6 +1,7 @@
 import { createServerSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { nextPow2, roundName, buildSingleElimination, buildDoubleElimination, buildRoundRobin } from '@/lib/bracketGen'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -15,7 +16,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esOrganizador = torneo.creator_id === player.id || player.role === 'admin'
+  const esOrganizador = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   // No pisar un cuadro que ya tiene resultados REALES cargados — un BYE no

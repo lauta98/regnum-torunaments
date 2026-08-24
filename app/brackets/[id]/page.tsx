@@ -14,6 +14,7 @@ import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -63,7 +64,7 @@ export default async function BracketPage({
 
   const { data: torneo } = await supabase
     .from('tournaments')
-    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
+    .select('*, creator:players!tournaments_creator_id_fkey(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
     .eq('id', id).single()
 
   if (!torneo) notFound()
@@ -90,6 +91,7 @@ export default async function BracketPage({
 
   const { data: { user } } = await supabase.auth.getUser()
   let isOrganizer = false
+  let puedeExpulsar = false
   let playerId: string | null = null
   let personajesElegibles: { id: string; nickname_juego: string; clase: string }[] = []
   let yaInscritoTeamId: string | null = null
@@ -104,9 +106,10 @@ export default async function BracketPage({
 
   if (user) {
     const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
-    isOrganizer = !!(player && ['organizer', 'admin'].includes(player.role))
     if (player) {
       playerId = player.id
+      puedeExpulsar = torneo.creator_id === player.id || player.role === 'admin'
+      isOrganizer = puedeExpulsar || await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, player)
       const { data: personajes } = await supabase
         .from('personajes')
         .select('id, nickname_juego, clase')
@@ -329,7 +332,7 @@ export default async function BracketPage({
                     equipos={inscritosActivos.map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, seed: r.seed })).filter((e: any) => e.id)}
                   />
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                  <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
                     <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
                   </div>
@@ -354,12 +357,12 @@ export default async function BracketPage({
                       isOrganizer ? (
                         <GenerarCopaButton torneoId={torneo.id} cupo={torneo.playoff_cupo ?? 0} />
                       ) : (
-                        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
                           <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>La liga terminó — la copa se genera en cualquier momento.</p>
                         </div>
                       )
                     ) : (
-                      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+                      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
                         <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Disponible cuando termine la fase de liga.</p>
                       </div>
                     )}
@@ -409,7 +412,7 @@ export default async function BracketPage({
                   })
                   const rows = Object.values(standings).sort((a, b) => b.pts - a.pts || b.W - a.W)
                   return (
-                    <div style={{ background: '#0f0f0f', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                       <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
                         {['#', 'EQUIPO', 'G', 'E', 'P', 'PTS'].map(c => (
                           <div key={c} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{c}</div>
@@ -449,9 +452,10 @@ export default async function BracketPage({
                       const esUnico = miembros.length <= 1
                       return (
                         <div key={team.id} style={{
-                          background: '#0f0f0f',
-                          border: `1px solid ${expulsado ? 'rgba(244,67,54,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                          borderRadius: 10, padding: '14px 16px', opacity: expulsado ? 0.7 : 1,
+                          background: 'var(--bg-card)',
+                          border: `1px solid ${expulsado ? 'rgba(244,67,54,0.3)' : 'var(--border)'}`,
+                          borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)',
+                          padding: '14px 16px', opacity: expulsado ? 0.7 : 1,
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
                             <div style={{ minWidth: 0 }}>
@@ -492,11 +496,11 @@ export default async function BracketPage({
                           {expulsado ? (
                             <div style={{ marginTop: 8, background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 6, padding: '6px 10px' }}>
                               <div style={{ fontSize: 9, color: '#f87171', fontFamily: 'var(--font-display)', letterSpacing: 0.5, marginBottom: 2 }}>EXPULSADO</div>
-                              {isOrganizer && r.motivo_expulsion && (
+                              {puedeExpulsar && r.motivo_expulsion && (
                                 <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{r.motivo_expulsion}</div>
                               )}
                             </div>
-                          ) : isOrganizer && (
+                          ) : puedeExpulsar && (
                             <div style={{ marginTop: 10 }}>
                               <ExpulsarButton torneoId={torneo.id} teamId={team.id} teamNombre={team.nombre} />
                             </div>
@@ -547,7 +551,7 @@ const SECTION_LABEL: Record<string, string> = {
 function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   if (entries.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
+      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
         <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Sin partidos todavía.</p>
       </div>
     )
@@ -747,9 +751,9 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles }: { match: any;
 
   return (
     <div style={{
-      background: '#0f0f0f',
-      border: `1px solid ${isPlayed ? fc + '44' : 'rgba(255,255,255,0.08)'}`,
-      borderRadius: 10, overflow: 'hidden',
+      background: 'var(--bg-card)',
+      border: `1px solid ${isPlayed ? fc + '44' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-card)',
       transition: 'border-color 0.2s',
     }}>
       {/* Top accent */}

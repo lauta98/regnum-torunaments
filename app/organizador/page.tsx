@@ -23,18 +23,27 @@ export default async function OrganizadorPage() {
     .eq('user_id', user.id)
     .single()
 
-  if (!player || !canOrganize(player.role)) {
+  // Torneos donde es co-organizador (colaborador puntual, sin necesitar
+  // el rol global) — se suman a los propios en la lista de abajo.
+  const { data: coOrgRows } = await supabase.from('tournament_organizers').select('tournament_id').eq('player_id', player?.id ?? '')
+  const coOrgIds = (coOrgRows ?? []).map((r: any) => r.tournament_id)
+
+  if (!player || (!canOrganize(player.role) && coOrgIds.length === 0)) {
     redirect('/')
   }
 
-  // El admin ve TODOS los torneos; el organizador solo los suyos
+  // El admin ve TODOS los torneos; el resto solo los propios + los que co-organiza
   const tourneysQuery = supabase
     .from('tournaments')
     .select('*, registros:tournament_registrations(count), partidos:matches(count)')
     .order('created_at', { ascending: false })
 
   if (!canAdmin(player.role)) {
-    tourneysQuery.eq('creator_id', player.id)
+    tourneysQuery.or(
+      coOrgIds.length > 0
+        ? `creator_id.eq.${player.id},id.in.(${coOrgIds.join(',')})`
+        : `creator_id.eq.${player.id}`
+    )
   }
 
   const { data: torneos } = await tourneysQuery

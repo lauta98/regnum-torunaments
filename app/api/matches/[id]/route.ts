@@ -1,5 +1,6 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 /** Borra un partido pendiente (sin resultado) directo, o revierte uno ya
  *  jugado (deshace el mmr aplicado y lo deja en pendiente otra vez, sin
@@ -13,8 +14,8 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 })
 
-  const { data: player } = await supabase.from('players').select('role').eq('user_id', user.id).single()
-  if (!player || !['organizer', 'admin'].includes(player.role)) {
+  const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
+  if (!player) {
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   }
 
@@ -22,14 +23,18 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { data: match } = await svc.from('matches').select('*').eq('id', id).single()
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
+  const { data: torneo } = await svc.from('tournaments').select('creator_id, bracket_type').eq('id', match.torneo_id).single()
+  if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
+  const esOrganizador = await esOrganizadorDelTorneo(svc, match.torneo_id, torneo.creator_id, player)
+  if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
+
   if (match.estado === 'pendiente') {
     const { error } = await svc.from('matches').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     return NextResponse.json({ ok: true, accion: 'borrado' })
   }
 
-  const { data: torneo } = await svc.from('tournaments').select('bracket_type').eq('id', match.torneo_id).single()
-  const bracketType = torneo?.bracket_type ?? 'single_elimination'
+  const bracketType = torneo.bracket_type ?? 'single_elimination'
   if (bracketType === 'double_elimination') {
     return NextResponse.json({
       error: 'Revertir resultados en eliminación doble todavía no está soportado — avisale al desarrollador para arreglarlo a mano.',

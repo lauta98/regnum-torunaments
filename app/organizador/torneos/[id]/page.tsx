@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { canAdmin, canOrganize } from '@/lib/roles'
+import { canAdmin, esOrganizadorDelTorneo } from '@/lib/roles'
 import EditarTorneoForm from '@/app/admin/torneos/[id]/EditarTorneoForm'
 
 export const dynamic = 'force-dynamic'
@@ -17,13 +17,14 @@ export default async function EditarTorneoOrganizadorPage({ params }: { params: 
   if (!user) redirect('/login')
 
   const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
-  if (!me || !canOrganize(me.role)) redirect('/')
+  if (!me) redirect('/')
 
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', id).single()
   if (!torneo) notFound()
 
   const esAdmin = canAdmin(me.role)
-  if (!esAdmin && torneo.creator_id !== me.id) redirect('/organizador')
+  const puedeEditar = await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, me)
+  if (!puedeEditar) redirect('/organizador')
 
   return (
     <>

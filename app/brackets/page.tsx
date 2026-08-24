@@ -11,7 +11,7 @@ export default async function BracketsPage() {
 
   const { data: tourneys } = await supabase
     .from('tournaments')
-    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
+    .select('*, creator:players!tournaments_creator_id_fkey(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
     .in('estado', ['live', 'finalizado', 'inscripciones'])
     .order('destacado', { ascending: false })
     .order('fecha_inicio', { ascending: false })

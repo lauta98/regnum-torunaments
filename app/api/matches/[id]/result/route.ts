@@ -1,6 +1,7 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { calcularEsperado, calcularNuevoMMR, ELO_K_DEFAULT, ELO_K_VETERAN, ELO_VETERAN_THRESHOLD } from '@/lib/constants'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 export async function POST(
   request: Request,
@@ -14,11 +15,11 @@ export async function POST(
 
   const { data: player } = await supabase
     .from('players')
-    .select('role')
+    .select('id, role')
     .eq('user_id', user.id)
     .single()
 
-  if (!player || !['organizer', 'admin'].includes(player.role)) {
+  if (!player) {
     return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   }
 
@@ -58,6 +59,11 @@ export async function POST(
 
   if (!match) return NextResponse.json({ error: 'Partido no encontrado' }, { status: 404 })
 
+  const { data: torneo } = await svc.from('tournaments').select('creator_id, bracket_type').eq('id', match.torneo_id).single()
+  if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
+  const esOrganizador = await esOrganizadorDelTorneo(svc, match.torneo_id, torneo.creator_id, player)
+  if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
+
   if (editar && match.estado !== 'jugado') {
     return NextResponse.json({ error: 'Este partido todavía no tiene resultado cargado' }, { status: 409 })
   }
@@ -71,8 +77,7 @@ export async function POST(
     return NextResponse.json({ error: 'ganador_id no corresponde a ninguno de los dos equipos de este partido' }, { status: 400 })
   }
 
-  const { data: torneo } = await svc.from('tournaments').select('bracket_type').eq('id', match.torneo_id).single()
-  const bracketType = torneo?.bracket_type ?? 'single_elimination'
+  const bracketType = torneo.bracket_type ?? 'single_elimination'
 
   const perdedor_id = ganador_id === match.equipo_a_id ? match.equipo_b_id : match.equipo_a_id
 

@@ -1,5 +1,6 @@
 import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { esOrganizadorDelTorneo } from '@/lib/roles'
 
 type Dependiente = { matchId: string; estado: string; field: 'equipo_a_id' | 'equipo_b_id' | 'ambos' }
 
@@ -140,7 +141,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   const { data: torneo } = await svc.from('tournaments').select('id, creator_id, bracket_type').eq('id', match.torneo_id).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
-  const esOrganizador = torneo.creator_id === player.id || player.role === 'admin'
+  const esOrganizador = await esOrganizadorDelTorneo(svc, torneo.id, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   const { data: nuevoEquipo } = await svc.from('teams').select('id').eq('id', nuevo_team_id).single()
