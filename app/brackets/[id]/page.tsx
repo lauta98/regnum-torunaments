@@ -15,6 +15,7 @@ import ExpulsarButton from './ExpulsarButton'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
+import { previewBracket } from '@/lib/bracketGen'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,6 +105,14 @@ export default async function BracketPage({
     .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre }))
     .filter((e: any) => e.id)
 
+  // Vista previa del cuadro (sin generar nada todavía) — mismo orden que
+  // usaría "Generar cuadro": por semilla si ya se guardó, si no por orden
+  // de inscripción.
+  const equiposOrdenParaPreview = inscritosActivos
+    .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, seed: r.seed as number | null }))
+    .filter((e: any) => e.id)
+    .sort((a: any, b: any) => (a.seed ?? 999) - (b.seed ?? 999))
+
   if (user) {
     const { data: player } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
     if (player) {
@@ -159,6 +168,13 @@ export default async function BracketPage({
   const copaEntries = roundEntries.filter(([key]) => !key.startsWith('league-'))
   const ligaMatches = matches?.filter((m: any) => m.bracket === 'league') ?? []
   const ligaCompleta = ligaMatches.length > 0 && ligaMatches.every((m: any) => m.estado === 'jugado')
+
+  // Solo tiene sentido armar la vista previa cuando todavía no hay cuadro
+  // real generado — una vez generado, roundEntries ya no está vacío y se
+  // muestra el de verdad.
+  const previewEntries = roundEntries.length === 0 && torneo.estado !== 'draft'
+    ? previewBracket(torneo.bracket_type, equiposOrdenParaPreview)
+    : []
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
@@ -326,17 +342,36 @@ export default async function BracketPage({
             {/* ── TAB: LLAVE ───────────────────────────────── */}
             {tab === 'llave' && (
               roundEntries.length === 0 ? (
-                isOrganizer && torneo.estado !== 'draft' ? (
-                  <GenerarBracketButton
-                    torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type}
-                    equipos={inscritosActivos.map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, seed: r.seed })).filter((e: any) => e.id)}
-                  />
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                    <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
-                    <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
-                  </div>
-                )
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                  {isOrganizer && torneo.estado !== 'draft' && (
+                    <GenerarBracketButton
+                      torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type}
+                      equipos={inscritosActivos.map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, seed: r.seed })).filter((e: any) => e.id)}
+                    />
+                  )}
+                  {previewEntries.length > 0 ? (
+                    <div>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
+                        fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--neon-cyan)', letterSpacing: 0.5,
+                        background: 'var(--neon-cyan-muted)', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 'var(--radius-sm)',
+                        padding: '9px 14px',
+                      }}>
+                        👁 VISTA PREVIA — según el orden de semillas actual. El cuadro real se genera cuando {isOrganizer ? 'lo confirmes arriba' : 'el organizador lo confirme'}.
+                      </div>
+                      {(torneo.bracket_type === 'round_robin' || torneo.bracket_type === 'league_cup') ? (
+                        <LigaFechas entries={previewEntries} isOrganizer={false} fc={fc} />
+                      ) : (
+                        <BracketTree roundEntries={previewEntries} isOrganizer={false} fc={fc} />
+                      )}
+                    </div>
+                  ) : !(isOrganizer && torneo.estado !== 'draft') && (
+                    <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
+                      <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
+                      <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
+                    </div>
+                  )}
+                </div>
               ) : torneo.bracket_type === 'round_robin' ? (
                 <LigaFechas entries={roundEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
               ) : torneo.bracket_type === 'league_cup' ? (

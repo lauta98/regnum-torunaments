@@ -149,6 +149,85 @@ export function buildRoundRobin(teamIds: string[]): SlotMatch[][] {
   return rounds
 }
 
+/** Partido "de mentira" con la misma forma que uno real de la tabla
+ *  `matches` (con `equipo_a`/`equipo_b` ya resueltos a nombre) — para que
+ *  se pueda reusar tal cual `BracketTree`/`LigaFechas`/`MatchCard` en modo
+ *  vista previa, sin escribir nada en la base. */
+export type PreviewMatch = {
+  id: string
+  bracket: 'main' | 'league'
+  ronda_numero: number
+  ronda: string
+  posicion: number
+  equipo_a_id: string | null
+  equipo_b_id: string | null
+  equipo_a: { id: string; nombre: string } | null
+  equipo_b: { id: string; nombre: string } | null
+  estado: 'pendiente' | 'jugado'
+  ganador_id: string | null
+  resultado: string | null
+}
+
+function nombrar(id: string | null, nombrePorId: Map<string, string>) {
+  return id ? { id, nombre: nombrePorId.get(id) ?? '???' } : null
+}
+
+function slotsAPreview(rounds: SlotMatch[][], bracket: 'main' | 'league', nombrePorId: Map<string, string>): PreviewMatch[] {
+  const out: PreviewMatch[] = []
+  rounds.forEach((roundMatches, idx) => {
+    const esFinal = bracket === 'main' && idx === rounds.length - 1
+    const ronda = bracket === 'league' ? `Fecha ${idx + 1}` : roundName(roundMatches.length, esFinal)
+    roundMatches.forEach(s => {
+      // Igual que generar-bracket/route.ts: un bye se resuelve al toque
+      // (queda "jugado" con ganador ya definido) para que el resto del
+      // cuadro se pueda alinear/conectar como si ya se hubiera generado.
+      const esBye = !!(s.equipoA && !s.equipoB) || !!(s.equipoB && !s.equipoA)
+      out.push({
+        id: `preview-${bracket}-${s.round}-${s.posicion}`,
+        bracket, ronda_numero: s.round, ronda, posicion: s.posicion,
+        equipo_a_id: s.equipoA, equipo_b_id: s.equipoB,
+        equipo_a: nombrar(s.equipoA, nombrePorId), equipo_b: nombrar(s.equipoB, nombrePorId),
+        estado: esBye ? 'jugado' : 'pendiente',
+        ganador_id: esBye ? (s.equipoA ?? s.equipoB) : null,
+        resultado: esBye ? 'BYE' : null,
+      })
+    })
+  })
+  return out
+}
+
+/** Vista previa del cuadro con los equipos ya inscriptos, en el mismo
+ *  orden (semilla si hay, si no orden de inscripción) que usaría
+ *  "Generar cuadro" — no persiste nada, es puro cálculo para mostrar.
+ *  Devuelve las rondas ya agrupadas por bracket+ronda, misma forma que
+ *  `roundEntries` en brackets/[id]/page.tsx, lista para pasarle directo a
+ *  `BracketTree`/`LigaFechas`. Si no hay suficientes equipos (o, en
+ *  eliminación doble, si la cantidad no es potencia de 2 exacta — mismo
+ *  requisito que la generación real) devuelve `[]`. */
+export function previewBracket(bracketType: string, equipos: { id: string; nombre: string }[]): [string, PreviewMatch[]][] {
+  if (equipos.length < 2) return []
+  const ids = equipos.map(e => e.id)
+  const nombrePorId = new Map(equipos.map(e => [e.id, e.nombre]))
+
+  let matches: PreviewMatch[]
+  if (bracketType === 'round_robin' || bracketType === 'league_cup') {
+    matches = slotsAPreview(buildRoundRobin(ids), 'league', nombrePorId)
+  } else if (bracketType === 'double_elimination') {
+    if (nextPow2(ids.length) !== ids.length) return []
+    matches = slotsAPreview(buildDoubleElimination(ids).main, 'main', nombrePorId)
+  } else {
+    matches = slotsAPreview(buildSingleElimination(ids), 'main', nombrePorId)
+  }
+
+  const rounds = new Map<string, PreviewMatch[]>()
+  matches.forEach(m => {
+    const key = `${m.bracket}-${m.ronda_numero}`
+    if (!rounds.has(key)) rounds.set(key, [])
+    rounds.get(key)!.push(m)
+  })
+  return Array.from(rounds.entries())
+}
+
 export type Standing = { teamId: string; w: number; d: number; l: number; pts: number; for: number; against: number }
 
 /** Tabla de posiciones de la fase de liga: 2 puntos por victoria, 1 por
