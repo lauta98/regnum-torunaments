@@ -3,8 +3,8 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE, getTier } from '@/lib/constants'
-import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/types'
+import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE, BRACKET_TYPE_LABEL, getTier } from '@/lib/constants'
+import type { TournamentFormat, TournamentStatus, MatchStatus, BracketType } from '@/lib/types'
 import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
 import GenerarBracketButton from './GenerarBracketButton'
@@ -236,6 +236,9 @@ export default async function BracketPage({
                   {torneo.estado === 'live' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F44336', display: 'inline-block' }} />}
                   {st.label}
                 </span>
+                <span style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5 }}>
+                  {BRACKET_TYPE_LABEL[torneo.bracket_type as BracketType] ?? torneo.bracket_type}
+                </span>
               </div>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                 {torneo.nombre}
@@ -253,9 +256,17 @@ export default async function BracketPage({
                   <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>PARTIDOS</div>
                 </div>
               </div>
-              {isOrganizer && torneo.estado === 'live' && (
-                <div style={{ marginTop: 12 }}>
-                  <FinalizarTorneoButton torneoId={torneo.id} />
+              {isOrganizer && (
+                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <Link href={`/organizador/torneos/${torneo.id}`} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                    background: 'transparent', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 8,
+                    color: 'var(--gold)', padding: '7px 0', fontFamily: 'var(--font-display)', fontSize: 10.5,
+                    letterSpacing: 0.5, textDecoration: 'none',
+                  }}>
+                    ✎ Editar torneo
+                  </Link>
+                  {torneo.estado === 'live' && <FinalizarTorneoButton torneoId={torneo.id} />}
                 </div>
               )}
             </div>
@@ -306,7 +317,10 @@ export default async function BracketPage({
             {tab === 'llave' && (
               roundEntries.length === 0 ? (
                 isOrganizer && torneo.estado !== 'draft' ? (
-                  <GenerarBracketButton torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type} />
+                  <GenerarBracketButton
+                    torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type}
+                    equipos={inscritosActivos.map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, seed: r.seed })).filter((e: any) => e.id)}
+                  />
                 ) : (
                   <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 12 }}>
                     <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
