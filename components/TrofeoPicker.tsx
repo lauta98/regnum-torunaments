@@ -1,27 +1,31 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { TROFEO_COLORES, TROFEO_ICONOS, TROFEO_FORMAS } from '@/lib/constants'
+import { TROFEO_COLORES, TROFEO_ICONOS } from '@/lib/constants'
 import TrofeoBadge from './TrofeoBadge'
 
 type Trofeo = { id: string; nombre: string; icono: string; color: string; forma: string }
 
-/** Selector de copa para el organizador: elegir una ya creada por él mismo,
- *  no asignar ninguna, o armar una nueva desde un picker curado (forma +
- *  color + ícono) — sin subir imágenes, para que toda copa se vea prolija
- *  sin pedirle diseño gráfico a nadie. */
+/** Selector de trofeo para el organizador: elegir uno ya creado por él
+ *  mismo, no asignar ninguno, o armar uno nuevo desde un picker curado
+ *  (color + ícono) — sin subir imágenes, para que se vea prolijo sin
+ *  pedirle diseño gráfico a nadie. La `forma` viene fija por prop — cada
+ *  forma tiene un significado propio (copa=campeón, medalla=subcampeón,
+ *  escudo=decorativo), así que acá no se elige, ya viene decidida por
+ *  quién usa el picker (ver EditarTorneoForm). */
 export default function TrofeoPicker({
-  playerId, value, onChange,
+  playerId, value, onChange, forma, tipoNombre,
 }: {
   playerId: string
   value: string | null
   onChange: (trofeoId: string | null) => void
+  forma: string
+  tipoNombre: string
 }) {
   const [trofeos, setTrofeos] = useState<Trofeo[]>([])
   const [loading, setLoading] = useState(true)
   const [creando, setCreando] = useState(false)
   const [nombre, setNombre] = useState('')
-  const [forma, setForma] = useState<string>(TROFEO_FORMAS[0].id)
   const [color, setColor] = useState<string>(TROFEO_COLORES[0].hex)
   const [icono, setIcono] = useState<string>(Object.keys(TROFEO_ICONOS)[0])
   const [guardando, setGuardando] = useState(false)
@@ -29,19 +33,19 @@ export default function TrofeoPicker({
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.from('trofeos').select('id, nombre, icono, color, forma').eq('creado_por', playerId).order('created_at', { ascending: false })
+    supabase.from('trofeos').select('id, nombre, icono, color, forma').eq('creado_por', playerId).eq('forma', forma).order('created_at', { ascending: false })
       .then(({ data }) => { setTrofeos(data ?? []); setLoading(false) })
-  }, [playerId])
+  }, [playerId, forma])
 
   const crearCopa = async () => {
-    if (!nombre.trim()) { setError('Ponele un nombre a la copa'); return }
+    if (!nombre.trim()) { setError(`Ponele un nombre a la ${tipoNombre}`); return }
     setGuardando(true); setError('')
     const supabase = createClient()
     const { data, error: err } = await supabase.from('trofeos')
       .insert({ nombre: nombre.trim(), icono, color, forma, creado_por: playerId })
       .select('id, nombre, icono, color, forma').single()
     setGuardando(false)
-    if (err || !data) { setError(err?.message ?? 'No se pudo crear la copa'); return }
+    if (err || !data) { setError(err?.message ?? `No se pudo crear la ${tipoNombre}`); return }
     setTrofeos(t => [data, ...t])
     onChange(data.id)
     setCreando(false); setNombre('')
@@ -61,7 +65,7 @@ export default function TrofeoPicker({
     <div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: creando ? 16 : 0 }}>
         <button type="button" onClick={() => onChange(null)} style={chipStyle(value === null)}>
-          Sin copa asignada
+          Sin {tipoNombre} asignada
         </button>
         {!loading && trofeos.map(t => (
           <button type="button" key={t.id} onClick={() => onChange(t.id)} style={chipStyle(value === t.id)}>
@@ -74,7 +78,7 @@ export default function TrofeoPicker({
           onClick={() => setCreando(c => !c)}
           style={{ ...chipStyle(creando), borderStyle: 'dashed' }}
         >
-          + Crear copa nueva
+          + Crear {tipoNombre} nueva
         </button>
       </div>
 
@@ -92,45 +96,18 @@ export default function TrofeoPicker({
           }}>
             <TrofeoBadge trofeo={{ nombre: nombre || 'Vista previa', icono, color, forma }} size="lg" />
             <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 0.5, textAlign: 'center' }}>
-              {nombre.trim() || 'Nombre de la copa'}
+              {nombre.trim() || `Nombre de la ${tipoNombre}`}
             </div>
           </div>
 
           {/* ── Nombre ──────────────────────────────────────── */}
           <div>
-            <label style={labelStyle}>NOMBRE DE LA COPA</label>
+            <label style={labelStyle}>NOMBRE</label>
             <input
               value={nombre} onChange={e => { setNombre(e.target.value); setError('') }} maxLength={40}
               placeholder="Ej: Copa de Bárbaros"
               style={inputStyle}
             />
-          </div>
-
-          {/* ── Forma ───────────────────────────────────────── */}
-          <div>
-            <label style={labelStyle}>FORMA</label>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {TROFEO_FORMAS.map(f => {
-                const active = forma === f.id
-                return (
-                  <button
-                    type="button" key={f.id} onClick={() => setForma(f.id)}
-                    style={{
-                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-                      padding: '12px 8px', borderRadius: 10, cursor: 'pointer',
-                      border: `2px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-                      background: active ? 'rgba(212,175,55,0.1)' : 'transparent',
-                      transition: 'border-color 0.15s, background 0.15s',
-                    }}
-                  >
-                    <TrofeoBadge trofeo={{ nombre: f.nombre, icono, color, forma: f.id }} size="md" />
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, fontWeight: 700, color: active ? 'var(--gold)' : 'var(--text-secondary)' }}>
-                      {f.nombre}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
           </div>
 
           {/* ── Color ───────────────────────────────────────── */}
@@ -202,7 +179,7 @@ export default function TrofeoPicker({
       {seleccionado && !creando && (
         <div style={{ marginTop: 10, fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <TrofeoBadge trofeo={seleccionado} size="sm" />
-          Los campeones de este torneo van a mostrar la copa "{seleccionado.nombre}".
+          Este torneo va a mostrar la {tipoNombre} "{seleccionado.nombre}".
         </div>
       )}
     </div>

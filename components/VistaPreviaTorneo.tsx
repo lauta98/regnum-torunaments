@@ -1,10 +1,11 @@
-import { FORMAT_LABEL, FORMAT_COLOR, STATUS_STYLE } from '@/lib/constants'
-import type { TournamentFormat, TournamentStatus } from '@/lib/types'
+import { FORMAT_LABEL, FORMAT_COLOR, STATUS_STYLE, BRACKET_TYPE_LABEL } from '@/lib/constants'
+import type { TournamentFormat, TournamentStatus, BracketType } from '@/lib/types'
 
 type PreviewForm = {
   nombre: string
   formato: TournamentFormat
   estado: TournamentStatus
+  bracket_type: BracketType
   fecha_inicio: string
   fecha_fin: string
   max_equipos: number
@@ -40,6 +41,9 @@ export default function VistaPreviaTorneo({ form }: { form: PreviewForm }) {
             ★ Destacado
           </span>
         )}
+        <span style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5 }}>
+          {BRACKET_TYPE_LABEL[form.bracket_type]}
+        </span>
       </div>
 
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, wordBreak: 'break-word' }}>

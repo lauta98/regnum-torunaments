@@ -18,10 +18,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const esOrganizador = torneo.creator_id === player.id || player.role === 'admin'
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
-  // No pisar un cuadro que ya tiene resultados cargados
-  const { data: existentes } = await supabase.from('matches').select('id, estado').eq('torneo_id', torneoId)
-  if (existentes && existentes.some(m => m.estado === 'jugado')) {
+  // No pisar un cuadro que ya tiene resultados REALES cargados — un BYE no
+  // cuenta, se marca 'jugado' automáticamente al generar pero es
+  // estructural (sin impacto en mmr), no algo que el organizador cargó.
+  const { data: existentes } = await supabase.from('matches').select('id, estado, resultado').eq('torneo_id', torneoId)
+  if (existentes && existentes.some(m => m.estado === 'jugado' && m.resultado !== 'BYE')) {
     return NextResponse.json({ error: 'Ya hay resultados cargados — no se puede regenerar el cuadro.' }, { status: 409 })
+  }
+  // Pasada la guardia, se borra el cuadro viejo (si había) antes de
+  // insertar el nuevo — nada de esto tiene mmr que revertir.
+  if (existentes && existentes.length > 0) {
+    await supabase.from('matches').delete().eq('torneo_id', torneoId)
   }
 
   const { data: registros } = await supabase

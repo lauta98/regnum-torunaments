@@ -55,7 +55,7 @@ export default async function TorneosPage({
 
   let query = supabase
     .from('tournaments')
-    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count)')
+    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
     .order('fecha_inicio', { ascending: ordenAntiguos })
 
   if (params.formato) query = query.eq('formato', params.formato as TournamentFormat)

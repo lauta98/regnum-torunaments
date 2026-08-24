@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
-import { FORMATS, FORMAT_LABEL, CLASES, CLASE_LABEL } from '@/lib/constants'
-import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
+import { FORMATS, FORMAT_LABEL, CLASES, CLASE_LABEL, BRACKET_TYPES, BRACKET_TYPE_LABEL } from '@/lib/constants'
+import type { TournamentFormat, TournamentStatus, Clase, BracketType } from '@/lib/types'
 import TrofeoPicker from '@/components/TrofeoPicker'
 import VistaPreviaTorneo from '@/components/VistaPreviaTorneo'
 
@@ -28,6 +28,11 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
     destacado: torneo.destacado ?? false,
     organizador_verificado: torneo.organizador_verificado ?? false,
     trofeo_id: torneo.trofeo_id ?? null as string | null,
+    trofeo_subcampeon_id: torneo.trofeo_subcampeon_id ?? null as string | null,
+    escudo_id: torneo.escudo_id ?? null as string | null,
+    bracket_type: torneo.bracket_type as BracketType,
+    playoff_cupo: torneo.playoff_cupo ?? 4,
+    playoff_bracket_type: (torneo.playoff_bracket_type ?? 'single_elimination') as 'single_elimination' | 'double_elimination',
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -67,6 +72,11 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
         premio: form.premio.trim() || null,
         reglamento: form.reglamento.trim() || null,
         trofeo_id: form.trofeo_id,
+        trofeo_subcampeon_id: form.trofeo_subcampeon_id,
+        escudo_id: form.escudo_id,
+        bracket_type: form.bracket_type,
+        playoff_cupo: form.bracket_type === 'league_cup' ? form.playoff_cupo : null,
+        playoff_bracket_type: form.bracket_type === 'league_cup' ? form.playoff_bracket_type : null,
         ...(isAdmin ? { estado: form.estado, destacado: form.destacado, organizador_verificado: form.organizador_verificado } : {}),
       }),
     })
@@ -143,6 +153,52 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
         </div>
 
         <div className="card-section">
+          <div className="card-section__title">Tipo de cuadro</div>
+          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+            Si ya generaste el cuadro y lo cambiás acá, los partidos actuales se borran — vas a tener que generar el cuadro de nuevo desde la página del torneo.
+          </p>
+          <div className="segmented">
+            {BRACKET_TYPES.map(bt => {
+              const active = form.bracket_type === bt
+              return (
+                <button type="button" key={bt} className={`segmented-btn${active ? ' is-active' : ''}`}
+                  onClick={() => setForm(f => ({ ...f, bracket_type: bt }))}>
+                  {BRACKET_TYPE_LABEL[bt]}
+                </button>
+              )
+            })}
+          </div>
+          {form.bracket_type === 'league_cup' && (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 14 }}>
+              <div>
+                <label className="field-label">CUPO A COPA</label>
+                <input
+                  type="number" min={2} className="field" value={form.playoff_cupo}
+                  onChange={e => setForm(f => ({ ...f, playoff_cupo: parseInt(e.target.value) || 0 }))}
+                />
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+                  Cuántos de los mejores puestos de la liga pasan a la copa.
+                </p>
+              </div>
+              <div>
+                <label className="field-label">FORMATO DE LA COPA</label>
+                <div className="segmented">
+                  {(['single_elimination', 'double_elimination'] as const).map(bt => {
+                    const active = form.playoff_bracket_type === bt
+                    return (
+                      <button type="button" key={bt} className={`segmented-btn${active ? ' is-active' : ''}`}
+                        onClick={() => setForm(f => ({ ...f, playoff_bracket_type: bt }))}>
+                        {BRACKET_TYPE_LABEL[bt]}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="card-section">
           <div className="card-section__title">Fechas y cupo</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -213,15 +269,47 @@ export default function EditarTorneoForm({ torneo, isAdmin = true }: { torneo: a
         )}
 
         <div className="card-section">
-          <div className="card-section__title">Copa del torneo</div>
-          <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
-            Los campeones van a mostrar esta copa en vez del trofeo genérico. Podés reutilizar una que ya creaste o armar una nueva.
-          </p>
-          {miPlayerId ? (
-            <TrofeoPicker playerId={miPlayerId} value={form.trofeo_id} onChange={id => setForm(f => ({ ...f, trofeo_id: id }))} />
-          ) : (
-            <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
-          )}
+          <div className="card-section__title">Trofeos del torneo</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+            <div>
+              <label className="field-label">COPA DEL CAMPEÓN</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+                El campeón va a mostrar esta copa en vez del trofeo genérico.
+              </p>
+              {miPlayerId ? (
+                <TrofeoPicker playerId={miPlayerId} value={form.trofeo_id} forma="copa" tipoNombre="copa"
+                  onChange={id => setForm(f => ({ ...f, trofeo_id: id }))} />
+              ) : (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
+              )}
+            </div>
+
+            <div style={{ paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <label className="field-label">MEDALLA DEL SUBCAMPEÓN</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+                El subcampeón va a mostrar esta medalla en vez de la genérica.
+              </p>
+              {miPlayerId ? (
+                <TrofeoPicker playerId={miPlayerId} value={form.trofeo_subcampeon_id} forma="medalla" tipoNombre="medalla"
+                  onChange={id => setForm(f => ({ ...f, trofeo_subcampeon_id: id }))} />
+              ) : (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
+              )}
+            </div>
+
+            <div style={{ paddingTop: 18, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+              <label className="field-label">ESCUDO DEL TORNEO</label>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>
+                Puramente decorativo — no se le asigna a ningún puesto, solo identifica visualmente a este torneo en la llave y en los listados.
+              </p>
+              {miPlayerId ? (
+                <TrofeoPicker playerId={miPlayerId} value={form.escudo_id} forma="escudo" tipoNombre="escudo"
+                  onChange={id => setForm(f => ({ ...f, escudo_id: id }))} />
+              ) : (
+                <p style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cargando…</p>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="card-section">

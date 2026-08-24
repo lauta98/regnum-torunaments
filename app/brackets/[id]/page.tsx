@@ -13,6 +13,7 @@ import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
+import TrofeoBadge from '@/components/TrofeoBadge'
 
 export const dynamic = 'force-dynamic'
 
@@ -62,7 +63,7 @@ export default async function BracketPage({
 
   const { data: torneo } = await supabase
     .from('tournaments')
-    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count)')
+    .select('*, creator:players(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
     .eq('id', id).single()
 
   if (!torneo) notFound()
@@ -245,11 +246,14 @@ export default async function BracketPage({
                   {BRACKET_TYPE_LABEL[torneo.bracket_type as BracketType] ?? torneo.bracket_type}
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                {torneo.nombre}
-                {torneo.organizador_verificado && (
-                  <span title="Torneo verificado por la administración" style={{ color: '#4CAF50', marginLeft: 6, fontSize: 12 }}>✓</span>
-                )}
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6 }}>
+                {torneo.escudo && <TrofeoBadge trofeo={torneo.escudo} size="sm" title={`Escudo: ${torneo.escudo.nombre}`} />}
+                <span>
+                  {torneo.nombre}
+                  {torneo.organizador_verificado && (
+                    <span title="Torneo verificado por la administración" style={{ color: '#4CAF50', marginLeft: 6, fontSize: 12 }}>✓</span>
+                  )}
+                </span>
               </div>
               <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
                 <div>

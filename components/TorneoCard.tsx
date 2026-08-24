@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { FORMAT_COLOR, FORMAT_LABEL, STATUS_STYLE, temaTorneo } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, Clase } from '@/lib/types'
+import TrofeoBadge from './TrofeoBadge'
 
 /** Tarjeta de torneo compartida entre /torneos y /brackets. Antes cada
  *  página tenía su propia versión ligeramente distinta, coloreada solo
@@ -65,6 +66,9 @@ export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: 
               )}
               {t.destacado && (
                 <span style={{ color: 'var(--gold)', fontSize: 11 }} title="Destacado">★</span>
+              )}
+              {t.escudo && (
+                <TrofeoBadge trofeo={t.escudo} size="xs" title={`Escudo: ${t.escudo.nombre}`} />
               )}
             </div>
             <span style={{

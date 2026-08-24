@@ -41,7 +41,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const personajeIds = personajes?.map(p => p.id) ?? []
   const { data: campeonatos } = personajeIds.length ? await supabase
     .from('campeonatos')
-    .select('personaje_id, tipo, equipo_nombre, puesto, torneo:tournaments(nombre, trofeo:trofeos(nombre, icono, color, forma))')
+    .select('personaje_id, tipo, equipo_nombre, puesto, torneo:tournaments(nombre, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma), trofeo_subcampeon:trofeos!tournaments_trofeo_subcampeon_id_fkey(nombre, icono, color, forma))')
     .in('personaje_id', personajeIds)
     : { data: null }
   const trofeosPorPersonaje = agruparTrofeos(campeonatos as any)

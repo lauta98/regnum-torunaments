@@ -8,6 +8,7 @@ import { canAdmin, canOrganize } from '@/lib/roles'
 const CAMPOS_EDITABLES_ORGANIZADOR = [
   'nombre', 'descripcion', 'formato', 'fecha_inicio', 'fecha_fin',
   'premio', 'max_equipos', 'reglamento', 'subclases_permitidas', 'trofeo_id',
+  'trofeo_subcampeon_id', 'escudo_id', 'bracket_type', 'playoff_cupo', 'playoff_bracket_type',
 ] as const
 
 // Campos de prestigio/curación editorial — solo un admin los toca, sin
@@ -23,7 +24,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
   if (!me) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
-  const { data: torneoActual } = await supabase.from('tournaments').select('creator_id').eq('id', torneoId).single()
+  const { data: torneoActual } = await supabase.from('tournaments').select('creator_id, bracket_type').eq('id', torneoId).single()
   if (!torneoActual) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
   const esDueño = canOrganize(me.role) && torneoActual.creator_id === me.id
@@ -43,6 +44,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })
 
   const svc = createServiceSupabase()
+
+  // Cambiar el tipo de cuadro deja obsoleta la estructura de partidos ya
+  // generada (main/losers/league dejan de tener sentido bajo el tipo
+  // nuevo) — se permite mientras no haya un resultado REAL cargado (un bye
+  // no cuenta: es estructural, no un resultado que alguien reportó). Si
+  // pasa la guardia, se borran los partidos viejos para que la llave no
+  // quede mostrando una estructura inconsistente — el organizador tiene
+  // que generar el cuadro de nuevo, igual que la primera vez.
+  if (typeof patch.bracket_type === 'string' && patch.bracket_type !== torneoActual.bracket_type) {
+    const { data: matches } = await svc.from('matches').select('id, estado, resultado').eq('torneo_id', torneoId)
+    const conResultadoReal = matches?.some(m => m.estado === 'jugado' && m.resultado !== 'BYE')
+    if (conResultadoReal) {
+      return NextResponse.json({ error: 'Ya hay resultados cargados en este torneo — no se puede cambiar el tipo de cuadro. Revertí los resultados primero.' }, { status: 409 })
+    }
+    if (matches && matches.length > 0) {
+      await svc.from('matches').delete().eq('torneo_id', torneoId)
+    }
+  }
+
   const { data: torneo, error } = await svc.from('tournaments').update(patch).eq('id', torneoId).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ ok: true, torneo })

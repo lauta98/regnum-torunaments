@@ -111,6 +111,10 @@ export interface Tournament {
   organizador_verificado: boolean
   trofeo_id: string | null
   trofeo?: Trofeo | null
+  trofeo_subcampeon_id: string | null
+  trofeo_subcampeon?: Trofeo | null
+  escudo_id: string | null
+  escudo?: Trofeo | null
   created_at: string
   creator?: Player
   equipos_inscritos?: number

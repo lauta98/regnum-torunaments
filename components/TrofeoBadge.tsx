@@ -70,10 +70,9 @@ export default function TrofeoBadge({
 }) {
   const s = SIZES[size]
 
-  // El subcampeón (puesto 2) siempre cae en el look genérico de medalla de
-  // plata — la copa personalizada es un premio de campeón, no se le pone al
-  // que salió segundo.
-  if (!trofeo || puesto === 2) {
+  // Sin trofeo asignado (ni copa de campeón ni medalla de subcampeón) cae
+  // en el look genérico por emoji — puesto solo decide cuál emoji/color.
+  if (!trofeo) {
     const emojiSize = Math.round(s.box * 0.62)
     const emoji = puesto === 2 ? '🥈' : (tipoClan ? '🛡️' : '🏆')
     const bubbleColor = puesto === 2 ? '#c0c0c0' : (tipoClan ? '#5b8fd4' : '#d4af37')

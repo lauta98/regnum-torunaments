@@ -5,26 +5,26 @@ export type CampeonatoRaw = {
   tipo: string | null
   equipo_nombre: string | null
   puesto: number | null
-  torneo: { nombre: string; trofeo: TrofeoInfo } | null
+  torneo: { nombre: string; trofeo: TrofeoInfo; trofeo_subcampeon?: TrofeoInfo } | null
 }
 
 export type TrofeoGrupo = { trofeo: TrofeoInfo; tipoClan: boolean; puesto: 1 | 2; count: number; nombres: string[] }
 
-/** Agrupa los campeonatos/subcampeonatos de cada personaje por copa (misma
- *  copa personalizada → un solo badge con contador; sin copa asignada → cae
- *  en un grupo "genérico" por tipo+puesto, también contado). Así se puede
- *  distinguir cuántos títulos tiene alguien y de cuáles copas, en vez de un
- *  ícono suelto que no cambia entre 1 y 10 campeonatos — mismo criterio en
- *  el ranking y el perfil. El segundo puesto SIEMPRE cae en el grupo
- *  genérico (medalla de plata) — la copa personalizada es un premio de
- *  campeón, no se le asigna a quien salió subcampeón. */
+/** Agrupa los campeonatos/subcampeonatos de cada personaje por trofeo
+ *  (mismo trofeo personalizado → un solo badge con contador; sin trofeo
+ *  asignado → cae en un grupo "genérico" por tipo+puesto, también
+ *  contado). Así se puede distinguir cuántos títulos tiene alguien y de
+ *  cuáles copas/medallas, en vez de un ícono suelto que no cambia entre 1
+ *  y 10 campeonatos — mismo criterio en el ranking y el perfil. Campeón
+ *  (puesto 1) usa la copa del torneo; subcampeón (puesto 2) usa la
+ *  medalla del torneo — son trofeos distintos, asignados por separado. */
 export function agruparTrofeos(raw: CampeonatoRaw[] | null | undefined): Map<string, TrofeoGrupo[]> {
   const porPersonaje = new Map<string, Map<string, TrofeoGrupo>>()
   raw?.forEach(c => {
     if (!c.torneo) return
     const tipoClan = c.tipo === 'equipo'
     const puesto: 1 | 2 = c.puesto === 2 ? 2 : 1
-    const trofeo = puesto === 1 ? (c.torneo.trofeo ?? null) : null
+    const trofeo = puesto === 1 ? (c.torneo.trofeo ?? null) : (c.torneo.trofeo_subcampeon ?? null)
     const key = `${tipoClan ? 'clan' : 'ind'}:${puesto}:${trofeo?.nombre ?? '__generico'}`
     const grupos = porPersonaje.get(c.personaje_id) ?? new Map<string, TrofeoGrupo>()
     const nombre = tipoClan ? `${c.torneo.nombre} (${c.equipo_nombre})` : c.torneo.nombre
