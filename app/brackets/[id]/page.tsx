@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE } from '@/lib/constants'
+import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE, getTier } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, MatchStatus } from '@/lib/types'
 import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
@@ -76,7 +76,14 @@ export default async function BracketPage({
 
   const { data: inscritos } = await supabase
     .from('tournament_registrations')
-    .select('seed, estado, motivo_expulsion, team:teams(id, nombre, capitan:players!teams_capitan_id_fkey(id, nickname_juego, reino), miembros:team_members(count))')
+    .select(`
+      seed, estado, motivo_expulsion, registered_at,
+      team:teams(
+        id, nombre,
+        capitan:players!teams_capitan_id_fkey(id, nickname_juego, discord_username, reino),
+        miembros:team_members(personaje:personajes(id, nickname_juego, mmr, clase))
+      )
+    `)
     .eq('tournament_id', id)
     .order('seed', { ascending: true })
 
@@ -116,7 +123,7 @@ export default async function BracketPage({
 
   const teamSize = FORMAT_TEAM_SIZE[torneo.formato as TournamentFormat] ?? 1
   const equiposConCupo = inscritosActivos
-    .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, miembros: r.team?.miembros?.[0]?.count ?? 1 }))
+    .map((r: any) => ({ id: r.team?.id, nombre: r.team?.nombre, miembros: r.team?.miembros?.length ?? 1 }))
     .filter((t: any) => t.id && t.miembros < teamSize)
 
   // Group by (bracket, ronda_numero) — en eliminación doble 'main' y
@@ -417,6 +424,8 @@ export default async function BracketPage({
                       const team = r.team
                       if (!team) return null
                       const expulsado = r.estado === 'expulsado'
+                      const miembros = (team.miembros ?? []).filter((m: any) => m.personaje)
+                      const esUnico = miembros.length <= 1
                       return (
                         <div key={team.id} style={{
                           background: '#0f0f0f',
@@ -424,16 +433,40 @@ export default async function BracketPage({
                           borderRadius: 10, padding: '14px 16px', opacity: expulsado ? 0.7 : 1,
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                            <div>
+                            <div style={{ minWidth: 0 }}>
                               {r.seed && <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>SEED #{r.seed}</div>}
                               <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: expulsado ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 4, textDecoration: expulsado ? 'line-through' : 'none' }}>
                                 {team.nombre}
                               </div>
                               {team.capitan && (
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span></div>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                                  Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
+                                  {team.capitan.discord_username && <span style={{ color: 'var(--text-muted)' }}> · @{team.capitan.discord_username}</span>}
+                                </div>
+                              )}
+                              {r.registered_at && (
+                                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
+                                  📅 Inscripto el {new Date(r.registered_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                </div>
                               )}
                             </div>
+                            {esUnico && miembros[0] && (
+                              <span className={`tier-pill ${getTier(miembros[0].personaje.mmr).cssClass}`} style={{ flexShrink: 0 }} title={`MMR: ${miembros[0].personaje.mmr}`}>
+                                {getTier(miembros[0].personaje.mmr).icon} {miembros[0].personaje.mmr}
+                              </span>
+                            )}
                           </div>
+
+                          {!esUnico && miembros.length > 0 && (
+                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              {miembros.map((m: any, mi: number) => (
+                                <div key={mi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.personaje.nickname_juego}</span>
+                                  <span className={`tier-pill ${getTier(m.personaje.mmr).cssClass}`} style={{ flexShrink: 0 }}>{m.personaje.mmr}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
                           {expulsado ? (
                             <div style={{ marginTop: 8, background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 6, padding: '6px 10px' }}>
