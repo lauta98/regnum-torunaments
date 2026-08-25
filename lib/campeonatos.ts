@@ -5,7 +5,7 @@ export type CampeonatoRaw = {
   tipo: string | null
   equipo_nombre: string | null
   puesto: number | null
-  torneo: { nombre: string; trofeo: TrofeoInfo; trofeo_subcampeon?: TrofeoInfo } | null
+  torneo: { nombre: string; formato?: string | null; trofeo: TrofeoInfo; trofeo_subcampeon?: TrofeoInfo } | null
 }
 
 export type TrofeoGrupo = { trofeo: TrofeoInfo; tipoClan: boolean; puesto: 1 | 2; count: number; nombres: string[] }
@@ -22,12 +22,16 @@ export function agruparTrofeos(raw: CampeonatoRaw[] | null | undefined): Map<str
   const porPersonaje = new Map<string, Map<string, TrofeoGrupo>>()
   raw?.forEach(c => {
     if (!c.torneo) return
-    const tipoClan = c.tipo === 'equipo'
+    // "equipo" cubre cualquier torneo de a dos o más (2v2, 3v3, 7v7) —
+    // "clan" es específicamente 7v7. Un 2v2 campeón es "Campeón" a secas,
+    // no "Campeón de clan".
+    const esEquipo = c.tipo === 'equipo'
+    const tipoClan = esEquipo && c.torneo.formato === '7v7'
     const puesto: 1 | 2 = c.puesto === 2 ? 2 : 1
     const trofeo = puesto === 1 ? (c.torneo.trofeo ?? null) : (c.torneo.trofeo_subcampeon ?? null)
-    const key = `${tipoClan ? 'clan' : 'ind'}:${puesto}:${trofeo?.nombre ?? '__generico'}`
+    const key = `${tipoClan ? 'clan' : esEquipo ? 'equipo' : 'ind'}:${puesto}:${trofeo?.nombre ?? '__generico'}`
     const grupos = porPersonaje.get(c.personaje_id) ?? new Map<string, TrofeoGrupo>()
-    const nombre = tipoClan ? `${c.torneo.nombre} (${c.equipo_nombre})` : c.torneo.nombre
+    const nombre = esEquipo ? `${c.torneo.nombre} (${c.equipo_nombre})` : c.torneo.nombre
     const existente = grupos.get(key)
     if (existente) { existente.count++; existente.nombres.push(nombre) }
     else grupos.set(key, { trofeo, tipoClan, puesto, count: 1, nombres: [nombre] })

@@ -133,7 +133,12 @@ export default async function SalonDeLaFamaPage() {
                     {campeones.map((c: any) => {
                       const p = c.personaje
                       if (!p) return null
-                      const esClan = c.tipo === 'equipo'
+                      // "equipo" (2v2/3v3/7v7) vs "clan" — solo 7v7 es de
+                      // clan; un 2v2 sigue siendo "equipo" para mostrar el
+                      // nombre del compañero, pero no lleva la etiqueta ni
+                      // el color de clan.
+                      const esEquipo = c.tipo === 'equipo'
+                      const esClan = esEquipo && c.torneo.formato === '7v7'
                       const rc = esClan ? '#5b8fd4' : (REINO_COLOR[p.reino as Reino] ?? 'var(--gold)')
                       return (
                         <Link
@@ -172,8 +177,8 @@ export default async function SalonDeLaFamaPage() {
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: esClan ? '#5b8fd4' : (c.torneo.trofeo?.color ?? 'var(--gold)'), fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.9 }}>
                               <TrofeoBadge trofeo={c.torneo.trofeo} tipoClan={esClan} size="xs" />
-                              {c.torneo.trofeo?.nombre ?? (esClan ? `CLAN CAMPEÓN — ${c.equipo_nombre}` : 'CAMPEÓN')}
-                              {c.torneo.trofeo && esClan && ` — ${c.equipo_nombre}`}
+                              {c.torneo.trofeo?.nombre ?? (esClan ? `CLAN CAMPEÓN — ${c.equipo_nombre}` : esEquipo ? `CAMPEÓN — ${c.equipo_nombre}` : 'CAMPEÓN')}
+                              {c.torneo.trofeo && esEquipo && ` — ${c.equipo_nombre}`}
                             </div>
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {p.nickname_juego}
