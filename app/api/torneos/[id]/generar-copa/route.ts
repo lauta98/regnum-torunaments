@@ -3,17 +3,6 @@ import { NextResponse } from 'next/server'
 import { roundName, buildSingleElimination, buildDoubleElimination, standingsFromMatches, nextPow2 } from '@/lib/bracketGen'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
 
-/** Orden de siembra estándar de bracket (1 vs N, 2 vs N-1 en llaves
- *  opuestas, etc.) para `size` potencia de 2 — así los mejores puestos de
- *  la liga no se cruzan entre sí en la primera ronda de la copa. */
-function seedOrder(size: number): number[] {
-  if (size === 1) return [1]
-  const prev = seedOrder(size / 2)
-  const out: number[] = []
-  for (const s of prev) { out.push(s); out.push(size + 1 - s) }
-  return out
-}
-
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
   const supabase = await createServerSupabase()
@@ -64,9 +53,6 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
 
   const clasificados = standings.slice(0, torneo.playoff_cupo).map(s => s.teamId)
   const size = nextPow2(clasificados.length)
-  const orden = seedOrder(size)
-    .filter(seed => seed <= clasificados.length)
-    .map(seed => clasificados[seed - 1])
 
   const rows: any[] = []
 
@@ -76,7 +62,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
         error: `Eliminación doble solo admite un cupo de copa que sea potencia de 2 (4, 8, 16...). El cupo configurado es ${clasificados.length}.`,
       }, { status: 400 })
     }
-    const { main, losers } = buildDoubleElimination(clasificados, orden)
+    // clasificados ya está en orden de posiciones de liga (1º, 2º, 3º...) —
+    // buildDoubleElimination se encarga de repartirlo por el cuadro con
+    // seedOrder para que los primeros puestos no se crucen en la primera
+    // ronda.
+    const { main, losers } = buildDoubleElimination(clasificados, clasificados)
     main.forEach((roundMatches, idx) => {
       const isFinal = idx === main.length - 1
       const ronda = isFinal ? 'Final Llave Principal' : roundName(roundMatches.length, false)
@@ -104,7 +94,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       ronda_numero: 1, posicion: 1, equipo_a_id: null, equipo_b_id: null, estado: 'pendiente',
     })
   } else {
-    const rounds = buildSingleElimination(clasificados, orden)
+    const rounds = buildSingleElimination(clasificados, clasificados)
     rounds.forEach((roundMatches, idx) => {
       const isFinal = idx === rounds.length - 1
       const ronda = roundName(roundMatches.length, isFinal)

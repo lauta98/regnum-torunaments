@@ -43,15 +43,34 @@ export function roundName(matchesEnEsaRonda: number, esFinal: boolean): string {
   return NOMBRES_RONDA[matchesEnEsaRonda] ?? `Ronda de ${matchesEnEsaRonda * 2}`
 }
 
+/** Orden de siembra estándar de bracket (1 vs N, 2 vs N-1, en llaves
+ *  opuestas, etc.) para un cuadro de `size` (potencia de 2). Se usa para
+ *  reacomodar el ranking 1º/2º/3º.../Nº en las POSICIONES del cuadro
+ *  antes de emparejar secuencialmente — así, si `size` no coincide
+ *  exactamente con la cantidad de equipos reales (hacen falta BYE), esos
+ *  BYE quedan repartidos por todo el cuadro en vez de amontonados al
+ *  final (que es lo que pasa si simplemente se empareja 1-2, 3-4, 5-6...
+ *  en el orden que llegan). */
+export function seedOrder(size: number): number[] {
+  if (size <= 1) return [1]
+  const prev = seedOrder(size / 2)
+  const out: number[] = []
+  for (const s of prev) { out.push(s); out.push(size + 1 - s) }
+  return out
+}
+
 /** Eliminación simple — resuelve byes en el momento de generar, para que
  *  las rondas siguientes ya arranquen con el equipo que pasó de largo.
- *  Si se pasa `ordenFijo`, se respeta tal cual (sorteo en vivo ya hecho
- *  en el cliente, o seeding por tabla de posiciones); si no, se mezcla
- *  acá (sorteo rápido). */
+ *  Si se pasa `ordenFijo`, se respeta ese ranking (sorteo en vivo ya
+ *  hecho en el cliente, o seeding por tabla de posiciones); si no, se
+ *  mezcla acá (sorteo rápido). En cualquier caso, el ranking resultante
+ *  se pasa por `seedOrder` antes de emparejar, para repartir los BYE de
+ *  forma pareja por todo el cuadro. */
 export function buildSingleElimination(teamIds: string[], ordenFijo?: string[]): SlotMatch[][] {
   const size = nextPow2(teamIds.length)
-  let current: (string | null)[] = ordenFijo && ordenFijo.length === teamIds.length ? [...ordenFijo] : shuffle(teamIds)
-  while (current.length < size) current.push(null) // bye
+  const ranked: (string | null)[] = ordenFijo && ordenFijo.length === teamIds.length ? [...ordenFijo] : shuffle(teamIds)
+  while (ranked.length < size) ranked.push(null) // bye
+  let current: (string | null)[] = seedOrder(size).map(seed => ranked[seed - 1])
 
   const rounds: SlotMatch[][] = []
   let roundNum = 1
@@ -214,9 +233,9 @@ export function previewBracket(bracketType: string, equipos: { id: string; nombr
     matches = slotsAPreview(buildRoundRobin(ids), 'league', nombrePorId)
   } else if (bracketType === 'double_elimination') {
     if (nextPow2(ids.length) !== ids.length) return []
-    matches = slotsAPreview(buildDoubleElimination(ids).main, 'main', nombrePorId)
+    matches = slotsAPreview(buildDoubleElimination(ids, ids).main, 'main', nombrePorId)
   } else {
-    matches = slotsAPreview(buildSingleElimination(ids), 'main', nombrePorId)
+    matches = slotsAPreview(buildSingleElimination(ids, ids), 'main', nombrePorId)
   }
 
   const rounds = new Map<string, PreviewMatch[]>()
