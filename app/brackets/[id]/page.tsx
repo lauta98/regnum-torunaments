@@ -686,6 +686,16 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
   const height = HEADER_H + (maxY + 1) * ROW
   const width = rounds.length * COL_W
 
+  // Numeración corrida de todo el cuadro (1, 2, 3... sin reiniciar en
+  // cada ronda) — el número por sí solo no dice nada de a quién enfrenta
+  // cada equipo (eso ya lo muestra el nombre + la línea conectora), así
+  // que reiniciar en 1 en cada ronda solo generaba la falsa sensación de
+  // que el partido "1" de Octavos tenía algo que ver con el "1" de
+  // Dieciseisavos.
+  let numeroGlobal = 0
+  const numeroPorMatch = new Map<string, number>()
+  rounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
+
   const connectors: { x1: number; y1: number; xm: number; x2: number; y2: number }[] = []
   rounds.forEach((r, idx) => {
     if (idx === 0) return
@@ -729,7 +739,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
               </div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={{ position: 'absolute', left: colIdx * COL_W + CARD_PAD, top: HEADER_H + yByRound[colIdx][i] * ROW, width: COL_W - CARD_PAD * 2 }}>
-                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} />
                 </div>
               ))}
             </div>
@@ -741,7 +751,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
 }
 
 /* ── Match Card ─────────────────────────────────────────────── */
-function MatchCard({ match, isOrganizer, fc, equiposDisponibles }: { match: any; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero }: { match: any; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numero?: number }) {
   const teamA = match.equipo_a
   const teamB = match.equipo_b
   const ganadorId = match.ganador_id
@@ -782,7 +792,7 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles }: { match: any;
 
       {/* Team A */}
       <TeamRow
-        seed={match.posicion}
+        seed={numero ?? match.posicion}
         team={teamA}
         score={scoreA}
         isWinner={!!ganadorId && ganadorId === teamA?.id}
