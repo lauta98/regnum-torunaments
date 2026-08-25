@@ -55,7 +55,11 @@ export default function ExpulsarButton({ torneoId, teamId, teamNombre }: { torne
   }
 
   return (
-    <div style={{ background: '#1a0f0f', border: '1px solid rgba(244,67,54,0.35)', borderRadius: 'var(--radius-sm)', padding: 12, minWidth: 220 }}>
+    <div style={{
+      position: 'absolute', top: 0, right: 0, zIndex: 30,
+      background: '#1a0f0f', border: '1px solid rgba(244,67,54,0.35)', borderRadius: 'var(--radius-sm)',
+      padding: 12, width: 240, boxShadow: 'var(--shadow-elevated)',
+    }}>
       <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: '#f87171', marginBottom: 8, letterSpacing: 0.5 }}>
         EXPULSAR A {teamNombre.toUpperCase()}
       </div>

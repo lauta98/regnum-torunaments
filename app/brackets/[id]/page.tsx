@@ -478,7 +478,12 @@ export default async function BracketPage({
                 {!inscritos?.length ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay participantes inscritos.</div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 10 }}>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 90px 130px 90px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md) var(--radius-md) 0 0' }}>
+                      {['#', torneo.formato === '7v7' ? 'CLAN' : 'EQUIPO', 'MMR', 'INSCRIPTO', ''].map(c => (
+                        <div key={c} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{c}</div>
+                      ))}
+                    </div>
                     {inscritos.map((r: any, i: number) => {
                       const team = r.team
                       if (!team) return null
@@ -486,60 +491,64 @@ export default async function BracketPage({
                       const miembros = (team.miembros ?? []).filter((m: any) => m.personaje)
                       const esUnico = miembros.length <= 1
                       return (
-                        <div key={team.id} style={{
-                          background: 'var(--bg-card)',
-                          border: `1px solid ${expulsado ? 'rgba(244,67,54,0.3)' : 'var(--border)'}`,
-                          borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)',
-                          padding: '14px 16px', opacity: expulsado ? 0.7 : 1,
+                        <div key={team.id} className="row-hover" style={{
+                          display: 'grid', gridTemplateColumns: '48px 1fr 90px 130px 90px', alignItems: 'center',
+                          padding: '10px 20px', gap: 8, opacity: expulsado ? 0.6 : 1,
+                          borderBottom: i < inscritos.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                         }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
-                            <div style={{ minWidth: 0 }}>
-                              {r.seed && <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1, marginBottom: 6 }}>SEED #{r.seed}</div>}
-                              <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: expulsado ? 'var(--text-muted)' : 'var(--text-primary)', marginBottom: 4, textDecoration: expulsado ? 'line-through' : 'none' }}>
+                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)' }}>
+                            {r.seed ?? i + 1}
+                          </div>
+
+                          <div style={{ minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              <span style={{
+                                fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 700,
+                                color: expulsado ? 'var(--text-muted)' : 'var(--text-primary)',
+                                textDecoration: expulsado ? 'line-through' : 'none',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260,
+                              }}>
                                 {team.nombre}
-                              </div>
-                              {team.capitan && (
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-                                  Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
-                                  {team.capitan.discord_username && <span style={{ color: 'var(--text-muted)' }}> · @{team.capitan.discord_username}</span>}
-                                </div>
-                              )}
-                              {r.registered_at && (
-                                <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 2 }}>
-                                  📅 Inscripto el {new Date(r.registered_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                </div>
+                              </span>
+                              {expulsado && (
+                                <span style={{ fontSize: 8, fontFamily: 'var(--font-display)', color: '#f87171', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 4, padding: '1px 6px', letterSpacing: 0.5, flexShrink: 0 }}>
+                                  EXPULSADO
+                                </span>
                               )}
                             </div>
+                            {team.capitan && (
+                              <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1 }}>
+                                Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
+                                {team.capitan.discord_username && <span> · @{team.capitan.discord_username}</span>}
+                              </div>
+                            )}
+                            {!esUnico && miembros.length > 0 && (
+                              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {miembros.map((m: any) => m.personaje.nickname_juego).join(' · ')}
+                              </div>
+                            )}
+                            {expulsado && puedeExpulsar && r.motivo_expulsion && (
+                              <div style={{ fontSize: 10.5, color: '#f87171', marginTop: 2 }}>{r.motivo_expulsion}</div>
+                            )}
+                          </div>
+
+                          <div>
                             {esUnico && miembros[0] && (
-                              <span className={`tier-pill ${getTier(miembros[0].personaje.mmr).cssClass}`} style={{ flexShrink: 0 }} title={`MMR: ${miembros[0].personaje.mmr}`}>
+                              <span className={`tier-pill ${getTier(miembros[0].personaje.mmr).cssClass}`} title={`MMR: ${miembros[0].personaje.mmr}`}>
                                 {getTier(miembros[0].personaje.mmr).icon} {miembros[0].personaje.mmr}
                               </span>
                             )}
                           </div>
 
-                          {!esUnico && miembros.length > 0 && (
-                            <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              {miembros.map((m: any, mi: number) => (
-                                <div key={mi} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 11, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{m.personaje.nickname_juego}</span>
-                                  <span className={`tier-pill ${getTier(m.personaje.mmr).cssClass}`} style={{ flexShrink: 0 }}>{m.personaje.mmr}</span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                            {r.registered_at && new Date(r.registered_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
+                          </div>
 
-                          {expulsado ? (
-                            <div style={{ marginTop: 8, background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 6, padding: '6px 10px' }}>
-                              <div style={{ fontSize: 9, color: '#f87171', fontFamily: 'var(--font-display)', letterSpacing: 0.5, marginBottom: 2 }}>EXPULSADO</div>
-                              {puedeExpulsar && r.motivo_expulsion && (
-                                <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{r.motivo_expulsion}</div>
-                              )}
-                            </div>
-                          ) : puedeExpulsar && (
-                            <div style={{ marginTop: 10 }}>
+                          <div style={{ position: 'relative' }}>
+                            {!expulsado && puedeExpulsar && (
                               <ExpulsarButton torneoId={torneo.id} teamId={team.id} teamNombre={team.nombre} />
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </div>
                       )
                     })}
