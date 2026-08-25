@@ -648,9 +648,179 @@ function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { ro
   )
 }
 
+/** Un cuadro "parejo" (potencia de 2 exacta en cada ronda, cada ronda
+ *  con exactamente la mitad de partidos que la anterior) se puede armar
+ *  como llave espejada — mitad izquierda y mitad derecha convergiendo al
+ *  centro, como cualquier bracket de torneo estándar. Uno irregular
+ *  (import histórico con byes reales repartidos más allá de la Ronda 1,
+ *  ej. Copa Thorkul con Ronda 1 de 6 partidos y Ronda 2 de 16) no tiene
+ *  una mitad izquierda/derecha real que trazar, así que sigue usando la
+ *  vista lineal de siempre. */
+function esCuadroParejo(rounds: { matches: any[] }[]): boolean {
+  if (rounds.length < 2) return false
+  for (let i = 0; i < rounds.length - 1; i++) {
+    if (rounds[i].matches.length !== rounds[i + 1].matches.length * 2) return false
+  }
+  return true
+}
+
 function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
+  if (section.bracket === 'main' && esCuadroParejo(rounds)) {
+    return <MirroredBracketSection rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+  }
+  return <LinearBracketSection section={section} rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+}
+
+/** Vista espejada — dos mitades convergiendo a una Final central, como
+ *  cualquier cuadro de torneo estándar (ver referencia de un bracket de
+ *  Mundial). La Ronda 1 se parte en dos por `posicion` (mitad de menor
+ *  número = izquierda, mitad de mayor número = derecha); como cada ronda
+ *  siguiente tiene exactamente la mitad de partidos y `posicion` en la
+ *  ronda N+1 es `ceil(posicion/2)` de la ronda N, la misma regla
+ *  "posicion <= mitad de esta ronda" sigue separando correctamente
+ *  izquierda/derecha en todas las rondas sin tener que rastrear linaje. */
+function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }: { rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+  const numEarlier = rounds.length - 1 // rondas antes de la Final
+  const finalRound = rounds[rounds.length - 1]
+  const finalMatch = finalRound.matches[0]
+
+  const earlier = rounds.slice(0, numEarlier)
+  const leftRounds = earlier.map(r => {
+    const half = r.matches.length / 2
+    return { ...r, matches: r.matches.filter(m => m.posicion <= half) }
+  })
+  const rightRounds = earlier.map(r => {
+    const half = r.matches.length / 2
+    return { ...r, matches: r.matches.filter(m => m.posicion > half) }
+  })
+
+  const halfCount = leftRounds[0].matches.length
+  const height = HEADER_H + halfCount * ROW
+  const totalCols = numEarlier * 2 + 1
+  const width = totalCols * COL_W
+  const finalColX = numEarlier * COL_W
+  const rightColX = (i: number) => finalColX + COL_W * (numEarlier - i)
+
+  // Fila = índice dentro de la mitad (mismo criterio que la vista
+  // lineal: siempre 0,1,2... de arriba a abajo en esa mitad).
+  const leftY = leftRounds.map(r => r.matches.map((_, i) => i))
+  const rightY = rightRounds.map(r => r.matches.map((_, i) => i))
+
+  function fuenteEnRonda(m: any, prevMatches: any[]) {
+    const srcAIdx = m.equipo_a_id ? prevMatches.findIndex((pm: any) => pm.ganador_id === m.equipo_a_id) : -1
+    const srcBIdx = m.equipo_b_id ? prevMatches.findIndex((pm: any) => pm.ganador_id === m.equipo_b_id) : -1
+    return { srcAIdx, srcBIdx }
+  }
+
+  // Numeración corrida — primero toda la mitad izquierda de corrido
+  // (Ronda 1 a Semifinal), después la derecha, después la Final. El
+  // orden exacto importa poco (no es un dato competitivo, solo evita que
+  // se repita "1" en cada ronda) — se prioriza que sea determinístico.
+  let numeroGlobal = 0
+  const numeroPorMatch = new Map<string, number>()
+  leftRounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
+  rightRounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
+  numeroPorMatch.set(finalMatch.id, ++numeroGlobal)
+
+  const connectors: { x1: number; y1: number; xm: number; x2: number; y2: number }[] = []
+
+  // Mitad izquierda: mismo trazado que la vista lineal (avanza a la derecha).
+  leftRounds.forEach((r, idx) => {
+    if (idx === 0) return
+    const x1 = idx * COL_W - CARD_PAD, xm = idx * COL_W - COL_W / 2, x2 = idx * COL_W + CARD_PAD
+    const prevMatches = leftRounds[idx - 1].matches
+    r.matches.forEach((m, i) => {
+      const { srcAIdx, srcBIdx } = fuenteEnRonda(m, prevMatches)
+      const y2 = HEADER_H + leftY[idx][i] * ROW + CARD_CENTER
+      if (srcAIdx !== -1) connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][srcAIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+      if (srcBIdx !== -1) connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][srcBIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+    })
+  })
+
+  // Mitad derecha: espejo — avanza a la izquierda, así que los offsets
+  // respecto al límite entre columnas se invierten (donde la izquierda
+  // suma CARD_PAD/COL_W/2, acá se resta, y viceversa).
+  rightRounds.forEach((r, idx) => {
+    if (idx === 0) return
+    const boundary = rightColX(idx - 1)
+    const x1 = boundary + CARD_PAD, xm = boundary + COL_W / 2, x2 = boundary - CARD_PAD
+    const prevMatches = rightRounds[idx - 1].matches
+    r.matches.forEach((m, i) => {
+      const { srcAIdx, srcBIdx } = fuenteEnRonda(m, prevMatches)
+      const y2 = HEADER_H + rightY[idx][i] * ROW + CARD_CENTER
+      if (srcAIdx !== -1) connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][srcAIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+      if (srcBIdx !== -1) connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][srcBIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+    })
+  })
+
+  // Final: converge desde la última ronda de cada mitad (Semifinal
+  // izquierda y derecha) — un lado usa la fórmula "hacia la derecha", el
+  // otro "hacia la izquierda", igual que arriba.
+  {
+    const y2 = HEADER_H + CARD_CENTER // única fila, centrada más abajo por CSS
+    const lastLeft = leftRounds[numEarlier - 1]?.matches ?? []
+    const lastRight = rightRounds[numEarlier - 1]?.matches ?? []
+    const { srcAIdx: lA, srcBIdx: lB } = fuenteEnRonda(finalMatch, lastLeft)
+    const { srcAIdx: rA, srcBIdx: rB } = fuenteEnRonda(finalMatch, lastRight)
+    const x1L = numEarlier * COL_W - CARD_PAD, xmL = numEarlier * COL_W - COL_W / 2, x2L = numEarlier * COL_W + CARD_PAD
+    if (lA !== -1) connectors.push({ x1: x1L, y1: HEADER_H + leftY[numEarlier - 1][lA] * ROW + CARD_CENTER, xm: xmL, x2: x2L, y2 })
+    if (lB !== -1) connectors.push({ x1: x1L, y1: HEADER_H + leftY[numEarlier - 1][lB] * ROW + CARD_CENTER, xm: xmL, x2: x2L, y2 })
+    const boundaryR = rightColX(numEarlier - 1)
+    const x1R = boundaryR + CARD_PAD, xmR = boundaryR + COL_W / 2, x2R = boundaryR - CARD_PAD
+    if (rA !== -1) connectors.push({ x1: x1R, y1: HEADER_H + rightY[numEarlier - 1][rA] * ROW + CARD_CENTER, xm: xmR, x2: x2R, y2 })
+    if (rB !== -1) connectors.push({ x1: x1R, y1: HEADER_H + rightY[numEarlier - 1][rB] * ROW + CARD_CENTER, xm: xmR, x2: x2R, y2 })
+  }
+
+  const cardStyle = (x: number, y: number) => ({ position: 'absolute' as const, left: x + CARD_PAD, top: y, width: COL_W - CARD_PAD * 2 })
+  const headerStyle = (x: number) => ({
+    position: 'absolute' as const, left: x, top: 0, width: COL_W, textAlign: 'center' as const,
+    fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600,
+  })
+
+  return (
+    <div>
+      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
+        <div style={{ position: 'relative', width, height, minWidth: width, flexShrink: 0 }}>
+          <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+            {connectors.map((c, i) => (
+              <path key={i} d={`M ${c.x1} ${c.y1} H ${c.xm} V ${c.y2} H ${c.x2}`} fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth={1.5} />
+            ))}
+          </svg>
+          {leftRounds.map((r, colIdx) => (
+            <div key={`l-${r.key}`}>
+              <div style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
+              {r.matches.map((match, i) => (
+                <div key={match.id} style={cardStyle(colIdx * COL_W, HEADER_H + leftY[colIdx][i] * ROW)}>
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} />
+                </div>
+              ))}
+            </div>
+          ))}
+          {rightRounds.map((r, colIdx) => (
+            <div key={`r-${r.key}`}>
+              <div style={headerStyle(rightColX(colIdx))}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
+              {r.matches.map((match, i) => (
+                <div key={match.id} style={cardStyle(rightColX(colIdx), HEADER_H + rightY[colIdx][i] * ROW)}>
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} />
+                </div>
+              ))}
+            </div>
+          ))}
+          <div key="final">
+            <div style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
+            <div style={cardStyle(finalColX, height / 2 - CARD_CENTER)}>
+              <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   // Posición vertical (en "filas") de cada partido = su índice dentro de
   // su propia ronda, ya ordenada por `posicion`. En un cuadro parejo esto
   // ya coincide con el linaje real (partido i de una ronda desciende de
@@ -837,8 +1007,13 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?
       <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 16, textAlign: 'center', flexShrink: 0 }}>
         {seed ?? ''}
       </span>
-      {/* Team name */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      {/* Team name — title nativo del navegador como tooltip: si el
+          nombre no entra y queda truncado con "...", pasando el mouse se
+          ve completo sin tener que agrandar la tarjeta. */}
+      <span
+        title={team?.nombre}
+        style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+      >
         {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>TBD</span>}
       </span>
       {/* Score */}
