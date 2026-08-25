@@ -651,69 +651,35 @@ function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { ro
 function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
-  // Posición vertical (en "filas") de cada partido. En vez de adivinar la
-  // relación entre rondas por CANTIDAD de partidos (eso se rompía apenas
-  // había byes repartidos más allá de la ronda 1 — ej. Ronda 1 con 4
-  // partidos reales y Ronda 2 con 8 porque 12 jugadores entraban directo
-  // por bye: 4 no es ni el doble ni igual a 8, así que la ronda entera
-  // quedaba "flotando" sin alinear ni conectar con nada) se traza el
-  // linaje real: para cada partido se busca en la ronda anterior el/los
-  // partido(s) cuyo ganador_id coincide con equipo_a_id/equipo_b_id de
-  // este partido. Si se encuentran los dos lados, la fila es el promedio
-  // de ambos (como una llave normal). Si se encuentra solo uno (el otro
-  // lado entró directo por bye, sin jugar la ronda anterior) la fila se
-  // alinea con ese único origen. Si no se encuentra ninguno (round robin,
-  // gran final que junta dos llaves, etc.) el partido no tiene un origen
-  // vertical real, así que se ubica en la primera fila libre de esa
-  // ronda — nunca se pisa con uno que sí esté alineado.
+  // Posición vertical (en "filas") de cada partido = su índice dentro de
+  // su propia ronda, ya ordenada por `posicion`. En un cuadro parejo esto
+  // ya coincide con el linaje real (partido i de una ronda desciende de
+  // los partidos 2i-1/2i de la anterior), así que se ve como un árbol
+  // normal. En torneos históricos con byes muy irregulares (ej. Ronda 1
+  // con 6 partidos reales y Ronda 2 con 16 porque el resto entró directo
+  // por bye) promediar la fila del linaje real terminaba desordenando
+  // visualmente los números de partido de arriba a abajo — alinear por
+  // índice simple prioriza que el orden 1,2,3... siempre se lea de
+  // corrido, a costa de que las líneas conectoras queden en diagonal en
+  // vez de rectas en esos casos irregulares.
   const yByRound: number[][] = []
   const sourcesByRound: { a: number | null; b: number | null }[][] = []
   rounds.forEach((r, idx) => {
+    yByRound.push(r.matches.map((_, i) => i))
     if (idx === 0) {
-      yByRound.push(r.matches.map((_, i) => i))
       sourcesByRound.push(r.matches.map(() => ({ a: null, b: null })))
       return
     }
     const prevMatches = rounds[idx - 1].matches
     const prevY = yByRound[idx - 1]
-    const usedRows = new Set<number>()
-    const srcs: { a: number | null; b: number | null }[] = []
-    const raw: (number | null)[] = r.matches.map(m => {
+    sourcesByRound.push(r.matches.map(m => {
       const srcAIdx = m.equipo_a_id ? prevMatches.findIndex(pm => pm.ganador_id === m.equipo_a_id) : -1
       const srcBIdx = m.equipo_b_id ? prevMatches.findIndex(pm => pm.ganador_id === m.equipo_b_id) : -1
-      const yA = srcAIdx !== -1 ? prevY[srcAIdx] : null
-      const yB = srcBIdx !== -1 ? prevY[srcBIdx] : null
-      srcs.push({ a: yA, b: yB })
-      let y: number | null = null
-      if (yA !== null && yB !== null) y = (yA + yB) / 2
-      else if (yA !== null) y = yA
-      else if (yB !== null) y = yB
-      if (y !== null) usedRows.add(y)
-      return y
-    })
-    let next = 0
-    const filled = raw.map(y => {
-      if (y !== null) return y
-      while (usedRows.has(next)) next++
-      usedRows.add(next)
-      return next
-    })
-
-    // Anti-colisión: con bye en más de un nivel (ej. Ronda1→Ronda2 Y
-    // Ronda2→Cuartos) el promedio fraccionario de un partido puede caer
-    // por pura coincidencia numérica casi encima del de otro partido de
-    // la misma ronda, aunque cada uno individualmente esté bien calculado.
-    // Se ordena por posición y se empuja hacia abajo cualquiera que quede
-    // a menos de 1 fila del anterior, preservando el orden relativo.
-    const order = filled.map((_, i) => i).sort((i, j) => filled[i] - filled[j])
-    let minY = -Infinity
-    for (const i of order) {
-      if (filled[i] < minY) filled[i] = minY
-      minY = filled[i] + 1
-    }
-
-    yByRound.push(filled)
-    sourcesByRound.push(srcs)
+      return {
+        a: srcAIdx !== -1 ? prevY[srcAIdx] : null,
+        b: srcBIdx !== -1 ? prevY[srcBIdx] : null,
+      }
+    }))
   })
 
   const maxY = Math.max(0, ...yByRound.flat())
