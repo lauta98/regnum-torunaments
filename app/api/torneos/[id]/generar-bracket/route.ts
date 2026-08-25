@@ -96,7 +96,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const isFinal = idx === main.length - 1
       const ronda = (isFinal ? 'Final Llave Principal' : roundName(roundMatches.length, false))
       roundMatches.forEach(m => {
-        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        // Un bye real (avance sin jugar) solo existe en la Ronda 1 — de
+        // ahí en más un lado vacío es un TBD pendiente de un partido
+        // real, nunca un hueco vacío de verdad.
+        const esBye = idx === 0 && (!!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA))
         rows.push({
           torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
           equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,
@@ -134,7 +137,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       const isFinal = !esLiga && idx === rounds.length - 1
       const ronda = esLiga ? `Fecha ${idx + 1}` : roundName(roundMatches.length, isFinal)
       roundMatches.forEach(m => {
-        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        // Round robin no tiene byes reales (buildRoundRobin ya filtra el
+        // "equipo libre"); en eliminación simple solo la Ronda 1 puede
+        // tener un bye real, ver comentario arriba.
+        const esBye = !esLiga && idx === 0 && (!!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA))
         rows.push({
           torneo_id: torneoId, bracket: bracketField, ronda, ronda_numero: m.round, posicion: m.posicion,
           equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,

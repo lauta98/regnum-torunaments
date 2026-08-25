@@ -166,17 +166,22 @@ export async function POST(
     // Robin no tiene avance — cada partido es independiente.
     const { data: nextMatch } = await svc
       .from('matches')
-      .select('id, equipo_a_id, equipo_b_id')
+      .select('id, equipo_a_id, equipo_b_id, estado')
       .eq('torneo_id', match.torneo_id)
       .eq('bracket', 'main')
       .eq('ronda_numero', match.ronda_numero + 1)
       .eq('posicion', Math.ceil(match.posicion / 2))
       .maybeSingle()
 
-    if (nextMatch) {
+    // Si la ronda siguiente ya está "jugada" no se pisa el cupo — un
+    // partido de eliminación simple recién termina de definirse cuando
+    // juegan los dos lados, así que la única forma de que ya esté
+    // "jugado" acá es una anomalía (o un bug de generación viejo); mejor
+    // no sobreescribir un resultado ya cargado a ciegas.
+    if (nextMatch && nextMatch.estado !== 'jugado') {
       const field = match.posicion % 2 === 1 ? 'equipo_a_id' : 'equipo_b_id'
       await svc.from('matches').update({ [field]: ganador_id }).eq('id', nextMatch.id)
-    } else {
+    } else if (!nextMatch) {
       // No hay ronda siguiente — este era el partido final del torneo.
       await svc.from('tournaments').update({ estado: 'finalizado' }).eq('id', match.torneo_id)
     }

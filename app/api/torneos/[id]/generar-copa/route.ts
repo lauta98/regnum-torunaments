@@ -71,7 +71,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       const isFinal = idx === main.length - 1
       const ronda = isFinal ? 'Final Llave Principal' : roundName(roundMatches.length, false)
       roundMatches.forEach(m => {
-        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        // Un bye real solo existe en la Ronda 1 de la copa — ver
+        // comentario en buildSingleElimination (lib/bracketGen.ts).
+        const esBye = idx === 0 && (!!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA))
         rows.push({
           torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
           equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,
@@ -99,7 +101,9 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
       const isFinal = idx === rounds.length - 1
       const ronda = roundName(roundMatches.length, isFinal)
       roundMatches.forEach(m => {
-        const esBye = !!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA)
+        // Un bye real solo existe en la Ronda 1 de la copa — ver
+        // comentario en buildSingleElimination (lib/bracketGen.ts).
+        const esBye = idx === 0 && (!!(m.equipoA && !m.equipoB) || !!(m.equipoB && !m.equipoA))
         rows.push({
           torneo_id: torneoId, bracket: 'main', ronda, ronda_numero: m.round, posicion: m.posicion,
           equipo_a_id: m.equipoA, equipo_b_id: m.equipoB,

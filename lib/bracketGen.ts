@@ -81,9 +81,24 @@ export function buildSingleElimination(teamIds: string[], ordenFijo?: string[]):
       const a = current[2 * i]
       const b = current[2 * i + 1]
       roundMatches.push({ round: roundNum, posicion: i + 1, equipoA: a, equipoB: b })
-      if (a && !b) next.push(a)
-      else if (b && !a) next.push(b)
-      else next.push(null) // se define jugando (o queda TBD si ambos son bye, no debería pasar)
+      // Un bye real (avance automático sin jugar) solo puede pasar en la
+      // Ronda 1 — ahí es donde se completan los huecos vacíos para llegar
+      // a una potencia de 2. De la Ronda 2 en adelante, todo cupo ya
+      // representa o bien un equipo real (que pasó por bye) o un TBD
+      // pendiente de un partido real de la ronda anterior — nunca un
+      // hueco genuinamente vacío. Aunque un lado ya sea un equipo
+      // conocido, todavía le falta jugar contra quien salga del otro
+      // lado, así que NUNCA se puede dar por ganador de arrastre: si no,
+      // un equipo que pasó por bye en Ronda 1 terminaba "ganando por
+      // bye" de nuevo en cada ronda siguiente sin jugar nunca, hasta la
+      // final.
+      if (roundNum === 1) {
+        if (a && !b) next.push(a)
+        else if (b && !a) next.push(b)
+        else next.push(null)
+      } else {
+        next.push(null)
+      }
     }
     rounds.push(roundMatches)
     current = next
@@ -200,7 +215,9 @@ function slotsAPreview(rounds: SlotMatch[][], bracket: 'main' | 'league', nombre
       // Igual que generar-bracket/route.ts: un bye se resuelve al toque
       // (queda "jugado" con ganador ya definido) para que el resto del
       // cuadro se pueda alinear/conectar como si ya se hubiera generado.
-      const esBye = !!(s.equipoA && !s.equipoB) || !!(s.equipoB && !s.equipoA)
+      // Solo puede ser un bye real en la Ronda 1 — de ahí en más un lado
+      // vacío es un TBD pendiente de un partido real, no un hueco vacío.
+      const esBye = idx === 0 && (!!(s.equipoA && !s.equipoB) || !!(s.equipoB && !s.equipoA))
       out.push({
         id: `preview-${bracket}-${s.round}-${s.posicion}`,
         bracket, ronda_numero: s.round, ronda, posicion: s.posicion,
