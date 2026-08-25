@@ -703,16 +703,21 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
   const finalColX = numEarlier * COL_W
   const rightColX = (i: number) => finalColX + COL_W * (numEarlier - i)
 
-  // Fila = índice dentro de la mitad (mismo criterio que la vista
-  // lineal: siempre 0,1,2... de arriba a abajo en esa mitad).
-  const leftY = leftRounds.map(r => r.matches.map((_, i) => i))
-  const rightY = rightRounds.map(r => r.matches.map((_, i) => i))
-
-  function fuenteEnRonda(m: any, prevMatches: any[]) {
-    const srcAIdx = m.equipo_a_id ? prevMatches.findIndex((pm: any) => pm.ganador_id === m.equipo_a_id) : -1
-    const srcBIdx = m.equipo_b_id ? prevMatches.findIndex((pm: any) => pm.ganador_id === m.equipo_b_id) : -1
-    return { srcAIdx, srcBIdx }
+  // Fila balanceada: el partido i de una ronda se centra verticalmente
+  // entre sus dos "hijos" estructurales (posiciones 2i/2i+1 de la ronda
+  // anterior, DENTRO DE LA MISMA MITAD) — es pura geometría de árbol
+  // binario, no depende de que esos partidos ya se hayan jugado, así que
+  // un cuadro recién generado (todo TBD) ya se ve balanceado en vez de
+  // amontonado arriba del todo.
+  function filasBalanceadas(sideRounds: { matches: any[] }[]): number[][] {
+    const y: number[][] = [sideRounds[0].matches.map((_, i) => i)]
+    for (let idx = 1; idx < sideRounds.length; idx++) {
+      y.push(sideRounds[idx].matches.map((_, i) => (y[idx - 1][2 * i] + y[idx - 1][2 * i + 1]) / 2))
+    }
+    return y
   }
+  const leftY = filasBalanceadas(leftRounds)
+  const rightY = filasBalanceadas(rightRounds)
 
   // Numeración corrida — primero toda la mitad izquierda de corrido
   // (Ronda 1 a Semifinal), después la derecha, después la Final. El
@@ -724,18 +729,34 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
   rightRounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
   numeroPorMatch.set(finalMatch.id, ++numeroGlobal)
 
+  // Placeholder de un lado sin equipo todavía: "Ganador PVP N" en vez de
+  // un "TBD" genérico, referenciando el número del partido real del que
+  // depende — igual que se ve en cualquier bracket publicado (ahí suelen
+  // usar códigos tipo "W74"). Es estructural (2i/2i+1 de la ronda
+  // anterior), no depende de si ese partido ya se jugó.
+  const placeholders = new Map<string, { a?: string; b?: string }>()
+  function marcarPlaceholders(m: any, fuenteA: any, fuenteB: any) {
+    const p: { a?: string; b?: string } = {}
+    if (!m.equipo_a_id) p.a = `Ganador PVP ${numeroPorMatch.get(fuenteA.id)}`
+    if (!m.equipo_b_id) p.b = `Ganador PVP ${numeroPorMatch.get(fuenteB.id)}`
+    placeholders.set(m.id, p)
+  }
+
   const connectors: { x1: number; y1: number; xm: number; x2: number; y2: number }[] = []
 
-  // Mitad izquierda: mismo trazado que la vista lineal (avanza a la derecha).
+  // Mitad izquierda: mismo trazado que la vista lineal (avanza a la
+  // derecha) — la línea siempre se dibuja (estructural), haya o no
+  // resultado todavía.
   leftRounds.forEach((r, idx) => {
     if (idx === 0) return
     const x1 = idx * COL_W - CARD_PAD, xm = idx * COL_W - COL_W / 2, x2 = idx * COL_W + CARD_PAD
     const prevMatches = leftRounds[idx - 1].matches
     r.matches.forEach((m, i) => {
-      const { srcAIdx, srcBIdx } = fuenteEnRonda(m, prevMatches)
+      const fuenteA = prevMatches[2 * i], fuenteB = prevMatches[2 * i + 1]
+      marcarPlaceholders(m, fuenteA, fuenteB)
       const y2 = HEADER_H + leftY[idx][i] * ROW + CARD_CENTER
-      if (srcAIdx !== -1) connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][srcAIdx] * ROW + CARD_CENTER, xm, x2, y2 })
-      if (srcBIdx !== -1) connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][srcBIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+      connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][2 * i] * ROW + CARD_CENTER, xm, x2, y2 })
+      connectors.push({ x1, y1: HEADER_H + leftY[idx - 1][2 * i + 1] * ROW + CARD_CENTER, xm, x2, y2 })
     })
   })
 
@@ -748,29 +769,33 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
     const x1 = boundary + CARD_PAD, xm = boundary + COL_W / 2, x2 = boundary - CARD_PAD
     const prevMatches = rightRounds[idx - 1].matches
     r.matches.forEach((m, i) => {
-      const { srcAIdx, srcBIdx } = fuenteEnRonda(m, prevMatches)
+      const fuenteA = prevMatches[2 * i], fuenteB = prevMatches[2 * i + 1]
+      marcarPlaceholders(m, fuenteA, fuenteB)
       const y2 = HEADER_H + rightY[idx][i] * ROW + CARD_CENTER
-      if (srcAIdx !== -1) connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][srcAIdx] * ROW + CARD_CENTER, xm, x2, y2 })
-      if (srcBIdx !== -1) connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][srcBIdx] * ROW + CARD_CENTER, xm, x2, y2 })
+      connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][2 * i] * ROW + CARD_CENTER, xm, x2, y2 })
+      connectors.push({ x1, y1: HEADER_H + rightY[idx - 1][2 * i + 1] * ROW + CARD_CENTER, xm, x2, y2 })
     })
   })
 
   // Final: converge desde la última ronda de cada mitad (Semifinal
   // izquierda y derecha) — un lado usa la fórmula "hacia la derecha", el
-  // otro "hacia la izquierda", igual que arriba.
+  // otro "hacia la izquierda", igual que arriba. Por construcción, la
+  // fila balanceada de la última ronda de cada mitad cae exactamente en
+  // el centro vertical de la sección (height/2), que es donde se ubica
+  // la tarjeta de la Final.
   {
-    const y2 = HEADER_H + CARD_CENTER // única fila, centrada más abajo por CSS
-    const lastLeft = leftRounds[numEarlier - 1]?.matches ?? []
-    const lastRight = rightRounds[numEarlier - 1]?.matches ?? []
-    const { srcAIdx: lA, srcBIdx: lB } = fuenteEnRonda(finalMatch, lastLeft)
-    const { srcAIdx: rA, srcBIdx: rB } = fuenteEnRonda(finalMatch, lastRight)
+    const y2 = height / 2
+    const lastLeft = leftRounds[numEarlier - 1].matches
+    const lastRight = rightRounds[numEarlier - 1].matches
+    // La Final solo tiene 1 partido de cada lado como fuente (no 2) —
+    // se arma un objeto "de mentira" con esos dos partidos como si
+    // fueran las posiciones 0/1 de una ronda anterior común.
+    marcarPlaceholders(finalMatch, lastLeft[0], lastRight[0])
     const x1L = numEarlier * COL_W - CARD_PAD, xmL = numEarlier * COL_W - COL_W / 2, x2L = numEarlier * COL_W + CARD_PAD
-    if (lA !== -1) connectors.push({ x1: x1L, y1: HEADER_H + leftY[numEarlier - 1][lA] * ROW + CARD_CENTER, xm: xmL, x2: x2L, y2 })
-    if (lB !== -1) connectors.push({ x1: x1L, y1: HEADER_H + leftY[numEarlier - 1][lB] * ROW + CARD_CENTER, xm: xmL, x2: x2L, y2 })
+    connectors.push({ x1: x1L, y1: HEADER_H + leftY[numEarlier - 1][0] * ROW + CARD_CENTER, xm: xmL, x2: x2L, y2 })
     const boundaryR = rightColX(numEarlier - 1)
     const x1R = boundaryR + CARD_PAD, xmR = boundaryR + COL_W / 2, x2R = boundaryR - CARD_PAD
-    if (rA !== -1) connectors.push({ x1: x1R, y1: HEADER_H + rightY[numEarlier - 1][rA] * ROW + CARD_CENTER, xm: xmR, x2: x2R, y2 })
-    if (rB !== -1) connectors.push({ x1: x1R, y1: HEADER_H + rightY[numEarlier - 1][rB] * ROW + CARD_CENTER, xm: xmR, x2: x2R, y2 })
+    connectors.push({ x1: x1R, y1: HEADER_H + rightY[numEarlier - 1][0] * ROW + CARD_CENTER, xm: xmR, x2: x2R, y2 })
   }
 
   const cardStyle = (x: number, y: number) => ({ position: 'absolute' as const, left: x + CARD_PAD, top: y, width: COL_W - CARD_PAD * 2 })
@@ -793,7 +818,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
               <div style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={cardStyle(colIdx * COL_W, HEADER_H + leftY[colIdx][i] * ROW)}>
-                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} />
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} placeholderA={placeholders.get(match.id)?.a} placeholderB={placeholders.get(match.id)?.b} />
                 </div>
               ))}
             </div>
@@ -803,7 +828,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
               <div style={headerStyle(rightColX(colIdx))}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={cardStyle(rightColX(colIdx), HEADER_H + rightY[colIdx][i] * ROW)}>
-                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} />
+                  <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} placeholderA={placeholders.get(match.id)?.a} placeholderB={placeholders.get(match.id)?.b} />
                 </div>
               ))}
             </div>
@@ -811,7 +836,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
           <div key="final">
             <div style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
             <div style={cardStyle(finalColX, height / 2 - CARD_CENTER)}>
-              <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} />
+              <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} placeholderA={placeholders.get(finalMatch.id)?.a} placeholderB={placeholders.get(finalMatch.id)?.b} />
             </div>
           </div>
         </div>
@@ -921,7 +946,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
 }
 
 /* ── Match Card ─────────────────────────────────────────────── */
-function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero }: { match: any; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numero?: number }) {
+function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeholderA, placeholderB }: { match: any; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numero?: number; placeholderA?: string; placeholderB?: string }) {
   const teamA = match.equipo_a
   const teamB = match.equipo_b
   const ganadorId = match.ganador_id
@@ -967,6 +992,7 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero }: { mat
         score={scoreA}
         isWinner={!!ganadorId && ganadorId === teamA?.id}
         isLoser={!!ganadorId && ganadorId !== teamA?.id}
+        placeholder={placeholderA}
         borderBottom
       />
       {/* Team B */}
@@ -975,6 +1001,7 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero }: { mat
         score={scoreB}
         isWinner={!!ganadorId && ganadorId === teamB?.id}
         isLoser={!!ganadorId && ganadorId !== teamB?.id}
+        placeholder={placeholderB}
       />
 
       {/* Footer */}
@@ -992,7 +1019,7 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero }: { mat
   )
 }
 
-function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean }) {
+function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, placeholder }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean; placeholder?: string }) {
   const nameColor = isWinner ? 'var(--text-primary)' : isLoser ? 'var(--text-muted)' : 'var(--text-secondary)'
   const scoreBg = isWinner ? 'rgba(212,175,55,0.2)' : isLoser ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)'
   const scoreColor = isWinner ? 'var(--gold)' : 'var(--text-muted)'
@@ -1014,7 +1041,7 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?
         title={team?.nombre}
         style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
       >
-        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>TBD</span>}
+        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>{placeholder ?? 'TBD'}</span>}
       </span>
       {/* Score */}
       {score !== null && score !== undefined && !isNaN(score) && (
