@@ -215,7 +215,7 @@ export default async function BracketPage({
         </div>
       )}
 
-      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ maxWidth: 1600, width: '100%', margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top meta bar */}
         <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 0', display: 'flex', alignItems: 'center', gap: 20, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
@@ -247,7 +247,7 @@ export default async function BracketPage({
         `}</style>
 
         {/* Two-column layout: sidebar + content (se apila en mobile) */}
-        <div className="cor-bracket-layout" style={{ display: 'flex', flex: 1, gap: 0 }}>
+        <div className="cor-bracket-layout" style={{ display: 'flex', flex: 1, gap: 0, minWidth: 0 }}>
 
           {/* Sidebar */}
           <aside className="cor-bracket-sidebar" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '20px 0' }}>
@@ -743,7 +743,13 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
           {SECTION_LABEL[section.bracket]}
         </div>
       )}
-      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
+      {/* "safe center" en vez de "center": centra la llave cuando entra
+          entera en pantalla, pero si es más ancha que el contenedor (ej.
+          la llave de perdedores, con más rondas) cae a alineación normal
+          en vez de dejar el borde izquierdo fuera del área de scroll
+          alcanzable — "center" a secas puede volver la ronda 1
+          inalcanzable cuando el contenido desborda. */}
+      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
         <div style={{ position: 'relative', width, height, minWidth: width, flexShrink: 0 }}>
           <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             {connectors.map((c, i) => (
