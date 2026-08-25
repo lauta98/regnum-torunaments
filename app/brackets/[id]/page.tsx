@@ -510,16 +510,20 @@ export default async function BracketPage({
                               }}>
                                 {team.nombre}
                               </span>
+                              {team.capitan?.discord_username && (
+                                <span style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>
+                                  @{team.capitan.discord_username}
+                                </span>
+                              )}
                               {expulsado && (
                                 <span style={{ fontSize: 8, fontFamily: 'var(--font-display)', color: '#f87171', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 4, padding: '1px 6px', letterSpacing: 0.5, flexShrink: 0 }}>
                                   EXPULSADO
                                 </span>
                               )}
                             </div>
-                            {team.capitan && (
+                            {team.capitan?.nickname_juego && (
                               <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1 }}>
                                 Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
-                                {team.capitan.discord_username && <span> · @{team.capitan.discord_username}</span>}
                               </div>
                             )}
                             {!esUnico && miembros.length > 0 && (
