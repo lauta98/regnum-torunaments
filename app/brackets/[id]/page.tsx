@@ -207,7 +207,7 @@ export default async function BracketPage({
               <SubirFoto tabla="tournaments" id={torneo.id} campo="imagen_url" label="Cambiar foto del torneo" variant="icon" aspectRatio={5} />
             </div>
           )}
-          <div style={{ position: 'absolute', left: 24, right: 24, bottom: 14, zIndex: 1, maxWidth: 1400 - 48, margin: '0 auto' }}>
+          <div style={{ position: 'absolute', left: 24, right: 24, bottom: 14, zIndex: 1, maxWidth: 1600 - 48, margin: '0 auto' }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.25 }}>
               {torneo.nombre}
             </h1>
@@ -215,7 +215,7 @@ export default async function BracketPage({
         </div>
       )}
 
-      <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ maxWidth: 1600, margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column' }}>
 
         {/* Top meta bar */}
         <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 0', display: 'flex', alignItems: 'center', gap: 20, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
@@ -342,7 +342,7 @@ export default async function BracketPage({
             {/* ── TAB: LLAVE ───────────────────────────────── */}
             {tab === 'llave' && (
               roundEntries.length === 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%' }}>
                   {isOrganizer && torneo.estado !== 'draft' && (
                     <GenerarBracketButton
                       torneoId={torneo.id} inscritos={teamIdsEnEsteTorneo.length} bracketType={torneo.bracket_type}
@@ -564,16 +564,17 @@ export default async function BracketPage({
  * posición real del árbol (no repartido parejo) y se dibujan líneas
  * conectoras — si no, con byes y "TBD" de por medio no se entiende
  * qué partido sale de cuál. */
-// Las tarjetas de partido miden ~77px de alto una vez que se les agrega el
-// footer (estado + acciones de organizador): ROW tiene que ser mayor a eso
-// o las filas contiguas de una misma ronda se pisan. CARD_CENTER es la
-// mitad de esa altura, para que las líneas conectoras salgan del centro
-// vertical real de la tarjeta.
-const ROW = 86
-const COL_W = 184
-const CARD_PAD = 6
-const HEADER_H = 24
-const CARD_CENTER = 39
+// Las tarjetas de partido miden ~103px de alto con el footer (estado +
+// acciones de organizador — el organizador SIEMPRE lo ve, jugado o no; un
+// visitante solo lo ve si ya está jugado): ROW tiene que ser mayor a eso o
+// las filas contiguas de una misma ronda se pisan. CARD_CENTER es la mitad
+// de esa altura, para que las líneas conectoras salgan del centro vertical
+// real de la tarjeta (medido a mano contra el render — ver brackets/[id]).
+const ROW = 118
+const COL_W = 224
+const CARD_PAD = 8
+const HEADER_H = 30
+const CARD_CENTER = 52
 
 const SECTION_LABEL: Record<string, string> = {
   losers: 'Llave de Perdedores',
@@ -626,7 +627,7 @@ function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { ro
   sections.forEach(s => s.rounds.sort((a, b) => a.roundNum - b.roundNum))
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 36, width: '100%' }}>
       {sections.map(section => (
         <BracketSection key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
       ))}
@@ -729,8 +730,8 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
           {SECTION_LABEL[section.bracket]}
         </div>
       )}
-      <div style={{ overflowX: 'auto' }}>
-        <div style={{ position: 'relative', width, height, minWidth: width }}>
+      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
+        <div style={{ position: 'relative', width, height, minWidth: width, flexShrink: 0 }}>
           <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             {connectors.map((c, i) => (
               <path key={i} d={`M ${c.x1} ${c.y1} H ${c.xm} V ${c.y2} H ${c.x2}`} fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth={1.5} />
@@ -738,7 +739,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
           </svg>
           {rounds.map((r, colIdx) => (
             <div key={r.key}>
-              <div style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600 }}>
+              <div style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600 }}>
                 {r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}
               </div>
               {r.matches.map((match, i) => (
@@ -813,8 +814,8 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles }: { match: any;
 
       {/* Footer */}
       {(isOrganizer || isPlayed) && (
-        <div style={{ padding: '2px 9px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
+        <div style={{ padding: '5px 12px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
             {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
           {isOrganizer && teamA && teamB && (
@@ -833,21 +834,21 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom }: { seed?
 
   return (
     <div style={{
-      padding: '5px 9px', display: 'flex', alignItems: 'center', gap: 6,
+      padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
       background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
       borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
     }}>
       {/* Seed */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', width: 12, textAlign: 'center', flexShrink: 0 }}>
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 16, textAlign: 'center', flexShrink: 0 }}>
         {seed ?? ''}
       </span>
       {/* Team name */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 10 }}>TBD</span>}
+      <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>TBD</span>}
       </span>
       {/* Score */}
       {score !== null && score !== undefined && !isNaN(score) && (
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: scoreColor, background: scoreBg, width: 20, height: 17, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 4, flexShrink: 0 }}>
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg, width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, flexShrink: 0 }}>
           {score}
         </span>
       )}
