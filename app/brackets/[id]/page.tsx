@@ -648,27 +648,48 @@ function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { ro
   )
 }
 
-/** Un cuadro "parejo" (potencia de 2 exacta en cada ronda, cada ronda
- *  con exactamente la mitad de partidos que la anterior) se puede armar
- *  como llave espejada — mitad izquierda y mitad derecha convergiendo al
- *  centro, como cualquier bracket de torneo estándar. Uno irregular
- *  (import histórico con byes reales repartidos más allá de la Ronda 1,
- *  ej. Copa Thorkul con Ronda 1 de 6 partidos y Ronda 2 de 16) no tiene
- *  una mitad izquierda/derecha real que trazar, así que sigue usando la
- *  vista lineal de siempre. */
-function esCuadroParejo(rounds: { matches: any[] }[]): boolean {
-  if (rounds.length < 2) return false
-  for (let i = 0; i < rounds.length - 1; i++) {
-    if (rounds[i].matches.length !== rounds[i + 1].matches.length * 2) return false
+/** Busca, de atrás para adelante, el sufijo más largo de rondas donde
+ *  cada una tiene exactamente la mitad de partidos que la anterior —
+ *  esa parte SÍ se puede armar como llave espejada (mitad izquierda y
+ *  derecha convergiendo al centro, como cualquier bracket estándar).
+ *  Devuelve el índice donde arranca ese sufijo. Torneos históricos con
+ *  byes reales repartidos más allá de la Ronda 1 (ej. Copa Thorkul, con
+ *  Ronda 1 de 6 partidos y Ronda 2 de 16) suelen tener la Ronda 1 (o las
+ *  primeras) rota pero todo de ahí en más parejo — separar esa parte
+ *  rota como una lista simple y espejar el resto mejora la mayoría de
+ *  los torneos importados sin inventar partidos que nunca se jugaron.
+ *  Si ni siquiera las últimas 2 rondas encajan (algo genuinamente roto,
+ *  ej. una cantidad de partidos que sube y baja en vez de solo bajar) no
+ *  hay sufijo válido y se sigue usando la vista lineal completa. */
+function inicioSufijoParejo(rounds: { matches: any[] }[]): number {
+  let inicio = rounds.length - 1
+  for (let i = rounds.length - 2; i >= 0; i--) {
+    if (rounds[i].matches.length === rounds[i + 1].matches.length * 2) inicio = i
+    else break
   }
-  return true
+  return inicio
 }
 
 function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
-  if (section.bracket === 'main' && esCuadroParejo(rounds)) {
-    return <MirroredBracketSection rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+  if (section.bracket === 'main') {
+    const inicio = inicioSufijoParejo(rounds)
+    if (rounds.length - inicio >= 2) {
+      const prefijo = rounds.slice(0, inicio)
+      const sufijo = rounds.slice(inicio)
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+          {prefijo.length > 0 && (
+            <LigaFechas entries={prefijo.map(r => [r.key, r.matches] as [string, any[]])} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+          )}
+          <MirroredBracketSection
+            rounds={sufijo} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles}
+            numeroInicial={prefijo.reduce((acc, r) => acc + r.matches.length, 0)}
+          />
+        </div>
+      )
+    }
   }
   return <LinearBracketSection section={section} rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
 }
@@ -681,7 +702,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
  *  ronda N+1 es `ceil(posicion/2)` de la ronda N, la misma regla
  *  "posicion <= mitad de esta ronda" sigue separando correctamente
  *  izquierda/derecha en todas las rondas sin tener que rastrear linaje. */
-function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }: { rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, numeroInicial = 0 }: { rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numeroInicial?: number }) {
   const numEarlier = rounds.length - 1 // rondas antes de la Final
   const finalRound = rounds[rounds.length - 1]
   const finalMatch = finalRound.matches[0]
@@ -723,7 +744,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles }:
   // (Ronda 1 a Semifinal), después la derecha, después la Final. El
   // orden exacto importa poco (no es un dato competitivo, solo evita que
   // se repita "1" en cada ronda) — se prioriza que sea determinístico.
-  let numeroGlobal = 0
+  let numeroGlobal = numeroInicial
   const numeroPorMatch = new Map<string, number>()
   leftRounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
   rightRounds.forEach(r => r.matches.forEach(m => numeroPorMatch.set(m.id, ++numeroGlobal)))
