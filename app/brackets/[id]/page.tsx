@@ -675,7 +675,17 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
 
   if (section.bracket === 'main') {
     const inicio = inicioSufijoParejo(rounds)
-    if (rounds.length - inicio >= 2) {
+    // El árbol espejado da por sentado que la ÚLTIMA ronda registrada es
+    // la Final real (1 solo partido) — necesita ese único punto de
+    // convergencia para saber dónde centrar las dos mitades. Si la
+    // última ronda tiene más de 1 partido (ej. terminó en semifinal
+    // porque la final real nunca se jugó/cargó — pasa con imports de
+    // Challonge donde se excluye a propósito un cruce que no ocurrió) no
+    // hay una Final real de la cual colgar el árbol, así que NO se puede
+    // espejar de forma segura: se cae a la vista lineal completa en vez
+    // de forzar una forma que no es la real.
+    const ultimaRonda = rounds[rounds.length - 1]
+    if (rounds.length - inicio >= 2 && ultimaRonda?.matches.length === 1) {
       const prefijo = rounds.slice(0, inicio)
       const sufijo = rounds.slice(inicio)
       return (
