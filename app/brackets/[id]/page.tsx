@@ -670,35 +670,82 @@ function inicioSufijoParejo(rounds: { matches: any[] }[]): number {
   return inicio
 }
 
+/** Cuando la "Final" que se identificó en realidad tiene K partidos en
+ *  vez de 1, puede ser que esto no sea UNA llave con final rota, sino K
+ *  llaves independientes en paralelo mostradas juntas (ej. Torneo
+ *  Arqueros 1v1 son en verdad dos cuadros de 16 separados, uno por
+ *  clase, cada uno con su propia Final real — la "Final de Clase" de acá
+ *  no es más que los dos partidos finales de cada llave, uno al lado del
+ *  otro). Se parte cada ronda en K bloques contiguos por posición: si
+ *  round R tiene el doble de partidos que R+1, cada bloque de R también
+ *  debe tener el doble que su bloque correspondiente de R+1, y CADA
+ *  sub-secuencia debe terminar en 1 solo partido (su propia Final real).
+ *  Si en algún nivel no cierra así, no es este caso y se devuelve null. */
+function partirEnSubLlaves(
+  rounds: { key: string; roundNum: number; matches: any[] }[],
+  k: number,
+): { key: string; roundNum: number; matches: any[] }[][] | null {
+  if (k < 2) return null
+  const subs: { key: string; roundNum: number; matches: any[] }[][] = Array.from({ length: k }, () => [])
+  for (const r of rounds) {
+    if (r.matches.length % k !== 0) return null
+    const tamañoBloque = r.matches.length / k
+    for (let i = 0; i < k; i++) {
+      subs[i].push({ ...r, key: `${r.key}-sub${i}`, matches: r.matches.slice(i * tamañoBloque, (i + 1) * tamañoBloque) })
+    }
+  }
+  for (const sub of subs) {
+    const ultimo = sub[sub.length - 1]
+    if (!ultimo || ultimo.matches.length !== 1) return null
+    for (let i = 0; i < sub.length - 1; i++) {
+      if (sub[i].matches.length !== sub[i + 1].matches.length * 2) return null
+    }
+  }
+  return subs
+}
+
 function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
 
   if (section.bracket === 'main') {
     const inicio = inicioSufijoParejo(rounds)
-    // El árbol espejado da por sentado que la ÚLTIMA ronda registrada es
-    // la Final real (1 solo partido) — necesita ese único punto de
-    // convergencia para saber dónde centrar las dos mitades. Si la
-    // última ronda tiene más de 1 partido (ej. terminó en semifinal
-    // porque la final real nunca se jugó/cargó — pasa con imports de
-    // Challonge donde se excluye a propósito un cruce que no ocurrió) no
-    // hay una Final real de la cual colgar el árbol, así que NO se puede
-    // espejar de forma segura: se cae a la vista lineal completa en vez
-    // de forzar una forma que no es la real.
-    const ultimaRonda = rounds[rounds.length - 1]
-    if (rounds.length - inicio >= 2 && ultimaRonda?.matches.length === 1) {
-      const prefijo = rounds.slice(0, inicio)
-      const sufijo = rounds.slice(inicio)
-      return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-          {prefijo.length > 0 && (
-            <LigaFechas entries={prefijo.map(r => [r.key, r.matches] as [string, any[]])} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
-          )}
-          <MirroredBracketSection
-            rounds={sufijo} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles}
-            numeroInicial={prefijo.reduce((acc, r) => acc + r.matches.length, 0)}
-          />
-        </div>
+    const prefijo = rounds.slice(0, inicio)
+    const sufijo = rounds.slice(inicio)
+    const ultimaRonda = sufijo[sufijo.length - 1]
+
+    if (sufijo.length >= 2 && ultimaRonda) {
+      const numeroInicialBase = prefijo.reduce((acc, r) => acc + r.matches.length, 0)
+      const prefijoJsx = prefijo.length > 0 && (
+        <LigaFechas entries={prefijo.map(r => [r.key, r.matches] as [string, any[]])} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
       )
+
+      if (ultimaRonda.matches.length === 1) {
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            {prefijoJsx}
+            <MirroredBracketSection rounds={sufijo} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicialBase} />
+          </div>
+        )
+      }
+
+      const subLlaves = partirEnSubLlaves(sufijo, ultimaRonda.matches.length)
+      if (subLlaves) {
+        let numeroCorrido = numeroInicialBase
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+            {prefijoJsx}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 44, justifyContent: 'center' }}>
+              {subLlaves.map((sub, idx) => {
+                const numeroInicial = numeroCorrido
+                numeroCorrido += sub.reduce((acc, r) => acc + r.matches.length, 0)
+                return (
+                  <MirroredBracketSection key={idx} rounds={sub} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicial} />
+                )
+              })}
+            </div>
+          </div>
+        )
+      }
     }
   }
   return <LinearBracketSection section={section} rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
@@ -717,14 +764,20 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
   const finalRound = rounds[rounds.length - 1]
   const finalMatch = finalRound.matches[0]
 
+  // Se separa por ÍNDICE dentro del arreglo ya ordenado por posicion, no
+  // por el VALOR de `posicion` — un torneo puede numerar posicion de
+  // forma corrida por todo el torneo (1..30) en vez de reiniciar en 1
+  // por ronda, y filtrar por "posicion <= mitad" daba una mitad vacía
+  // entera apenas los valores reales no empezaban en 1 (ej. una ronda
+  // con posicion 17-24: ninguna es <= 4, todas caían del lado derecho).
   const earlier = rounds.slice(0, numEarlier)
   const leftRounds = earlier.map(r => {
-    const half = r.matches.length / 2
-    return { ...r, matches: r.matches.filter(m => m.posicion <= half) }
+    const mitad = Math.ceil(r.matches.length / 2)
+    return { ...r, matches: r.matches.slice(0, mitad) }
   })
   const rightRounds = earlier.map(r => {
-    const half = r.matches.length / 2
-    return { ...r, matches: r.matches.filter(m => m.posicion > half) }
+    const mitad = Math.ceil(r.matches.length / 2)
+    return { ...r, matches: r.matches.slice(mitad) }
   })
 
   const halfCount = leftRounds[0].matches.length
