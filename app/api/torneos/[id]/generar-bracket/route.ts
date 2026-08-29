@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { nextPow2, roundName, buildSingleElimination, buildDoubleElimination, buildRoundRobin } from '@/lib/bracketGen'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -16,23 +16,30 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esOrganizador = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, player)
+  // De acá en más se usa service role: `tournament_organizers` no tiene
+  // policy de RLS para el cliente autenticado normal (el check nunca
+  // pasaría para un co-organizador), y el resto de las escrituras de
+  // este flujo (matches/tournaments) están gateadas por el mismo check,
+  // no por RLS propia — antes solo funcionaban para el creador porque
+  // sus policies miran creator_id, no la tabla de co-organizadores.
+  const svc = createServiceSupabase()
+  const esOrganizador = await esOrganizadorDelTorneo(svc, torneoId, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   // No pisar un cuadro que ya tiene resultados REALES cargados — un BYE no
   // cuenta, se marca 'jugado' automáticamente al generar pero es
   // estructural (sin impacto en mmr), no algo que el organizador cargó.
-  const { data: existentes } = await supabase.from('matches').select('id, estado, resultado').eq('torneo_id', torneoId)
+  const { data: existentes } = await svc.from('matches').select('id, estado, resultado').eq('torneo_id', torneoId)
   if (existentes && existentes.some(m => m.estado === 'jugado' && m.resultado !== 'BYE')) {
     return NextResponse.json({ error: 'Ya hay resultados cargados — no se puede regenerar el cuadro.' }, { status: 409 })
   }
   // Pasada la guardia, se borra el cuadro viejo (si había) antes de
   // insertar el nuevo — nada de esto tiene mmr que revertir.
   if (existentes && existentes.length > 0) {
-    await supabase.from('matches').delete().eq('torneo_id', torneoId)
+    await svc.from('matches').delete().eq('torneo_id', torneoId)
   }
 
-  const { data: registros } = await supabase
+  const { data: registros } = await svc
     .from('tournament_registrations')
     .select('team_id')
     .eq('tournament_id', torneoId)
@@ -84,7 +91,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Limpiar matches vacíos de un intento anterior (ninguno jugado, ya lo validamos arriba)
   if (existentes && existentes.length > 0) {
-    await supabase.from('matches').delete().eq('torneo_id', torneoId)
+    await svc.from('matches').delete().eq('torneo_id', torneoId)
   }
 
   const rows: any[] = []
@@ -152,10 +159,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
   }
 
-  const { error: insertError } = await supabase.from('matches').insert(rows)
+  const { error: insertError } = await svc.from('matches').insert(rows)
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
 
-  await supabase.from('tournaments').update({ estado: 'live' }).eq('id', torneoId)
+  await svc.from('tournaments').update({ estado: 'live' }).eq('id', torneoId)
 
   return NextResponse.json({ ok: true, partidos: rows.length })
 }

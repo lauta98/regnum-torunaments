@@ -13,10 +13,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (!me) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
   const { data: torneo } = await supabase.from('tournaments').select('creator_id').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
-  const puede = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, me)
+  // Service role: `tournament_organizers` no tiene policy de RLS para el
+  // cliente autenticado normal.
+  const svc = createServiceSupabase()
+  const puede = await esOrganizadorDelTorneo(svc, torneoId, torneo.creator_id, me)
   if (!puede) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
 
-  const svc = createServiceSupabase()
   const { error: updateErr } = await svc.from('tournaments').update({ estado: 'finalizado' }).eq('id', torneoId)
   if (updateErr) return NextResponse.json({ error: updateErr.message }, { status: 500 })
 

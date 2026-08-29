@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -125,7 +125,10 @@ export default async function BracketPage({
     if (player) {
       playerId = player.id
       puedeExpulsar = torneo.creator_id === player.id || player.role === 'admin'
-      isOrganizer = puedeExpulsar || await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, player)
+      // Service role: `tournament_organizers` no tiene policy de RLS
+      // para el cliente autenticado normal — con el cliente de sesión,
+      // un co-organizador nunca pasaba este check.
+      isOrganizer = puedeExpulsar || await esOrganizadorDelTorneo(createServiceSupabase(), id, torneo.creator_id, player)
       const { data: personajes } = await supabase
         .from('personajes')
         .select('id, nickname_juego, clase')

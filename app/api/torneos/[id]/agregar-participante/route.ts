@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
 import { FORMAT_TEAM_SIZE } from '@/lib/constants'
@@ -23,7 +23,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esOrganizador = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, player)
+  // Service role de acá en más: `tournament_organizers` no tiene policy
+  // de RLS para el cliente autenticado normal, y las escrituras de este
+  // flujo (teams/team_members/tournament_registrations) están gateadas
+  // por este mismo check, no por RLS propia.
+  const svc = createServiceSupabase()
+  const esOrganizador = await esOrganizadorDelTorneo(svc, torneoId, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   const body = await request.json().catch(() => null)
@@ -45,7 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Ponele un nombre al equipo' }, { status: 400 })
   }
 
-  const { data: personajes } = await supabase
+  const { data: personajes } = await svc
     .from('personajes')
     .select('id, nickname_juego, clase, player_id')
     .in('id', personajeIds)
@@ -63,14 +68,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // Ninguno de los personajes elegidos puede estar ya inscripto (activo)
   // en este torneo con otro equipo.
-  const { data: registrosActivos } = await supabase
+  const { data: registrosActivos } = await svc
     .from('tournament_registrations')
     .select('team_id')
     .eq('tournament_id', torneoId)
     .eq('estado', 'activo')
   const teamIdsEnTorneo = (registrosActivos ?? []).map(r => r.team_id)
   if (teamIdsEnTorneo.length > 0) {
-    const { data: miembrosExistentes } = await supabase
+    const { data: miembrosExistentes } = await svc
       .from('team_members')
       .select('personaje_id, personaje:personajes(nickname_juego)')
       .in('team_id', teamIdsEnTorneo)
@@ -82,19 +87,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   const nombre = teamSize === 1 ? personajes[0].nickname_juego : nombreEquipo!
-  const { data: team, error: teamErr } = await supabase
+  const { data: team, error: teamErr } = await svc
     .from('teams')
     .insert({ nombre, capitan_id: personajes[0].player_id, tipo: torneo.formato })
     .select('id')
     .single()
   if (teamErr || !team) return NextResponse.json({ error: teamErr?.message ?? 'Error al crear el equipo' }, { status: 500 })
 
-  const { error: memberErr } = await supabase
+  const { error: memberErr } = await svc
     .from('team_members')
     .insert(personajes.map(p => ({ team_id: team.id, player_id: p.player_id, personaje_id: p.id })))
   if (memberErr) return NextResponse.json({ error: memberErr.message }, { status: 500 })
 
-  const { error: regErr } = await supabase
+  const { error: regErr } = await svc
     .from('tournament_registrations')
     .insert({ tournament_id: torneoId, team_id: team.id })
   if (regErr) return NextResponse.json({ error: regErr.message }, { status: 500 })

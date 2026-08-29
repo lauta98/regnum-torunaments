@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -25,7 +25,9 @@ export default async function OrganizadorPage() {
 
   // Torneos donde es co-organizador (colaborador puntual, sin necesitar
   // el rol global) — se suman a los propios en la lista de abajo.
-  const { data: coOrgRows } = await supabase.from('tournament_organizers').select('tournament_id').eq('player_id', player?.id ?? '')
+  // Service role: `tournament_organizers` no tiene policy de RLS para
+  // el cliente autenticado normal.
+  const { data: coOrgRows } = await createServiceSupabase().from('tournament_organizers').select('tournament_id').eq('player_id', player?.id ?? '')
   const coOrgIds = (coOrgRows ?? []).map((r: any) => r.tournament_id)
 
   if (!player || (!canOrganize(player.role) && coOrgIds.length === 0)) {

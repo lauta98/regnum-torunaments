@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { redirect, notFound } from 'next/navigation'
 import Header from '@/components/Header'
 import SorteoEnVivo from './SorteoEnVivo'
@@ -30,7 +30,9 @@ export default async function SorteoPage({ params }: { params: Promise<{ id: str
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', id).single()
   if (!torneo) notFound()
 
-  const esOrganizador = devBypass || (!!player && await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, player))
+  // Service role: `tournament_organizers` no tiene policy de RLS para
+  // el cliente autenticado normal.
+  const esOrganizador = devBypass || (!!player && await esOrganizadorDelTorneo(createServiceSupabase(), id, torneo.creator_id, player))
   if (!esOrganizador) redirect(`/brackets/${id}`)
 
   if (torneo.bracket_type === 'double_elimination') {

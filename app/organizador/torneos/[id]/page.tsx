@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import { redirect, notFound } from 'next/navigation'
@@ -23,7 +23,10 @@ export default async function EditarTorneoOrganizadorPage({ params }: { params: 
   if (!torneo) notFound()
 
   const esAdmin = canAdmin(me.role)
-  const puedeEditar = await esOrganizadorDelTorneo(supabase, id, torneo.creator_id, me)
+  // Service role: `tournament_organizers` no tiene policy de RLS para
+  // el cliente autenticado normal — con el cliente de sesión, un
+  // co-organizador nunca pasaba este check.
+  const puedeEditar = await esOrganizadorDelTorneo(createServiceSupabase(), id, torneo.creator_id, me)
   if (!puedeEditar) redirect('/organizador')
 
   return (

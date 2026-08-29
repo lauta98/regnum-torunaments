@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 import { roundName, buildSingleElimination, buildDoubleElimination, standingsFromMatches, nextPow2 } from '@/lib/bracketGen'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -16,7 +16,11 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
   const { data: torneo } = await supabase.from('tournaments').select('*').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
-  const esOrganizador = await esOrganizadorDelTorneo(supabase, torneoId, torneo.creator_id, player)
+  // Service role de acá en más: `tournament_organizers` no tiene policy
+  // de RLS para el cliente autenticado normal, y las escrituras de este
+  // flujo están gateadas por este mismo check, no por RLS propia.
+  const svc = createServiceSupabase()
+  const esOrganizador = await esOrganizadorDelTorneo(svc, torneoId, torneo.creator_id, player)
   if (!esOrganizador) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   if (torneo.bracket_type !== 'league_cup') {
@@ -26,7 +30,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     return NextResponse.json({ error: 'El torneo no tiene un cupo de copa configurado.' }, { status: 400 })
   }
 
-  const { data: ligaMatches } = await supabase.from('matches').select('*').eq('torneo_id', torneoId).eq('bracket', 'league')
+  const { data: ligaMatches } = await svc.from('matches').select('*').eq('torneo_id', torneoId).eq('bracket', 'league')
   if (!ligaMatches || ligaMatches.length === 0) {
     return NextResponse.json({ error: 'Todavía no se generó la fase de liga.' }, { status: 400 })
   }
@@ -37,7 +41,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     }, { status: 409 })
   }
 
-  const { count: yaExiste } = await supabase
+  const { count: yaExiste } = await svc
     .from('matches').select('id', { count: 'exact', head: true })
     .eq('torneo_id', torneoId).neq('bracket', 'league')
   if ((yaExiste ?? 0) > 0) {
@@ -115,7 +119,7 @@ export async function POST(_request: Request, { params }: { params: Promise<{ id
     })
   }
 
-  const { error: insertError } = await supabase.from('matches').insert(rows)
+  const { error: insertError } = await svc.from('matches').insert(rows)
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 })
 
   return NextResponse.json({ ok: true, clasificados: clasificados.length, partidos: rows.length })

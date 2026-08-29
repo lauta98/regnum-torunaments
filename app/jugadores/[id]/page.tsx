@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -64,7 +64,10 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   /* ── Torneos que organizó (creador) o co-organizó ─────────── */
   const [{ data: torneosCreados }, { data: coOrgRows }] = await Promise.all([
     supabase.from('tournaments').select('id, nombre, formato, estado, created_at').eq('creator_id', id).order('created_at', { ascending: false }),
-    supabase.from('tournament_organizers').select('tournament:tournaments(id, nombre, formato, estado, created_at)').eq('player_id', id),
+    // Service role: `tournament_organizers` no tiene policy de RLS para
+    // el cliente autenticado normal (ni siquiera para leer los propios
+    // torneos co-organizados).
+    createServiceSupabase().from('tournament_organizers').select('tournament:tournaments(id, nombre, formato, estado, created_at)').eq('player_id', id),
   ])
   const torneosOrganizados = [
     ...(torneosCreados ?? []).map((t: any) => ({ ...t, rol: 'creador' as const })),

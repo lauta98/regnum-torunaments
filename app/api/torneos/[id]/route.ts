@@ -28,7 +28,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   if (!torneoActual) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
 
   const esAdmin = canAdmin(me.role)
-  const puedeEditar = await esOrganizadorDelTorneo(supabase, torneoId, torneoActual.creator_id, me)
+  const svc = createServiceSupabase()
+  // `tournament_organizers` no tiene policy de RLS para el cliente
+  // autenticado normal — este chequeo necesita service role o un
+  // co-organizador (no dueño/admin) nunca pasaría el check.
+  const puedeEditar = await esOrganizadorDelTorneo(svc, torneoId, torneoActual.creator_id, me)
   if (!puedeEditar) return NextResponse.json({ error: 'Sin permisos sobre este torneo' }, { status: 403 })
 
   const body = await req.json()
@@ -42,8 +46,6 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
   }
   if (Object.keys(patch).length === 0) return NextResponse.json({ error: 'Nada para actualizar' }, { status: 400 })
-
-  const svc = createServiceSupabase()
 
   // Cambiar el tipo de cuadro deja obsoleta la estructura de partidos ya
   // generada (main/losers/league dejan de tener sentido bajo el tipo
