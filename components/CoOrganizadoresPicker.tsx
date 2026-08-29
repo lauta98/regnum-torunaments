@@ -20,19 +20,17 @@ export default function CoOrganizadoresPicker({ torneoId }: { torneoId: string }
   const [procesando, setProcesando] = useState<string | null>(null)
   const [error, setError] = useState('')
 
+  // Se pide por la API (service role) en vez de consultar la tabla
+  // directo desde el cliente: `tournament_organizers` no tiene una
+  // policy de RLS que deje leerla al usuario autenticado normal, así
+  // que una consulta directa siempre volvía vacía (aunque el alta sí
+  // se hubiera guardado bien).
   const cargar = () => {
-    const supabase = createClient()
-    supabase
-      // `tournament_organizers` tiene dos FK a `players` (player_id y
-      // added_by) — hay que decir cuál usar o PostgREST devuelve un
-      // error de relación ambigua (y esto quedaba vacío en silencio,
-      // sin mostrar nada, aunque el alta sí se hubiera guardado bien).
-      .from('tournament_organizers')
-      .select('player:players!tournament_organizers_player_id_fkey(id, discord_username, discord_avatar)')
-      .eq('tournament_id', torneoId)
-      .then(({ data, error: err }) => {
-        if (err) { setError(err.message); setLoading(false); return }
-        setOrganizadores(((data ?? []) as any[]).map(r => r.player).filter(Boolean))
+    fetch(`/api/torneos/${torneoId}/organizadores`)
+      .then(res => res.json())
+      .then(d => {
+        if (d.error) { setError(d.error); setLoading(false); return }
+        setOrganizadores(d.organizadores ?? [])
         setLoading(false)
       })
   }
