@@ -1073,11 +1073,13 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
     <div style={{
       background: 'var(--bg-card)',
       border: `1px solid ${isPlayed ? fc + '44' : 'var(--border)'}`,
-      borderRadius: 'var(--radius-md)', overflow: 'hidden', boxShadow: 'var(--shadow-card)',
+      borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)',
       transition: 'border-color 0.2s',
     }}>
-      {/* Top accent */}
-      <div style={{ height: 2, background: isPlayed ? `linear-gradient(90deg, ${fc}, ${fc}44)` : 'rgba(255,255,255,0.06)' }} />
+      {/* Top accent — sin overflow:hidden en el padre (recortaría el
+          popover de BracketActions), así que redondea sus propias
+          esquinas de arriba para no sobresalir del borde de la tarjeta. */}
+      <div style={{ height: 2, borderRadius: 'var(--radius-md) var(--radius-md) 0 0', background: isPlayed ? `linear-gradient(90deg, ${fc}, ${fc}44)` : 'rgba(255,255,255,0.06)' }} />
 
       {/* Team A */}
       <TeamRow
@@ -1096,11 +1098,12 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
         isWinner={!!ganadorId && ganadorId === teamB?.id}
         isLoser={!!ganadorId && ganadorId !== teamB?.id}
         placeholder={placeholderB}
+        roundBottom={!(isOrganizer || isPlayed)}
       />
 
       {/* Footer */}
       {(isOrganizer || isPlayed) && (
-        <div style={{ padding: '5px 12px', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '5px 12px', borderRadius: '0 0 var(--radius-md) var(--radius-md)', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
             {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
@@ -1113,7 +1116,7 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
   )
 }
 
-function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, placeholder }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean; placeholder?: string }) {
+function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, roundBottom, placeholder }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean; roundBottom?: boolean; placeholder?: string }) {
   const nameColor = isWinner ? 'var(--text-primary)' : isLoser ? 'var(--text-muted)' : 'var(--text-secondary)'
   const scoreBg = isWinner ? 'rgba(212,175,55,0.2)' : isLoser ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)'
   const scoreColor = isWinner ? 'var(--gold)' : 'var(--text-muted)'
@@ -1123,6 +1126,7 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, placehold
       padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
       background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
       borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
+      borderRadius: roundBottom ? '0 0 var(--radius-md) var(--radius-md)' : undefined,
     }}>
       {/* Seed */}
       <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 16, textAlign: 'center', flexShrink: 0 }}>
