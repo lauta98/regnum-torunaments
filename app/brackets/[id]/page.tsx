@@ -12,6 +12,7 @@ import GenerarCopaButton from './GenerarCopaButton'
 import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
+import AgregarParticipanteButton from './AgregarParticipanteButton'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -472,8 +473,17 @@ export default async function BracketPage({
             {/* ── TAB: PARTICIPANTES ──────────────────────── */}
             {tab === 'participantes' && (
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
-                  {torneo.formato === '7v7' ? 'Clanes participantes' : 'Equipos participantes'} ({inscritos?.length ?? 0})
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {torneo.formato === '7v7' ? 'Clanes participantes' : 'Equipos participantes'} ({inscritos?.length ?? 0})
+                  </div>
+                  {isOrganizer && (
+                    <AgregarParticipanteButton
+                      torneoId={torneo.id}
+                      formato={torneo.formato as TournamentFormat}
+                      subclasesPermitidas={torneo.subclases_permitidas}
+                    />
+                  )}
                 </div>
                 {!inscritos?.length ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay participantes inscritos.</div>
