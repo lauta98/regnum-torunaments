@@ -104,6 +104,16 @@ export default async function BracketPage({
   let personajesElegibles: { id: string; nickname_juego: string; clase: string }[] = []
   let yaInscritoTeamId: string | null = null
 
+  // Service role: `tournament_organizers` no tiene policy de RLS para
+  // el cliente autenticado normal. Se reutiliza para el chequeo de
+  // isOrganizer más abajo.
+  const svc = createServiceSupabase()
+  const { data: coOrganizadoresRaw } = await svc
+    .from('tournament_organizers')
+    .select('player:players!tournament_organizers_player_id_fkey(id, nickname_juego, discord_username)')
+    .eq('tournament_id', id)
+  const coOrganizadores = (coOrganizadoresRaw ?? []).map((r: any) => r.player).filter(Boolean)
+
   const inscritosActivos = (inscritos ?? []).filter((r: any) => r.estado !== 'expulsado')
   const teamIdsEnEsteTorneo = inscritosActivos.map((r: any) => r.team?.id).filter(Boolean)
   // Para el selector de "cambiar equipo" en cada partido — cualquier
@@ -125,10 +135,7 @@ export default async function BracketPage({
     if (player) {
       playerId = player.id
       puedeExpulsar = torneo.creator_id === player.id || player.role === 'admin'
-      // Service role: `tournament_organizers` no tiene policy de RLS
-      // para el cliente autenticado normal — con el cliente de sesión,
-      // un co-organizador nunca pasaba este check.
-      isOrganizer = puedeExpulsar || await esOrganizadorDelTorneo(createServiceSupabase(), id, torneo.creator_id, player)
+      isOrganizer = puedeExpulsar || await esOrganizadorDelTorneo(svc, id, torneo.creator_id, player)
       const { data: personajes } = await supabase
         .from('personajes')
         .select('id, nickname_juego, clase')
@@ -242,6 +249,18 @@ export default async function BracketPage({
           <span>📅 {new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           {torneo.creator && (
             <span>👤 Organizado por <Link href={`/jugadores/${torneo.creator.id}`} style={{ color: 'var(--gold)', textDecoration: 'none' }}>{torneo.creator.nickname_juego}</Link></span>
+          )}
+          {coOrganizadores.length > 0 && (
+            <span>
+              🤝 Co-organizado por {coOrganizadores.map((o: any, i: number) => (
+                <span key={o.id}>
+                  <Link href={`/jugadores/${o.id}`} style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
+                    {o.nickname_juego || o.discord_username}
+                  </Link>
+                  {i < coOrganizadores.length - 1 ? ', ' : ''}
+                </span>
+              ))}
+            </span>
           )}
           {torneo.organizador_verificado && (
             <span title="Torneo verificado por la administración" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#4CAF50' }}>
