@@ -5,6 +5,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import type { UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
+import { FORMAT_COLOR, STATUS_STYLE } from '@/lib/constants'
+import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 import PersonajesYHistorial from './PersonajesYHistorial'
 import { agruparTrofeos } from '@/lib/campeonatos'
 
@@ -58,6 +60,16 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
     arr.push(n.nickname)
     nicknamesAnterioresPorPersonaje[n.personaje_id] = arr
   })
+
+  /* ── Torneos que organizó (creador) o co-organizó ─────────── */
+  const [{ data: torneosCreados }, { data: coOrgRows }] = await Promise.all([
+    supabase.from('tournaments').select('id, nombre, formato, estado, created_at').eq('creator_id', id).order('created_at', { ascending: false }),
+    supabase.from('tournament_organizers').select('tournament:tournaments(id, nombre, formato, estado, created_at)').eq('player_id', id),
+  ])
+  const torneosOrganizados = [
+    ...(torneosCreados ?? []).map((t: any) => ({ ...t, rol: 'creador' as const })),
+    ...(coOrgRows ?? []).filter((r: any) => r.tournament).map((r: any) => ({ ...r.tournament, rol: 'co-organizador' as const })),
+  ].sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''))
 
   /* ── Sesión actual ────────────────────────────────── */
   const { data: { user } } = await supabase.auth.getUser()
@@ -150,6 +162,43 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
 
           {/* ── Panel derecho ──────────────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+            {torneosOrganizados.length > 0 && (
+              <div className="card-section">
+                <div className="card-section__title">Torneos organizados</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {torneosOrganizados.map(t => {
+                    const st = STATUS_STYLE[t.estado as TournamentStatus]
+                    return (
+                      <Link
+                        key={t.id} href={`/brackets/${t.id}`}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+                          borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.02)',
+                          border: '1px solid rgba(255,255,255,0.06)', textDecoration: 'none',
+                        }}
+                      >
+                        <span style={{
+                          width: 4, height: 22, borderRadius: 2, flexShrink: 0,
+                          background: FORMAT_COLOR[t.formato as TournamentFormat] ?? 'var(--gold)',
+                        }} />
+                        <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {t.nombre}
+                        </span>
+                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 0.5, flexShrink: 0 }}>
+                          {t.rol === 'creador' ? 'CREADOR' : 'CO-ORGANIZADOR'}
+                        </span>
+                        {st && (
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: 4, letterSpacing: 0.5, flexShrink: 0 }}>
+                            {st.label}
+                          </span>
+                        )}
+                      </Link>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <PersonajesYHistorial
               playerId={id}

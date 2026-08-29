@@ -14,13 +14,23 @@ type Player = {
 const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
 const PAGE_SIZE = 25
 
-type FiltroEstado = 'todos' | 'registrados' | 'no_registrados' | 'admins'
+type FiltroEstado = 'todos' | 'registrados' | 'no_registrados' | 'organizadores' | 'admins'
 const FILTROS: { value: FiltroEstado; label: string }[] = [
   { value: 'todos', label: 'Todos' },
   { value: 'registrados', label: 'Registrados' },
   { value: 'no_registrados', label: 'No registrados' },
+  { value: 'organizadores', label: 'Organizadores' },
   { value: 'admins', label: 'Admins' },
 ]
+
+const filtroBtnStyle = (active: boolean) => ({
+  display: 'flex', alignItems: 'center', padding: '7px 14px', borderRadius: 20, cursor: 'pointer',
+  border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
+  background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
+  color: active ? 'var(--gold)' : 'var(--text-secondary)',
+  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, letterSpacing: 0.3,
+  whiteSpace: 'nowrap', transition: 'all 0.15s',
+} as const)
 
 export default function UsuariosTable({ players, meId }: { players: Player[]; meId: string }) {
   const router = useRouter()
@@ -38,6 +48,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
       if (term && !p.nickname_juego?.toLowerCase().includes(term) && !p.discord_username?.toLowerCase().includes(term)) return false
       if (filtro === 'registrados' && !p.user_id) return false
       if (filtro === 'no_registrados' && p.user_id) return false
+      if (filtro === 'organizadores' && p.role !== 'organizer') return false
       if (filtro === 'admins' && p.role !== 'admin') return false
       return true
     })
@@ -97,13 +108,13 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
           className="field"
           style={{ flex: '1 1 220px' }}
         />
-        <div className="segmented">
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
           {FILTROS.map(f => (
             <button
+              type="button"
               key={f.value}
               onClick={() => cambiarFiltro(f.value)}
-              className={`segmented-btn${filtro === f.value ? ' is-active' : ''}`}
-              style={{ whiteSpace: 'nowrap' }}
+              style={filtroBtnStyle(filtro === f.value)}
             >
               {f.label}
             </button>

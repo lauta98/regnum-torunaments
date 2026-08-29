@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase'
 import type { Reino, Clase } from '@/lib/types'
 import { REINO_COLOR, REINOS, CLASES } from '@/lib/constants'
 
@@ -34,15 +35,33 @@ function PersonajeAvatar({ nickname, reino }: { nickname: string; reino: string 
   )
 }
 
-export default function Leaderboard({ personajes: allPersonajes }: { personajes: any[] }) {
+export default function Leaderboard({ personajes: initialPersonajes }: { personajes: any[] }) {
   const [filterReino, setFilterReino] = useState<Reino | ''>('')
   const [filterClase, setFilterClase] = useState<Clase | ''>('')
+  const [personajes, setPersonajes] = useState(initialPersonajes)
+  const [loading, setLoading] = useState(false)
 
-  const personajes = allPersonajes.filter(p => {
-    if (filterReino && p.reino !== filterReino) return false
-    if (filterClase && p.clase !== filterClase) return false
-    return true
-  })
+  // Sin filtros, el top 10 ya lo trajo el servidor. Con algún filtro
+  // puesto, había que traer el top 10 DE ESE FILTRO — antes esto
+  // filtraba en el navegador sobre el top 10 general, así que si ningún
+  // jugador del top 10 global era de la subclase elegida, la tabla
+  // aparecía vacía aunque esa subclase tuviera sus propios cracks más
+  // abajo en el ranking general.
+  useEffect(() => {
+    if (!filterReino && !filterClase) { setPersonajes(initialPersonajes); return }
+    let cancelado = false
+    setLoading(true)
+    const supabase = createClient()
+    let q = supabase.from('personajes').select('*, player:players!personajes_player_id_fkey(id, discord_username, role)').order('mmr', { ascending: false }).limit(10)
+    if (filterReino) q = q.eq('reino', filterReino)
+    if (filterClase) q = q.eq('clase', filterClase)
+    q.then(({ data }) => {
+      if (cancelado) return
+      setPersonajes(data ?? [])
+      setLoading(false)
+    })
+    return () => { cancelado = true }
+  }, [filterReino, filterClase, initialPersonajes])
 
   return (
     <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
@@ -71,9 +90,10 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
         ))}
       </div>
 
+      <div style={{ opacity: loading ? 0.4 : 1, transition: 'opacity 0.15s' }}>
+
       {/* Rows */}
       {personajes.map((p, i) => {
-        const globalRank = allPersonajes.findIndex((x: any) => x.id === p.id) + 1
         const rc = REINO_COLOR[p.reino as Reino]
         const wr = Number(p.winrate)
         const wrColor = wr >= 70 ? '#4CAF50' : wr >= 55 ? 'var(--gold)' : 'var(--text-secondary)'
@@ -85,7 +105,7 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 
-              <RankBadge rank={globalRank} />
+              <RankBadge rank={i + 1} />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
@@ -112,11 +132,12 @@ export default function Leaderboard({ personajes: allPersonajes }: { personajes:
         )
       })}
 
-      {personajes.length === 0 && (
+      {personajes.length === 0 && !loading && (
         <div style={{ padding: '32px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12 }}>
           No hay personajes con esos filtros.
         </div>
       )}
+      </div>
 
       <div style={{ padding: '12px 20px', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'flex-end' }}>
         <Link href="/jugadores" style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--gold)', textDecoration: 'none', letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>

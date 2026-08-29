@@ -13,6 +13,7 @@ import AbrirInscripcionesButton from './AbrirInscripcionesButton'
 import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 import AgregarParticipanteButton from './AgregarParticipanteButton'
+import TeamNameLink from './TeamNameLink'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -66,14 +67,19 @@ export default async function BracketPage({
 
   const { data: torneo } = await supabase
     .from('tournaments')
-    .select('*, creator:players!tournaments_creator_id_fkey(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
+    .select('*, creator:players!tournaments_creator_id_fkey(id, nickname_juego, discord_avatar), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
     .eq('id', id).single()
 
   if (!torneo) notFound()
 
   const { data: matches } = await supabase
     .from('matches')
-    .select('*, equipo_a:teams!matches_equipo_a_id_fkey(id, nombre), equipo_b:teams!matches_equipo_b_id_fkey(id, nombre), ganador:teams!matches_ganador_id_fkey(id, nombre)')
+    .select(`
+      *,
+      equipo_a:teams!matches_equipo_a_id_fkey(id, nombre, miembros:team_members(personaje:personajes(id, nickname_juego, player_id))),
+      equipo_b:teams!matches_equipo_b_id_fkey(id, nombre, miembros:team_members(personaje:personajes(id, nickname_juego, player_id))),
+      ganador:teams!matches_ganador_id_fkey(id, nombre)
+    `)
     .eq('torneo_id', id)
     .order('ronda_numero', { ascending: true })
     .order('posicion', { ascending: true })
@@ -85,7 +91,7 @@ export default async function BracketPage({
       team:teams(
         id, nombre,
         capitan:players!teams_capitan_id_fkey(id, nickname_juego, discord_username, reino),
-        miembros:team_members(personaje:personajes(id, nickname_juego, mmr, clase))
+        miembros:team_members(personaje:personajes(id, nickname_juego, mmr, clase, player_id))
       )
     `)
     .eq('tournament_id', id)
@@ -179,7 +185,9 @@ export default async function BracketPage({
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
-  const inscrCount = torneo.registros?.[0]?.count ?? 0
+  // No usa un count crudo de tournament_registrations — ese incluiría a
+  // los expulsados. inscritosActivos ya filtra estado !== 'expulsado'.
+  const inscrCount = inscritosActivos.length
   const completedMatches = matches?.filter((m: any) => m.estado === 'jugado').length ?? 0
   const totalMatchCount = matches?.length ?? 0
 
@@ -230,7 +238,7 @@ export default async function BracketPage({
           </span>
           <span>📅 {new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           {torneo.creator && (
-            <span>👤 Organizado por <span style={{ color: 'var(--gold)' }}>{torneo.creator.nickname_juego}</span></span>
+            <span>👤 Organizado por <Link href={`/jugadores/${torneo.creator.id}`} style={{ color: 'var(--gold)', textDecoration: 'none' }}>{torneo.creator.nickname_juego}</Link></span>
           )}
           {torneo.organizador_verificado && (
             <span title="Torneo verificado por la administración" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#4CAF50' }}>
@@ -533,12 +541,23 @@ export default async function BracketPage({
                             </div>
                             {team.capitan?.nickname_juego && (
                               <div style={{ fontSize: 10.5, color: 'var(--text-muted)', marginTop: 1 }}>
-                                Cap: <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
+                                Cap: {team.capitan.id ? (
+                                  <Link href={`/jugadores/${team.capitan.id}`} style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{team.capitan.nickname_juego}</Link>
+                                ) : (
+                                  <span style={{ color: 'var(--text-secondary)' }}>{team.capitan.nickname_juego}</span>
+                                )}
                               </div>
                             )}
                             {!esUnico && miembros.length > 0 && (
-                              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {miembros.map((m: any) => m.personaje.nickname_juego).join(' · ')}
+                              <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', flexWrap: 'wrap', gap: '0 4px' }}>
+                                {miembros.map((m: any, mi: number) => (
+                                  <span key={m.personaje.id}>
+                                    {m.personaje.player_id ? (
+                                      <Link href={`/jugadores/${m.personaje.player_id}`} style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>{m.personaje.nickname_juego}</Link>
+                                    ) : m.personaje.nickname_juego}
+                                    {mi < miembros.length - 1 ? ' ·' : ''}
+                                  </span>
+                                ))}
                               </div>
                             )}
                             {expulsado && puedeExpulsar && r.motivo_expulsion && (
@@ -1134,13 +1153,21 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, roundBott
       </span>
       {/* Team name — title nativo del navegador como tooltip: si el
           nombre no entra y queda truncado con "...", pasando el mouse se
-          ve completo sin tener que agrandar la tarjeta. */}
-      <span
-        title={team?.nombre}
-        style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-      >
-        {team ? team.nombre : <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>{placeholder ?? 'TBD'}</span>}
-      </span>
+          ve completo sin tener que agrandar la tarjeta. Clickeable: en
+          1v1 lleva directo al perfil, en equipos de varios abre la
+          lista de integrantes (TeamNameLink). */}
+      {team ? (
+        <TeamNameLink
+          nombre={team.nombre}
+          miembros={(team.miembros ?? []).filter((m: any) => m.personaje).map((m: any) => m.personaje)}
+          title={team.nombre}
+          style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+        />
+      ) : (
+        <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>{placeholder ?? 'TBD'}</span>
+        </span>
+      )}
       {/* Score */}
       {score !== null && score !== undefined && !isNaN(score) && (
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg, width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, flexShrink: 0 }}>
