@@ -23,10 +23,15 @@ export default function CoOrganizadoresPicker({ torneoId }: { torneoId: string }
   const cargar = () => {
     const supabase = createClient()
     supabase
+      // `tournament_organizers` tiene dos FK a `players` (player_id y
+      // added_by) — hay que decir cuál usar o PostgREST devuelve un
+      // error de relación ambigua (y esto quedaba vacío en silencio,
+      // sin mostrar nada, aunque el alta sí se hubiera guardado bien).
       .from('tournament_organizers')
-      .select('player:players(id, discord_username, discord_avatar)')
+      .select('player:players!tournament_organizers_player_id_fkey(id, discord_username, discord_avatar)')
       .eq('tournament_id', torneoId)
-      .then(({ data }) => {
+      .then(({ data, error: err }) => {
+        if (err) { setError(err.message); setLoading(false); return }
         setOrganizadores(((data ?? []) as any[]).map(r => r.player).filter(Boolean))
         setLoading(false)
       })
