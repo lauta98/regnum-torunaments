@@ -161,47 +161,53 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                 </div>
               ))}
             </div>
-          </div>
 
-          {/* ── Panel derecho ──────────────────────────────── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-
+            {/* Torneos organizados */}
             {torneosOrganizados.length > 0 && (
-              <div className="card-section">
-                <div className="card-section__title">Torneos organizados</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {torneosOrganizados.map(t => {
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
+                  TORNEOS ORGANIZADOS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {torneosOrganizados.map((t, i) => {
                     const st = STATUS_STYLE[t.estado as TournamentStatus]
                     return (
                       <Link
                         key={t.id} href={`/brackets/${t.id}`}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
-                          borderRadius: 'var(--radius-sm)', background: 'rgba(255,255,255,0.02)',
-                          border: '1px solid rgba(255,255,255,0.06)', textDecoration: 'none',
+                          display: 'flex', gap: 8, padding: '10px 16px', textDecoration: 'none',
+                          borderBottom: i < torneosOrganizados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                         }}
                       >
                         <span style={{
-                          width: 4, height: 22, borderRadius: 2, flexShrink: 0,
+                          width: 3, borderRadius: 2, flexShrink: 0, alignSelf: 'stretch',
                           background: FORMAT_COLOR[t.formato as TournamentFormat] ?? 'var(--gold)',
                         }} />
-                        <span style={{ flex: 1, minWidth: 0, fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {t.nombre}
-                        </span>
-                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 0.5, flexShrink: 0 }}>
-                          {t.rol === 'creador' ? 'CREADOR' : 'CO-ORGANIZADOR'}
-                        </span>
-                        {st && (
-                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: st.color, background: st.bg, padding: '2px 8px', borderRadius: 4, letterSpacing: 0.5, flexShrink: 0 }}>
-                            {st.label}
-                          </span>
-                        )}
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {t.nombre}
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 4 }}>
+                            <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 0.5 }}>
+                              {t.rol === 'creador' ? 'CREADOR' : 'CO-ORGANIZADOR'}
+                            </span>
+                            {st && (
+                              <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: st.color, background: st.bg, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.5 }}>
+                                {st.label}
+                              </span>
+                            )}
+                          </div>
+                        </div>
                       </Link>
                     )
                   })}
                 </div>
               </div>
             )}
+          </div>
+
+          {/* ── Panel derecho ──────────────────────────────── */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
             <PersonajesYHistorial
               playerId={id}
