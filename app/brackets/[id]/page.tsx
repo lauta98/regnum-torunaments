@@ -14,6 +14,7 @@ import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 import AgregarParticipanteButton from './AgregarParticipanteButton'
 import TeamNameLink from './TeamNameLink'
+import RoundNavBar from './RoundNavBar'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -193,6 +194,20 @@ export default async function BracketPage({
     ? previewBracket(torneo.bracket_type, equiposOrdenParaPreview)
     : []
 
+  // Barra de navegación por ronda — solo tiene sentido con el cuadro ya
+  // generado (no en la vista previa) y con rondas suficientes como para
+  // que valga la pena un atajo en vez de scrollear a mano. Los ids que
+  // referencia (`round-${key}`) se pintan en BracketTree/LigaFechas.
+  const navEntriesRaw = torneo.bracket_type === 'league_cup' ? [...ligaEntries, ...copaEntries] : roundEntries
+  const navRounds = tab === 'llave' && navEntriesRaw.length > 2
+    ? navEntriesRaw.map(([key, ms]) => {
+        const bracket = ms[0]?.bracket ?? 'main'
+        const base = ms[0]?.ronda ?? `Ronda ${ms[0]?.ronda_numero ?? ''}`
+        const label = bracket === 'losers' ? `Perdedores: ${base}` : bracket === 'grand_final' ? 'Gran Final' : base
+        return { key, label }
+      })
+    : []
+
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
   // No usa un count crudo de tournament_registrations — ese incluiría a
@@ -369,6 +384,8 @@ export default async function BracketPage({
                 </a>
               </div>
             )}
+
+            {navRounds.length > 0 && <RoundNavBar rounds={navRounds} />}
 
             {/* ── TAB: LLAVE ───────────────────────────────── */}
             {tab === 'llave' && (
@@ -663,7 +680,7 @@ function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries:
           const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
           return (
             <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600 }}>
+              <div id={`round-${roundNum}`} style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600, scrollMarginTop: 80 }}>
                 {roundName}
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
@@ -937,6 +954,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
   const headerStyle = (x: number) => ({
     position: 'absolute' as const, left: x, top: 0, width: COL_W, textAlign: 'center' as const,
     fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600,
+    scrollMarginTop: 80,
   })
 
   return (
@@ -950,7 +968,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
           </svg>
           {leftRounds.map((r, colIdx) => (
             <div key={`l-${r.key}`}>
-              <div style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
+              <div id={`round-${r.key}`} style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={cardStyle(colIdx * COL_W, HEADER_H + leftY[colIdx][i] * ROW)}>
                   <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} placeholderA={placeholders.get(match.id)?.a} placeholderB={placeholders.get(match.id)?.b} />
@@ -969,7 +987,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
             </div>
           ))}
           <div key="final">
-            <div style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
+            <div id={`round-${finalRound.key}`} style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
             <div style={cardStyle(finalColX, height / 2 - CARD_CENTER)}>
               <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} placeholderA={placeholders.get(finalMatch.id)?.a} placeholderB={placeholders.get(finalMatch.id)?.b} />
             </div>
@@ -1064,7 +1082,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
           </svg>
           {rounds.map((r, colIdx) => (
             <div key={r.key}>
-              <div style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600 }}>
+              <div id={`round-${r.key}`} style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600, scrollMarginTop: 80 }}>
                 {r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}
               </div>
               {r.matches.map((match, i) => (
