@@ -17,7 +17,7 @@ import TeamNameLink from './TeamNameLink'
 import DragScroll from './DragScroll'
 import BuscarJugador from './BuscarJugador'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
-import TrofeoBadge from '@/components/TrofeoBadge'
+import TrofeoBadge, { type TrofeoInfo } from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
 import { previewBracket } from '@/lib/bracketGen'
 
@@ -69,7 +69,7 @@ export default async function BracketPage({
 
   const { data: torneo } = await supabase
     .from('tournaments')
-    .select('*, creator:players!tournaments_creator_id_fkey(id, nickname_juego, discord_avatar), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
+    .select('*, creator:players!tournaments_creator_id_fkey(id, nickname_juego, discord_avatar), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma), trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma)')
     .eq('id', id).single()
 
   if (!torneo) notFound()
@@ -453,7 +453,7 @@ export default async function BracketPage({
                       Copa
                     </div>
                     {copaEntries.length > 0 ? (
-                      <BracketTree roundEntries={copaEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
+                      <BracketTree roundEntries={copaEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} finalizado={torneo.estado === 'finalizado'} trofeo={torneo.trofeo} />
                     ) : ligaCompleta ? (
                       isOrganizer ? (
                         <GenerarCopaButton torneoId={torneo.id} cupo={torneo.playoff_cupo ?? 0} />
@@ -470,7 +470,7 @@ export default async function BracketPage({
                   </div>
                 </div>
               ) : (
-                <BracketTree roundEntries={roundEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
+                <BracketTree roundEntries={roundEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} finalizado={torneo.estado === 'finalizado'} trofeo={torneo.trofeo} />
               )
             )}
 
@@ -719,7 +719,7 @@ function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries:
   )
 }
 
-function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles, finalizado, trofeo }: { roundEntries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; finalizado?: boolean; trofeo?: TrofeoInfo }) {
   const sections: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }[] = []
   roundEntries.forEach(([key, matches]) => {
     const bracket = matches[0]?.bracket ?? 'main'
@@ -730,10 +730,20 @@ function BracketTree({ roundEntries, isOrganizer, fc, equiposDisponibles }: { ro
   })
   sections.forEach(s => s.rounds.sort((a, b) => a.roundNum - b.roundNum))
 
+  // El "campeón del torneo" es quien gana la última ronda de la sección
+  // 'grand_final' si existe (eliminación doble) — la de 'main' ahí solo
+  // decide quién llega invicto, no necesariamente quién se corona. Sin
+  // 'grand_final' (eliminación simple), 'main' SÍ es la definición real.
+  const tieneGrandFinal = sections.some(s => s.bracket === 'grand_final')
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 36, width: '100%' }}>
       {sections.map(section => (
-        <BracketSection key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+        <BracketSection
+          key={section.bracket} section={section} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles}
+          finalizado={finalizado} trofeo={trofeo}
+          esFinalDelTorneo={section.bracket === 'grand_final' || (section.bracket === 'main' && !tieneGrandFinal)}
+        />
       ))}
     </div>
   )
@@ -795,8 +805,9 @@ function partirEnSubLlaves(
   return subs
 }
 
-function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+function BracketSection({ section, isOrganizer, fc, equiposDisponibles, finalizado, trofeo, esFinalDelTorneo }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; finalizado?: boolean; trofeo?: TrofeoInfo; esFinalDelTorneo?: boolean }) {
   const rounds = section.rounds.map(r => ({ ...r, matches: [...r.matches].sort((a, b) => a.posicion - b.posicion) }))
+  const mostrarCampeon = !!finalizado && !!esFinalDelTorneo
 
   if (section.bracket === 'main') {
     const inicio = inicioSufijoParejo(rounds)
@@ -814,7 +825,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
             {prefijoJsx}
-            <MirroredBracketSection rounds={sufijo} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicialBase} />
+            <MirroredBracketSection rounds={sufijo} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicialBase} mostrarCampeon={mostrarCampeon} trofeo={trofeo} />
           </div>
         )
       }
@@ -830,7 +841,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
                 const numeroInicial = numeroCorrido
                 numeroCorrido += sub.reduce((acc, r) => acc + r.matches.length, 0)
                 return (
-                  <MirroredBracketSection key={idx} rounds={sub} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicial} />
+                  <MirroredBracketSection key={idx} rounds={sub} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numeroInicial={numeroInicial} mostrarCampeon={mostrarCampeon} trofeo={trofeo} />
                 )
               })}
             </div>
@@ -839,7 +850,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
       }
     }
   }
-  return <LinearBracketSection section={section} rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} />
+  return <LinearBracketSection section={section} rounds={rounds} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} mostrarCampeon={mostrarCampeon} trofeo={trofeo} />
 }
 
 /** Vista espejada — dos mitades convergiendo a una Final central, como
@@ -850,7 +861,7 @@ function BracketSection({ section, isOrganizer, fc, equiposDisponibles }: { sect
  *  ronda N+1 es `ceil(posicion/2)` de la ronda N, la misma regla
  *  "posicion <= mitad de esta ronda" sigue separando correctamente
  *  izquierda/derecha en todas las rondas sin tener que rastrear linaje. */
-function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, numeroInicial = 0 }: { rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numeroInicial?: number }) {
+function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, numeroInicial = 0, mostrarCampeon, trofeo }: { rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; numeroInicial?: number; mostrarCampeon?: boolean; trofeo?: TrofeoInfo }) {
   const numEarlier = rounds.length - 1 // rondas antes de la Final
   const finalRound = rounds[rounds.length - 1]
   const finalMatch = finalRound.matches[0]
@@ -1028,6 +1039,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
               ))}
             </div>
           ))}
+          {mostrarCampeon && <CampeonBadge match={finalMatch} trofeo={trofeo} x={finalColX} top={HEADER_H} height={(height / 2 - CARD_CENTER) - HEADER_H} />}
           <div key="final">
             <div style={cardStyle(finalColX, height / 2 - CARD_CENTER)}>
               <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} placeholderA={placeholders.get(finalMatch.id)?.a} placeholderB={placeholders.get(finalMatch.id)?.b} />
@@ -1039,7 +1051,37 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
   )
 }
 
-function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponibles }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
+/** Bloque que se muestra arriba de la tarjeta de la Final una vez que el
+ *  torneo está finalizado — el hueco vertical vacío que queda ahí (la
+ *  Final se centra en toda la altura de la sección, no arriba del todo)
+ *  es justo donde entra sin pisar nada. La copa solo aparece si el
+ *  torneo tiene una asignada (`trofeo`); el texto "Campeón" siempre. Se
+ *  esconde solo si el hueco es demasiado chico (brackets con pocas
+ *  rondas) para no amontonarse contra el encabezado o la tarjeta. */
+function CampeonBadge({ match, trofeo, x, top, height }: { match: any; trofeo?: TrofeoInfo; x: number; top: number; height: number }) {
+  if (match.estado !== 'jugado' || !match.ganador_id || height < 90) return null
+  const ganador = match.ganador_id === match.equipo_a_id ? match.equipo_a : match.equipo_b
+  if (!ganador) return null
+  return (
+    <div style={{
+      position: 'absolute', left: x, top, width: COL_W, height,
+      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
+    }}>
+      {trofeo && <TrofeoBadge trofeo={trofeo} size="lg" title={trofeo.nombre} />}
+      <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 1.5, textTransform: 'uppercase' }}>
+        🏆 Campeón
+      </div>
+      <TeamNameLink
+        nombre={ganador.nombre}
+        miembros={(ganador.miembros ?? []).filter((m: any) => m.personaje).map((m: any) => m.personaje)}
+        title={ganador.nombre}
+        style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center' }}
+      />
+    </div>
+  )
+}
+
+function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponibles, mostrarCampeon, trofeo }: { section: { bracket: string; rounds: { key: string; roundNum: number; matches: any[] }[] }; rounds: { key: string; roundNum: number; matches: any[] }[]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[]; mostrarCampeon?: boolean; trofeo?: TrofeoInfo }) {
   // Posición vertical (en "filas") de cada partido = su índice dentro de
   // su propia ronda, ya ordenada por `posicion`. En un cuadro parejo esto
   // ya coincide con el linaje real (partido i de una ronda desciende de
@@ -1101,6 +1143,13 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
     })
   })
 
+  // El "último partido" (última ronda, primera posición) es el que
+  // define al campeón acá — para 'grand_final' es la revancha si existe
+  // (ronda 2) o la única gran final si no hizo falta reset.
+  const ultimaRondaCols = rounds.length - 1
+  const decisivo = rounds[ultimaRondaCols]?.matches[0]
+  const decisivoTop = decisivo ? HEADER_H + yByRound[ultimaRondaCols][0] * ROW : 0
+
   return (
     <div>
       {SECTION_LABEL[section.bracket] && (
@@ -1135,6 +1184,9 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
               <path key={i} d={`M ${c.x1} ${c.y1} H ${c.xm} V ${c.y2} H ${c.x2}`} fill="none" stroke="rgba(212,175,55,0.3)" strokeWidth={1.5} />
             ))}
           </svg>
+          {mostrarCampeon && decisivo && (
+            <CampeonBadge match={decisivo} trofeo={trofeo} x={ultimaRondaCols * COL_W} top={HEADER_H} height={decisivoTop - HEADER_H} />
+          )}
           {rounds.map((r, colIdx) => (
             <div key={r.key}>
               {r.matches.map((match, i) => (
