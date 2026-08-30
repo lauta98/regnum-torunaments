@@ -14,7 +14,8 @@ import FinalizarTorneoButton from './FinalizarTorneoButton'
 import ExpulsarButton from './ExpulsarButton'
 import AgregarParticipanteButton from './AgregarParticipanteButton'
 import TeamNameLink from './TeamNameLink'
-import RoundNavBar from './RoundNavBar'
+import DragScroll from './DragScroll'
+import BuscarJugador from './BuscarJugador'
 import SubirFoto from '@/app/salon-de-la-fama/SubirFoto'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
@@ -194,19 +195,34 @@ export default async function BracketPage({
     ? previewBracket(torneo.bracket_type, equiposOrdenParaPreview)
     : []
 
-  // Barra de navegación por ronda — solo tiene sentido con el cuadro ya
-  // generado (no en la vista previa) y con rondas suficientes como para
-  // que valga la pena un atajo en vez de scrollear a mano. Los ids que
-  // referencia (`round-${key}`) se pintan en BracketTree/LigaFechas.
-  const navEntriesRaw = torneo.bracket_type === 'league_cup' ? [...ligaEntries, ...copaEntries] : roundEntries
-  const navRounds = tab === 'llave' && navEntriesRaw.length > 2
-    ? navEntriesRaw.map(([key, ms]) => {
-        const bracket = ms[0]?.bracket ?? 'main'
-        const base = ms[0]?.ronda ?? `Ronda ${ms[0]?.ronda_numero ?? ''}`
-        const label = bracket === 'losers' ? `Perdedores: ${base}` : bracket === 'grand_final' ? 'Gran Final' : base
-        return { key, label }
-      })
-    : []
+  // Índice para el buscador de la barra lateral: por cada equipo activo,
+  // su próximo rival (si tiene un partido pendiente con al menos un
+  // lado ya definido) o el resultado de su último partido jugado. Los
+  // nombres de búsqueda incluyen tanto el nombre del equipo como el de
+  // cada integrante, para que buscar a una persona dentro de un equipo
+  // de varios (2v2+) también la encuentre.
+  function estadoDeEquipo(teamId: string) {
+    const rivalDe = (m: any) => ((m.equipo_a_id === teamId ? m.equipo_b : m.equipo_a)?.nombre ?? null)
+    const propios = (matches ?? []).filter((m: any) => m.equipo_a_id === teamId || m.equipo_b_id === teamId)
+    const pendientes = propios.filter((m: any) => m.estado !== 'jugado').sort((a: any, b: any) => a.ronda_numero - b.ronda_numero)
+    if (pendientes.length > 0) {
+      const m = pendientes[0]
+      return { tipo: 'pendiente' as const, ronda: m.ronda as string, rival: rivalDe(m) }
+    }
+    const jugados = propios.filter((m: any) => m.estado === 'jugado').sort((a: any, b: any) => b.ronda_numero - a.ronda_numero)
+    if (jugados.length > 0) {
+      const m = jugados[0]
+      return { tipo: m.ganador_id === teamId ? 'gano' as const : 'perdio' as const, ronda: m.ronda as string, rival: rivalDe(m), resultado: m.resultado as string | null }
+    }
+    return { tipo: 'sin-partidos' as const }
+  }
+  const entradasBusqueda = inscritosActivos
+    .filter((r: any) => r.team?.id)
+    .map((r: any) => {
+      const nombres = [r.team.nombre as string]
+      ;(r.team.miembros ?? []).forEach((m: any) => { if (m.personaje?.nickname_juego) nombres.push(m.personaje.nickname_juego) })
+      return { teamId: r.team.id as string, teamNombre: r.team.nombre as string, nombres, estado: estadoDeEquipo(r.team.id) }
+    })
 
   const fc = FORMAT_COLOR[torneo.formato as TournamentFormat]
   const st = STATUS_STYLE[torneo.estado as TournamentStatus]
@@ -290,6 +306,8 @@ export default async function BracketPage({
             .cor-bracket-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 0 !important; }
             .cor-bracket-main { padding: 16px !important; }
           }
+          .cor-search-hl { background: rgba(0,212,255,0.14) !important; box-shadow: inset 0 0 0 2px var(--neon-cyan); border-radius: 6px; }
+          .cor-search-suggestion:hover { background: rgba(255,255,255,0.06) !important; }
         `}</style>
 
         {/* Two-column layout: sidebar + content (se apila en mobile) */}
@@ -358,6 +376,8 @@ export default async function BracketPage({
                 {label}
               </Link>
             ))}
+
+            <BuscarJugador entradas={entradasBusqueda} />
           </aside>
 
           {/* Main content */}
@@ -384,8 +404,6 @@ export default async function BracketPage({
                 </a>
               </div>
             )}
-
-            {navRounds.length > 0 && <RoundNavBar rounds={navRounds} />}
 
             {/* ── TAB: LLAVE ───────────────────────────────── */}
             {tab === 'llave' && (
@@ -674,13 +692,13 @@ function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries:
     )
   }
   return (
-    <div style={{ overflowX: 'auto' }}>
+    <DragScroll style={{ overflowX: 'auto' }}>
       <div style={{ display: 'flex', gap: 0, minWidth: entries.length * 240 }}>
         {entries.map(([roundNum, roundMatches]) => {
           const roundName = roundMatches[0]?.ronda ?? `Ronda ${roundNum}`
           return (
             <div key={roundNum} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div id={`round-${roundNum}`} style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600, scrollMarginTop: 80 }}>
+              <div style={{ padding: '10px 12px 10px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 16, fontWeight: 600 }}>
                 {roundName}
               </div>
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-around', padding: '0 8px', gap: 12 }}>
@@ -692,7 +710,7 @@ function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries:
           )
         })}
       </div>
-    </div>
+    </DragScroll>
   )
 }
 
@@ -954,12 +972,11 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
   const headerStyle = (x: number) => ({
     position: 'absolute' as const, left: x, top: 0, width: COL_W, textAlign: 'center' as const,
     fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600,
-    scrollMarginTop: 80,
   })
 
   return (
     <div>
-      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
+      <DragScroll style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
         <div style={{ position: 'relative', width, height, minWidth: width, flexShrink: 0 }}>
           <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             {connectors.map((c, i) => (
@@ -968,7 +985,7 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
           </svg>
           {leftRounds.map((r, colIdx) => (
             <div key={`l-${r.key}`}>
-              <div id={`round-${r.key}`} style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
+              <div style={headerStyle(colIdx * COL_W)}>{r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}</div>
               {r.matches.map((match, i) => (
                 <div key={match.id} style={cardStyle(colIdx * COL_W, HEADER_H + leftY[colIdx][i] * ROW)}>
                   <MatchCard match={match} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(match.id)} placeholderA={placeholders.get(match.id)?.a} placeholderB={placeholders.get(match.id)?.b} />
@@ -987,13 +1004,13 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
             </div>
           ))}
           <div key="final">
-            <div id={`round-${finalRound.key}`} style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
+            <div style={headerStyle(finalColX)}>🏆 {finalMatch.ronda}</div>
             <div style={cardStyle(finalColX, height / 2 - CARD_CENTER)}>
               <MatchCard match={finalMatch} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposDisponibles} numero={numeroPorMatch.get(finalMatch.id)} placeholderA={placeholders.get(finalMatch.id)?.a} placeholderB={placeholders.get(finalMatch.id)?.b} />
             </div>
           </div>
         </div>
-      </div>
+      </DragScroll>
     </div>
   )
 }
@@ -1073,7 +1090,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
           en vez de dejar el borde izquierdo fuera del área de scroll
           alcanzable — "center" a secas puede volver la ronda 1
           inalcanzable cuando el contenido desborda. */}
-      <div style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
+      <DragScroll style={{ overflowX: 'auto', display: 'flex', justifyContent: 'safe center' }}>
         <div style={{ position: 'relative', width, height, minWidth: width, flexShrink: 0 }}>
           <svg width={width} height={height} style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
             {connectors.map((c, i) => (
@@ -1082,7 +1099,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
           </svg>
           {rounds.map((r, colIdx) => (
             <div key={r.key}>
-              <div id={`round-${r.key}`} style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600, scrollMarginTop: 80 }}>
+              <div style={{ position: 'absolute', left: colIdx * COL_W, top: 0, width: COL_W, textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600 }}>
                 {r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}
               </div>
               {r.matches.map((match, i) => (
@@ -1093,7 +1110,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
             </div>
           ))}
         </div>
-      </div>
+      </DragScroll>
     </div>
   )
 }
@@ -1181,7 +1198,7 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, roundBott
   const scoreColor = isWinner ? 'var(--gold)' : 'var(--text-muted)'
 
   return (
-    <div style={{
+    <div data-team-id={team?.id} style={{
       padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
       background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
       borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
