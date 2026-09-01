@@ -175,6 +175,15 @@ export default async function HomePage({
           </section>
         )}
 
+        {/* ── Stats Bar ───────────────────────────────────────── */}
+        <section style={{ marginBottom: 20 }}>
+          <StatsBar
+            totalTorneos={totalTorneos ?? 0}
+            totalJugadores={totalJugadores ?? 0}
+            totalMatches={totalMatches ?? 0}
+          />
+        </section>
+
         {/* ── Actividad reciente (últimos campeones) ──────────────
             Mismo lenguaje visual que el podio de /jugadores (glow dorado,
             no una fila de tabla más) — StatsBar usa arte de fondo fijo por
@@ -210,15 +219,6 @@ export default async function HomePage({
             </div>
           </section>
         )}
-
-        {/* ── Stats Bar ───────────────────────────────────────── */}
-        <section style={{ marginBottom: 20 }}>
-          <StatsBar
-            totalTorneos={totalTorneos ?? 0}
-            totalJugadores={totalJugadores ?? 0}
-            totalMatches={totalMatches ?? 0}
-          />
-        </section>
 
         {/* ── Leaderboard ──────────────────────────────────────── */}
         <section>
