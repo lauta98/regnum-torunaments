@@ -3,7 +3,7 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { REINO_COLOR, REINOS, CLASES, CLASE_COLOR, getTier } from '@/lib/constants'
+import { REINO_COLOR, REINOS, CLASES, CLASE_COLOR, getTier, MMR_TIERS } from '@/lib/constants'
 import type { Reino, Clase } from '@/lib/types'
 import TierLegend from '@/components/TierLegend'
 import TrofeoBadge from '@/components/TrofeoBadge'
@@ -150,18 +150,30 @@ export default async function JugadoresPage({
   const promedio = (lista: any[], campo: string) =>
     lista.length ? Math.round(lista.reduce((s, p) => s + (p[campo] ?? 0), 0) / lista.length) : 0
 
+  // El MMR es un sistema de suma cero (lo que gana uno lo pierde el otro) y
+  // todo personaje arranca en 1200 -- el promedio de cualquier grupo grande
+  // converge cerca de ese número sin importar qué tan competitivo sea,
+  // así que no sirve como comparación. La distribución por tier y el techo
+  // (mejor MMR) sí reflejan algo real.
+  const distribucionTiers = (lista: any[]) => {
+    const conteo = new Map<string, { tier: typeof MMR_TIERS[number]; n: number }>()
+    MMR_TIERS.forEach(t => conteo.set(t.name, { tier: t, n: 0 }))
+    lista.forEach(p => { const t = getTier(p.mmr); conteo.get(t.name)!.n++ })
+    return [...conteo.values()].filter(x => x.n > 0)
+  }
+
   const porReino = vista === 'reinos'
     ? REINOS.map(r => {
         const lista = todosPersonajes.filter(p => p.reino === r)
-        return { reino: r, lista, count: lista.length, avgMmr: promedio(lista, 'mmr'), avgWr: promedio(lista, 'winrate'), top5: lista.slice(0, 5) }
+        return { reino: r, lista, count: lista.length, avgWr: promedio(lista, 'winrate'), topMmr: lista[0]?.mmr ?? 0, tiers: distribucionTiers(lista), top5: lista.slice(0, 5) }
       })
     : []
 
   const porClase = vista === 'clases'
     ? CLASES.map(c => {
         const lista = todosPersonajes.filter(p => p.clase === c)
-        return { clase: c, lista, count: lista.length, avgMmr: promedio(lista, 'mmr'), avgWr: promedio(lista, 'winrate'), top: lista[0] ?? null }
-      }).sort((a, b) => b.avgMmr - a.avgMmr)
+        return { clase: c, lista, count: lista.length, avgWr: promedio(lista, 'winrate'), top: lista[0] ?? null }
+      }).sort((a, b) => (b.top?.mmr ?? 0) - (a.top?.mmr ?? 0))
     : []
 
   const rachas = vista === 'rachas'
@@ -421,8 +433,9 @@ export default async function JugadoresPage({
         {/* ── VISTA REINOS ─────────────────────────────────── */}
         {vista === 'reinos' && (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-            {porReino.map(({ reino, count, avgMmr, avgWr, top5 }) => {
+            {porReino.map(({ reino, count, avgWr, topMmr, tiers, top5 }) => {
               const rc = REINO_COLOR[reino as Reino]
+              const totalTiers = tiers.reduce((s, x) => s + x.n, 0) || 1
               return (
                 <div key={reino} style={{ background: 'var(--bg-card)', border: `1px solid ${rc}33`, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
                   <div style={{ padding: '16px 20px', borderBottom: `1px solid ${rc}22`, background: `linear-gradient(135deg, ${rc}14, transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -432,11 +445,29 @@ export default async function JugadoresPage({
                       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>{count} personajes · {avgWr}% winrate prom.</div>
                     </div>
                   </div>
-                  <div style={{ padding: '14px 20px', display: 'flex', gap: 20, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: rc }}>{avgMmr || '—'}</div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>MMR PROMEDIO</div>
+                  <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: rc }}>{topMmr || '—'}</span>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>MMR MÁS ALTO</span>
                     </div>
+                    {/* Distribución por tier — el promedio de MMR converge cerca
+                        de 1200 en cualquier grupo grande (es un sistema de suma
+                        cero), así que no dice nada; cuántos llegaron a cada
+                        escalón sí. */}
+                    {tiers.length > 0 && (
+                      <>
+                        <div style={{ display: 'flex', height: 6, borderRadius: 4, overflow: 'hidden', marginBottom: 6 }}>
+                          {tiers.map(({ tier, n }) => (
+                            <div key={tier.name} title={`${tier.name}: ${n}`} style={{ width: `${(n / totalTiers) * 100}%`, background: tier.color }} />
+                          ))}
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
+                          {tiers.map(({ tier, n }) => (
+                            <span key={tier.name} style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: tier.color }}>{tier.icon} {n}</span>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                   {top5.length === 0 ? (
                     <div style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12 }}>Sin personajes.</div>
@@ -462,11 +493,11 @@ export default async function JugadoresPage({
         {vista === 'clases' && (
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 110px 1fr', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
-              {['CLASE', 'JUGADORES', 'MMR PROMEDIO', 'WINRATE PROM.', 'MEJOR PERSONAJE'].map(col => (
+              {['CLASE', 'JUGADORES', 'MMR MÁS ALTO', 'WINRATE PROM.', 'MEJOR PERSONAJE'].map(col => (
                 <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
               ))}
             </div>
-            {porClase.map(({ clase, count, avgMmr, avgWr, top }, i) => {
+            {porClase.map(({ clase, count, avgWr, top }, i) => {
               const cc = CLASE_COLOR[clase as Clase]
               const tier = top ? getTier(top.mmr) : null
               return (
@@ -476,7 +507,7 @@ export default async function JugadoresPage({
                     <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: cc }}>{clase}</span>
                   </div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count}</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{avgMmr || '—'}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{top?.mmr || '—'}</div>
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count ? `${avgWr}%` : '—'}</div>
                   {top ? (
                     <Link href={`/jugadores/${top.player_id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
