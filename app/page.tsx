@@ -1,9 +1,11 @@
+import { Suspense } from 'react'
 import { createPublicSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
 import TorneoCard from '@/components/TorneoCard'
 import TrofeoBadge from '@/components/TrofeoBadge'
+import ErrorBanner from '@/components/ErrorBanner'
 import Link from 'next/link'
 import { CLASE_COLOR, CLASE_ICON } from '@/lib/constants'
 import type { Clase } from '@/lib/types'
@@ -44,12 +46,7 @@ const IconMedal = () => (
   </svg>
 )
 
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
-  const { error } = await searchParams
+export default async function HomePage() {
   const supabase = createPublicSupabase()
 
   const [
@@ -90,15 +87,9 @@ export default async function HomePage({
       <Header />
       <main style={{ maxWidth: 1400, margin: '0 auto', padding: '32px 24px', flex: 1 }}>
 
-        {error === 'organizador' && (
-          <div style={{
-            background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.3)',
-            borderRadius: 'var(--radius-sm)', padding: '12px 18px', marginBottom: 20,
-            color: '#f87171', fontSize: 13, fontFamily: 'var(--font-display)',
-          }}>
-            Todavía no tenés permisos de organizador para crear torneos — pedile a un admin que te los otorgue.
-          </div>
-        )}
+        <Suspense fallback={null}>
+          <ErrorBanner />
+        </Suspense>
 
         {/* ── Hero ─────────────────────────────────────────────── */}
         <section style={{ marginBottom: 20 }}>
