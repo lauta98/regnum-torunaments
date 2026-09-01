@@ -79,7 +79,7 @@ export default function HacersePremium({ playerId }: { playerId: string }) {
                 <span style={{ fontSize: 15 }}>👑</span> Un símbolo junto a tu nombre en todo el sitio
               </li>
               <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span style={{ fontSize: 15 }}>🎨</span> Elegir un color/tema para tu perfil, entre 7 opciones
+                <span style={{ fontSize: 15 }}>🎨</span> Elegir cualquier color para tu perfil, con 4 estilos de fondo
               </li>
             </ul>
 
@@ -91,14 +91,14 @@ export default function HacersePremium({ playerId }: { playerId: string }) {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <button type="button" onClick={pagarConMercadoPago} disabled={isPending} className="btn btn-ghost-gold" style={{ padding: '9px 14px', fontSize: 12 }}>
-                  $1.500 ARS — MercadoPago
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <button type="button" onClick={pagarConMercadoPago} disabled={isPending} className="btn btn-primary" style={{ padding: '12px 16px', fontSize: 13, letterSpacing: 1 }}>
+                  $1.500 ARS — MERCADOPAGO
                 </button>
-                <button type="button" onClick={() => setMetodo('paypal')} className="btn btn-ghost-gold" style={{ padding: '9px 14px', fontSize: 12 }}>
-                  u$d1 — PayPal
+                <button type="button" onClick={() => setMetodo('paypal')} className="btn btn-primary" style={{ padding: '12px 16px', fontSize: 13, letterSpacing: 1 }}>
+                  $1 — PAYPAL
                 </button>
-                <button type="button" onClick={cerrar} className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 11, marginTop: 4 }}>
+                <button type="button" onClick={cerrar} className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 11, marginTop: 2 }}>
                   Cancelar
                 </button>
               </div>
