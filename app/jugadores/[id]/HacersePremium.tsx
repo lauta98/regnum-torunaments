@@ -8,11 +8,14 @@ declare global {
 
 export default function HacersePremium({ playerId }: { playerId: string }) {
   const router = useRouter()
+  const [open, setOpen] = useState(false)
   const [metodo, setMetodo] = useState<'elegir' | 'paypal'>('elegir')
   const [status, setStatus] = useState<'idle' | 'error'>('idle')
   const [isPending, startTransition] = useTransition()
   const paypalRef = useRef<HTMLDivElement>(null)
   const botonMontado = useRef(false)
+
+  const cerrar = () => { setOpen(false); setMetodo('elegir'); setStatus('idle') }
 
   const pagarConMercadoPago = () => {
     startTransition(async () => {
@@ -57,27 +60,54 @@ export default function HacersePremium({ playerId }: { playerId: string }) {
     document.body.appendChild(script)
   }, [metodo, router])
 
-  if (metodo === 'paypal') {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div ref={paypalRef} style={{ minWidth: 200 }} />
-        <button type="button" onClick={() => setMetodo('elegir')} className="btn btn-ghost-gold" style={{ padding: '5px 10px', fontSize: 10 }}>
-          ← Volver
-        </button>
-        {status === 'error' && <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)' }}>Error al procesar el pago</span>}
-      </div>
-    )
-  }
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <button type="button" onClick={pagarConMercadoPago} disabled={isPending} className="btn btn-ghost-gold" style={{ padding: '7px 14px', fontSize: 11 }}>
-        👑 Hacerme Premium — $1.500 ARS
+    <>
+      <button type="button" onClick={() => setOpen(true)} className="btn btn-ghost-gold" style={{ padding: '7px 14px', fontSize: 11 }}>
+        👑 Hacerme Premium
       </button>
-      <button type="button" onClick={() => setMetodo('paypal')} className="btn btn-ghost-gold" style={{ padding: '7px 14px', fontSize: 11 }}>
-        👑 Hacerme Premium — u$d1 (PayPal)
-      </button>
-      {status === 'error' && <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)' }}>Error al iniciar el pago</span>}
-    </div>
+
+      {open && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={cerrar}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold-strong)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>👑</div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--gold)', marginBottom: 8, letterSpacing: 1 }}>Cuenta Premium</h2>
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 16 }}>
+              Es una forma simbólica de apoyar el proyecto — no cambia nada del juego ni te da ninguna ventaja competitiva. A cambio conseguís:
+            </p>
+            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 15 }}>👑</span> Un símbolo junto a tu nombre en todo el sitio
+              </li>
+              <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)' }}>
+                <span style={{ fontSize: 15 }}>🎨</span> Elegir un color/tema para tu perfil, entre 7 opciones
+              </li>
+            </ul>
+
+            {metodo === 'paypal' ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div ref={paypalRef} style={{ minWidth: 200 }} />
+                <button type="button" onClick={() => setMetodo('elegir')} className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 10 }}>
+                  ← Volver
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <button type="button" onClick={pagarConMercadoPago} disabled={isPending} className="btn btn-ghost-gold" style={{ padding: '9px 14px', fontSize: 12 }}>
+                  $1.500 ARS — MercadoPago
+                </button>
+                <button type="button" onClick={() => setMetodo('paypal')} className="btn btn-ghost-gold" style={{ padding: '9px 14px', fontSize: 12 }}>
+                  u$d1 — PayPal
+                </button>
+                <button type="button" onClick={cerrar} className="btn btn-ghost" style={{ padding: '7px 14px', fontSize: 11, marginTop: 4 }}>
+                  Cancelar
+                </button>
+              </div>
+            )}
+
+            {status === 'error' && <p style={{ fontSize: 11, color: '#f87171', fontFamily: 'var(--font-display)', marginTop: 12 }}>Error al procesar el pago</p>}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
