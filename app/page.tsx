@@ -2,7 +2,22 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
+import TorneoCard from '@/components/TorneoCard'
+import TrofeoBadge from '@/components/TrofeoBadge'
 import Link from 'next/link'
+
+function hace(fecha: string) {
+  const diffMs = Date.now() - new Date(fecha).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (mins < 1) return 'hace un momento'
+  if (mins < 60) return `hace ${mins} min`
+  if (hours < 24) return `hace ${hours}h`
+  if (days < 30) return `hace ${days}d`
+  const meses = Math.floor(days / 30)
+  return `hace ${meses} mes${meses > 1 ? 'es' : ''}`
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -34,11 +49,23 @@ export default async function HomePage({
     { count: totalJugadores },
     { count: totalTorneos },
     { count: totalMatches },
+    { data: torneosActivos },
+    { data: campeonesRecientes },
   ] = await Promise.all([
     supabase.from('personajes').select('*, player:players!personajes_player_id_fkey(id, discord_username, role)').order('mmr', { ascending: false }).limit(10),
     supabase.from('personajes').select('*', { count: 'exact', head: true }),
     supabase.from('tournaments').select('*', { count: 'exact', head: true }),
     supabase.from('matches').select('*', { count: 'exact', head: true }),
+    supabase.from('tournaments')
+      .select('*, creator:players!tournaments_creator_id_fkey(nickname_juego, discord_avatar), registros:tournament_registrations(count), escudo:trofeos!tournaments_escudo_id_fkey(nombre, icono, color, forma)')
+      .in('estado', ['inscripciones', 'live'])
+      .order('fecha_inicio', { ascending: true })
+      .limit(6),
+    supabase.from('campeonatos')
+      .select('id, created_at, personaje_id, player_id, personaje:personajes(id, nickname_juego), torneo:tournaments(id, nombre, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma))')
+      .eq('puesto', 1)
+      .order('created_at', { ascending: false })
+      .limit(5),
   ])
 
   return (
@@ -122,6 +149,41 @@ export default async function HomePage({
             </div>
           </div>
         </section>
+
+        {/* ── Torneos activos ahora ─────────────────────────────── */}
+        {(torneosActivos ?? []).length > 0 && (
+          <section style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 1 }}>Torneos Activos</h2>
+              <Link href="/torneos" style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--gold)', textDecoration: 'none' }}>Ver todos →</Link>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+              {torneosActivos!.map((t: any) => <TorneoCard key={t.id} torneo={t} />)}
+            </div>
+          </section>
+        )}
+
+        {/* ── Actividad reciente (últimos campeones) ────────────── */}
+        {(campeonesRecientes ?? []).length > 0 && (
+          <section style={{ marginBottom: 20 }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 1, marginBottom: 14 }}>Actividad Reciente</h2>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+              {campeonesRecientes!.map((c: any, i: number) => (
+                <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none' }}>
+                  <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < campeonesRecientes!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                    <TrofeoBadge trofeo={c.torneo?.trofeo} puesto={1} size="sm" title={`Campeón de ${c.torneo?.nombre}`} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>
+                        <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{c.personaje?.nickname_juego ?? '—'}</span> ganó <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.torneo?.nombre}</span>
+                      </div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{hace(c.created_at)}</div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* ── Stats Bar ───────────────────────────────────────── */}
         <section style={{ marginBottom: 20 }}>
