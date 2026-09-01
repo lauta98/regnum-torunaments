@@ -13,9 +13,10 @@ import ReportarAvatar from './ReportarAvatar'
 import HacersePremium from './HacersePremium'
 import PersonalizarPerfil from './PersonalizarPerfil'
 import PremiumBadge from '@/components/PremiumBadge'
+import PremiumAccentLine from '@/components/PremiumAccentLine'
 import { agruparTrofeos } from '@/lib/campeonatos'
 import { avatarSrc } from '@/lib/avatar'
-import { estiloPremium } from '@/lib/premium'
+import { estiloPremium, cardEstiloPremium } from '@/lib/premium'
 
 export const dynamic = 'force-dynamic'
 
@@ -135,11 +136,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Tarjeta cuenta */}
-            <div style={{
-              background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 24, textAlign: 'center',
-              border: `1px solid ${tema ? tema.border : 'var(--border-gold)'}`,
-              boxShadow: tema?.glow ? `var(--shadow-card), ${tema.glow}` : 'var(--shadow-card)',
-            }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+              <PremiumAccentLine color={tema?.color} />
+              <div style={{ padding: 24, textAlign: 'center' }}>
               <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {avatarSrc(player)
@@ -179,10 +178,12 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                   )}
                 </div>
               )}
+              </div>
             </div>
 
             {/* Stats globales */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+              <PremiumAccentLine color={tema?.color} />
               <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
                 RESUMEN
               </div>
@@ -200,7 +201,8 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
 
             {/* Torneos organizados */}
             {torneosOrganizados.length > 0 && (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+                <PremiumAccentLine color={tema?.color} />
                 <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
                   TORNEOS ORGANIZADOS
                 </div>
@@ -253,6 +255,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               trofeosPorPersonaje={Object.fromEntries(trofeosPorPersonaje)}
               historiasPorPersonaje={historiasPorPersonaje}
               nicknamesAnterioresPorPersonaje={nicknamesAnterioresPorPersonaje}
+              tema={tema}
             />
 
           </div>

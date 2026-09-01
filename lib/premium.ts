@@ -24,12 +24,25 @@ export function hexToRgba(hex: string, alpha: number): string {
  * todavía no eligió nada, cae al dorado por defecto del sitio con
  * intensidad "sutil" — se ve igual que un perfil no premium hasta que
  * el jugador decide personalizarlo. */
-export function estiloPremium(color: string | null | undefined, bg: string | null | undefined) {
+export interface EstiloPremium { color: string; border: string; glow: string | null }
+
+export function estiloPremium(color: string | null | undefined, bg: string | null | undefined): EstiloPremium {
   const c = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : PREMIUM_COLOR_DEFAULT
   const style = PREMIUM_BG_STYLES[bg as PremiumBg] ?? PREMIUM_BG_STYLES.sutil
   return {
     color: c,
     border: hexToRgba(c, style.borderAlpha),
     glow: style.glowAlpha > 0 ? `0 0 ${style.glowBlur}px ${hexToRgba(c, style.glowAlpha)}` : null,
+  }
+}
+
+/** Border + boxShadow ya armados para cualquier card del perfil — cae a
+ * la estética dorada de siempre si el jugador de la página no es
+ * premium, así todas las cards del perfil (no solo la de cuenta) usan
+ * el mismo criterio. */
+export function cardEstiloPremium(tema: EstiloPremium | null) {
+  return {
+    border: `1px solid ${tema ? tema.border : 'var(--border-gold)'}`,
+    boxShadow: tema?.glow ? `var(--shadow-card), ${tema.glow}` : 'var(--shadow-card)',
   }
 }

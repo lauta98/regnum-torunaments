@@ -8,6 +8,8 @@ import ReclamarNickname from './ReclamarNickname'
 import ElegirPrincipal from './ElegirPrincipal'
 import EditarNickname from './EditarNickname'
 import TrofeoBadge from '@/components/TrofeoBadge'
+import PremiumAccentLine from '@/components/PremiumAccentLine'
+import { cardEstiloPremium, type EstiloPremium } from '@/lib/premium'
 import type { TrofeoGrupo } from '@/lib/campeonatos'
 
 const CLASE_ICON: Record<string, string> = {
@@ -37,7 +39,7 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: TrofeoGrupo[]; size?: 'xs'
 }
 
 export default function PersonajesYHistorial({
-  playerId, personajes, isOwner, personajePrincipalId, trofeosPorPersonaje, historiasPorPersonaje, nicknamesAnterioresPorPersonaje,
+  playerId, personajes, isOwner, personajePrincipalId, trofeosPorPersonaje, historiasPorPersonaje, nicknamesAnterioresPorPersonaje, tema,
 }: {
   playerId: string
   personajes: any[]
@@ -46,6 +48,7 @@ export default function PersonajesYHistorial({
   trofeosPorPersonaje: Record<string, TrofeoGrupo[]>
   historiasPorPersonaje: Record<string, any[]>
   nicknamesAnterioresPorPersonaje: Record<string, string[]>
+  tema: EstiloPremium | null
 }) {
   // Vitrina: todas las copas de todos sus personajes, combinadas por nombre
   // de copa (o el grupo genérico) — el trofeo es del jugador, no de "un"
@@ -75,7 +78,8 @@ export default function PersonajesYHistorial({
   return (
     <>
       {/* Personajes */}
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+      <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+        <PremiumAccentLine color={tema?.color} />
         <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>PERSONAJES</span>
           {isOwner && <AgregarPersonaje playerId={playerId} />}
@@ -157,7 +161,8 @@ export default function PersonajesYHistorial({
 
       {/* Vitrina de trofeos — todas las copas del jugador, combinadas */}
       {vitrina.length > 0 && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+          <PremiumAccentLine color={tema?.color} />
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>VITRINA DE TROFEOS</span>
           </div>
@@ -191,7 +196,8 @@ export default function PersonajesYHistorial({
 
       {/* Historial de enfrentamientos del personaje seleccionado */}
       {historial.length > 0 && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+          <PremiumAccentLine color={tema?.color} />
           <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
             <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, color: 'var(--gold)', letterSpacing: 2 }}>
               HISTORIAL DE ENFRENTAMIENTOS — {seleccionado?.nickname_juego}
