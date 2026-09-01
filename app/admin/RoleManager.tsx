@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { ROLE_LABEL, ROLE_COLOR } from '@/lib/roles'
 import type { UserRole } from '@/lib/types'
 
@@ -16,6 +17,7 @@ export default function RoleManager({
   isSelf: boolean
   isProtected: boolean
 }) {
+  const router = useRouter()
   const [role, setRole] = useState<UserRole>(currentRole)
   const [status, setStatus] = useState<'idle' | 'saved' | 'error'>('idle')
   const [errorMsg, setErrorMsg] = useState('')
@@ -41,6 +43,12 @@ export default function RoleManager({
         setRole(newRole)
         setStatus('saved')
         setTimeout(() => setStatus('idle'), 1800)
+        // La tabla del padre (UsuariosTable) filtra por rol sobre la lista
+        // que le llega por prop desde el server component — sin esto queda
+        // desactualizada: el cambio ya está guardado en la base pero la fila
+        // sigue mostrando el rol viejo y el filtro de "Organizadores" no la
+        // saca de la lista.
+        router.refresh()
       }
     })
   }
