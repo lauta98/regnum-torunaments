@@ -1,17 +1,35 @@
-export type PremiumTheme = 'dorado' | 'cian' | 'purpura' | 'legendario' | 'syrtis' | 'ignis' | 'alsius'
+export const PREMIUM_COLOR_DEFAULT = '#d4af37' // dorado, mismo que --gold
 
-export const PREMIUM_THEMES: Record<PremiumTheme, { label: string; color: string; border: string; glow: string }> = {
-  dorado:     { label: 'Dorado',     color: '#d4af37', border: 'rgba(212,175,55,0.6)', glow: 'rgba(212,175,55,0.22)' },
-  cian:       { label: 'Cian',       color: '#00d4ff', border: 'rgba(0,212,255,0.5)',  glow: 'rgba(0,212,255,0.22)' },
-  purpura:    { label: 'Púrpura',    color: '#b060ff', border: 'rgba(176,96,255,0.5)', glow: 'rgba(176,96,255,0.22)' },
-  legendario: { label: 'Legendario', color: '#ff6b35', border: 'rgba(255,107,53,0.5)', glow: 'rgba(255,107,53,0.22)' },
-  syrtis:     { label: 'Syrtis',     color: '#4CAF50', border: 'rgba(76,175,80,0.5)',  glow: 'rgba(76,175,80,0.22)' },
-  ignis:      { label: 'Ignis',      color: '#F44336', border: 'rgba(244,67,54,0.5)',  glow: 'rgba(244,67,54,0.22)' },
-  alsius:     { label: 'Alsius',     color: '#2196F3', border: 'rgba(33,150,243,0.5)', glow: 'rgba(33,150,243,0.22)' },
+export type PremiumBg = 'ninguno' | 'sutil' | 'intenso' | 'neon'
+
+export const PREMIUM_BG_STYLES: Record<PremiumBg, { label: string; borderAlpha: number; glowAlpha: number; glowBlur: number }> = {
+  ninguno: { label: 'Ninguno', borderAlpha: 0.25, glowAlpha: 0,    glowBlur: 0 },
+  sutil:   { label: 'Sutil',   borderAlpha: 0.4,  glowAlpha: 0.12, glowBlur: 20 },
+  intenso: { label: 'Intenso', borderAlpha: 0.6,  glowAlpha: 0.22, glowBlur: 30 },
+  neon:    { label: 'Neón',    borderAlpha: 0.75, glowAlpha: 0.32, glowBlur: 40 },
 }
 
-export const PREMIUM_THEME_KEYS = Object.keys(PREMIUM_THEMES) as PremiumTheme[]
+export const PREMIUM_BG_KEYS = Object.keys(PREMIUM_BG_STYLES) as PremiumBg[]
 
-export function temaPremium(theme: string | null | undefined) {
-  return PREMIUM_THEMES[theme as PremiumTheme] ?? PREMIUM_THEMES.dorado
+export function hexToRgba(hex: string, alpha: number): string {
+  const m = hex.replace('#', '')
+  const r = parseInt(m.substring(0, 2), 16)
+  const g = parseInt(m.substring(2, 4), 16)
+  const b = parseInt(m.substring(4, 6), 16)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+/** Combina el color libre + el estilo de fondo elegidos por un jugador
+ * premium en los valores CSS ya listos para usar (borde y glow). Si
+ * todavía no eligió nada, cae al dorado por defecto del sitio con
+ * intensidad "sutil" — se ve igual que un perfil no premium hasta que
+ * el jugador decide personalizarlo. */
+export function estiloPremium(color: string | null | undefined, bg: string | null | undefined) {
+  const c = color && /^#[0-9a-fA-F]{6}$/.test(color) ? color : PREMIUM_COLOR_DEFAULT
+  const style = PREMIUM_BG_STYLES[bg as PremiumBg] ?? PREMIUM_BG_STYLES.sutil
+  return {
+    color: c,
+    border: hexToRgba(c, style.borderAlpha),
+    glow: style.glowAlpha > 0 ? `0 0 ${style.glowBlur}px ${hexToRgba(c, style.glowAlpha)}` : null,
+  }
 }

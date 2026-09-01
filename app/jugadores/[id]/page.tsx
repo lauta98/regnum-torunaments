@@ -11,11 +11,11 @@ import PersonajesYHistorial from './PersonajesYHistorial'
 import SubirAvatar from './SubirAvatar'
 import ReportarAvatar from './ReportarAvatar'
 import HacersePremium from './HacersePremium'
-import ElegirTema from './ElegirTema'
+import PersonalizarPerfil from './PersonalizarPerfil'
 import PremiumBadge from '@/components/PremiumBadge'
 import { agruparTrofeos } from '@/lib/campeonatos'
 import { avatarSrc } from '@/lib/avatar'
-import { temaPremium } from '@/lib/premium'
+import { estiloPremium } from '@/lib/premium'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,7 +90,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const nombreCuenta = principal?.nickname_juego ?? player.discord_username ?? 'Jugador'
 
   /* ── Premium: acento de color propio en la card de cuenta ────────── */
-  const tema = player.es_premium ? temaPremium(player.premium_theme) : null
+  const tema = player.es_premium ? estiloPremium(player.premium_color, player.premium_bg) : null
 
   /* ── MMR history de TODOS los personajes (el usuario elige cuál ver) ── */
   const bestPersonaje = personajes?.[0]
@@ -138,7 +138,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
             <div style={{
               background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 24, textAlign: 'center',
               border: `1px solid ${tema ? tema.border : 'var(--border-gold)'}`,
-              boxShadow: tema ? `var(--shadow-card), 0 0 24px ${tema.glow}` : 'var(--shadow-card)',
+              boxShadow: tema?.glow ? `var(--shadow-card), ${tema.glow}` : 'var(--shadow-card)',
             }}>
               <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -156,9 +156,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                   </div>
                 )}
               </div>
-              <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
+              <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: tema ? tema.color : 'var(--text-primary)', marginBottom: 8 }}>
                 {nombreCuenta}
-                <PremiumBadge esPremium={player.es_premium} theme={player.premium_theme} size={15} />
+                <PremiumBadge esPremium={player.es_premium} color={player.premium_color} size={15} />
               </h1>
               {player.role && player.role !== 'player' && (
                 <span style={{ display: 'inline-block', background: ROLE_BG[player.role as UserRole], color: ROLE_COLOR[player.role as UserRole], border: `1px solid ${ROLE_COLOR[player.role as UserRole]}55`, padding: '3px 10px', borderRadius: 4, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, marginBottom: 8 }}>
@@ -171,12 +171,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               </div>
 
               {isOwner && (
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
                   {player.es_premium ? (
-                    <>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>PERSONALIZAR PERFIL</span>
-                      <ElegirTema playerId={player.id} temaActual={player.premium_theme} />
-                    </>
+                    <PersonalizarPerfil playerId={player.id} colorActual={player.premium_color} bgActual={player.premium_bg} />
                   ) : (
                     <HacersePremium playerId={player.id} />
                   )}
