@@ -5,6 +5,8 @@ import Leaderboard from '@/components/Leaderboard'
 import TorneoCard from '@/components/TorneoCard'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import Link from 'next/link'
+import { CLASE_COLOR, CLASE_ICON } from '@/lib/constants'
+import type { Clase } from '@/lib/types'
 
 // Para fechas recientes muestra relativo ("hace 3h"); pasado ese rango un
 // "hace N meses/años" deja de ser legible de un vistazo (y para torneos
@@ -71,7 +73,7 @@ export default async function HomePage({
     // porque supabase-js no permite ordenar por una columna de una tabla
     // relacionada directamente en el query.
     supabase.from('campeonatos')
-      .select('id, personaje_id, player_id, personaje:personajes(id, nickname_juego), torneo:tournaments(id, nombre, fecha_inicio, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma))')
+      .select('id, personaje_id, player_id, foto_url, personaje:personajes(id, nickname_juego, clase), torneo:tournaments(id, nombre, fecha_inicio, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma))')
       .eq('puesto', 1)
       .limit(200),
   ])
@@ -185,37 +187,52 @@ export default async function HomePage({
         </section>
 
         {/* ── Actividad reciente (últimos campeones) ──────────────
-            Mismo lenguaje visual que el podio de /jugadores (glow dorado,
-            no una fila de tabla más) — StatsBar usa arte de fondo fijo por
-            categoría, pero acá no hay una imagen confiable por torneo, así
-            que el peso visual sale del glow/gradiente en vez de una foto. */}
+            El fondo es la foto que el organizador subió al coronar al
+            campeón (campeonatos.foto_url, la misma que sale en el Salón de
+            la Fama) — con un degradé fuerte encima para que el trofeo y el
+            texto se sigan leyendo. Si ese torneo no tiene foto cargada,
+            cae al glow dorado liso de antes. */}
         {campeonesOrdenados.length > 0 && (
           <section style={{ marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 1, marginBottom: 14 }}>Actividad Reciente</h2>
-            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4 }}>
-              {campeonesOrdenados.map((c: any) => (
-                <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none', flex: '0 0 220px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 16 }}>
+              {campeonesOrdenados.map((c: any) => {
+                const clase = c.personaje?.clase as Clase | undefined
+                const cc = clase ? CLASE_COLOR[clase] : undefined
+                return (
+                <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none', flex: '0 0 240px' }}>
                   <div className="card-hover" style={{
                     position: 'relative', overflow: 'hidden', height: '100%',
-                    background: 'linear-gradient(160deg, #120f00, #1c1700)',
-                    border: '1px solid rgba(212,175,55,0.3)',
+                    backgroundImage: c.foto_url
+                      ? `linear-gradient(180deg, rgba(8,6,2,0.55) 0%, rgba(8,6,2,0.82) 55%, rgba(8,6,2,0.96) 100%), url('${c.foto_url}')`
+                      : 'linear-gradient(160deg, #120f00, #1c1700)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center 30%',
+                    border: '1px solid rgba(212,175,55,0.45)',
                     borderRadius: 'var(--radius-md)',
-                    padding: '20px 18px',
-                    boxShadow: '0 0 32px rgba(212,175,55,0.14), inset 0 0 50px rgba(0,0,0,0.35)',
+                    padding: '22px 18px',
+                    boxShadow: '0 0 0 1px rgba(212,175,55,0.12), 0 0 40px rgba(212,175,55,0.22), inset 0 0 60px rgba(0,0,0,0.4)',
                     display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8,
                   }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent)' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.85), transparent)' }} />
                     <TrofeoBadge trofeo={c.torneo?.trofeo} puesto={1} size="lg" title={`Campeón de ${c.torneo?.nombre}`} />
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--gold)', letterSpacing: 0.3, marginTop: 2 }}>
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--gold)', letterSpacing: 0.3, marginTop: 2, textShadow: '0 1px 6px rgba(0,0,0,0.8)' }}>
                       {c.personaje?.nickname_juego ?? '—'}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                    {clase && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: `${cc}22`, border: `1px solid ${cc}55`, borderRadius: 100, padding: '2px 10px' }}>
+                        <span style={{ fontSize: 11 }}>{CLASE_ICON[clase]}</span>
+                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 10.5, color: cc, fontWeight: 600 }}>{clase}</span>
+                      </div>
+                    )}
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
                       {c.torneo?.nombre}
                     </div>
                     <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10.5, color: 'var(--text-muted)' }}>{hace(c.torneo.fecha_inicio)}</div>
                   </div>
                 </Link>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
