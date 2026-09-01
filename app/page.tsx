@@ -6,6 +6,10 @@ import TorneoCard from '@/components/TorneoCard'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import Link from 'next/link'
 
+// Para fechas recientes muestra relativo ("hace 3h"); pasado ese rango un
+// "hace N meses/años" deja de ser legible de un vistazo (y para torneos
+// históricos importados hace poco pero jugados hace años, es directamente
+// confuso) — mejor la fecha real una vez que pasaron unas semanas.
 function hace(fecha: string) {
   const diffMs = Date.now() - new Date(fecha).getTime()
   const mins = Math.floor(diffMs / 60000)
@@ -14,9 +18,8 @@ function hace(fecha: string) {
   if (mins < 1) return 'hace un momento'
   if (mins < 60) return `hace ${mins} min`
   if (hours < 24) return `hace ${hours}h`
-  if (days < 30) return `hace ${days}d`
-  const meses = Math.floor(days / 30)
-  return `hace ${meses} mes${meses > 1 ? 'es' : ''}`
+  if (days < 21) return `hace ${days}d`
+  return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
 export const dynamic = 'force-dynamic'
@@ -61,12 +64,21 @@ export default async function HomePage({
       .in('estado', ['inscripciones', 'live'])
       .order('fecha_inicio', { ascending: true })
       .limit(6),
+    // Ordenar por cuándo se jugó el torneo de verdad (fecha_inicio), no por
+    // cuándo se cargó el registro en la base (created_at) — un torneo de
+    // 2023 importado ayer no es "actividad reciente" solo porque el import
+    // sea reciente. Se trae un lote más grande y se ordena/recorta en JS
+    // porque supabase-js no permite ordenar por una columna de una tabla
+    // relacionada directamente en el query.
     supabase.from('campeonatos')
-      .select('id, created_at, personaje_id, player_id, personaje:personajes(id, nickname_juego), torneo:tournaments(id, nombre, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma))')
+      .select('id, personaje_id, player_id, personaje:personajes(id, nickname_juego), torneo:tournaments(id, nombre, fecha_inicio, trofeo:trofeos!tournaments_trofeo_id_fkey(nombre, icono, color, forma))')
       .eq('puesto', 1)
-      .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(200),
   ])
+  const campeonesOrdenados = (campeonesRecientes ?? [])
+    .filter((c: any) => c.torneo?.fecha_inicio)
+    .sort((a: any, b: any) => +new Date(b.torneo.fecha_inicio) - +new Date(a.torneo.fecha_inicio))
+    .slice(0, 5)
 
   return (
     <>
@@ -164,19 +176,19 @@ export default async function HomePage({
         )}
 
         {/* ── Actividad reciente (últimos campeones) ────────────── */}
-        {(campeonesRecientes ?? []).length > 0 && (
+        {campeonesOrdenados.length > 0 && (
           <section style={{ marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 1, marginBottom: 14 }}>Actividad Reciente</h2>
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-              {campeonesRecientes!.map((c: any, i: number) => (
+              {campeonesOrdenados.map((c: any, i: number) => (
                 <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none' }}>
-                  <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < campeonesRecientes!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                  <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < campeonesOrdenados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
                     <TrofeoBadge trofeo={c.torneo?.trofeo} puesto={1} size="sm" title={`Campeón de ${c.torneo?.nombre}`} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>
                         <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{c.personaje?.nickname_juego ?? '—'}</span> ganó <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.torneo?.nombre}</span>
                       </div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{hace(c.created_at)}</div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{hace(c.torneo.fecha_inicio)}</div>
                     </div>
                   </div>
                 </Link>
