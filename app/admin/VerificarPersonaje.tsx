@@ -1,5 +1,6 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function VerificarPersonaje({
   personajeId,
@@ -10,6 +11,7 @@ export default function VerificarPersonaje({
   verificado: boolean
   reportId: string
 }) {
+  const router = useRouter()
   const [verificado, setVerificado] = useState(initialVerificado)
   const [status, setStatus] = useState<'idle' | 'ok' | 'error'>('idle')
   const [isPending, startTransition] = useTransition()
@@ -19,12 +21,15 @@ export default function VerificarPersonaje({
       const res = await fetch('/api/admin/verificar-personaje', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ personajeId, verificado: !verificado }),
+        body: JSON.stringify({ personajeId, verificado: !verificado, reportId }),
       })
       if (res.ok) {
         setVerificado(v => !v)
         setStatus('ok')
         setTimeout(() => setStatus('idle'), 1800)
+        // Misma familia de bug que RoleManager y ResolverReclamo: sin esto
+        // el reporte queda pegado en "pendientes" hasta recargar a mano.
+        router.refresh()
       } else {
         setStatus('error')
         setTimeout(() => setStatus('idle'), 2000)
