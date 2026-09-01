@@ -71,15 +71,15 @@ export default function HacersePremium({ playerId }: { playerId: string }) {
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold-strong)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 400, textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>👑</div>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, color: 'var(--gold)', marginBottom: 8, letterSpacing: 1 }}>Cuenta Premium</h2>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.5, marginBottom: 16 }}>
-              Es una forma simbólica de apoyar el proyecto — no cambia nada del juego ni te da ninguna ventaja competitiva. A cambio conseguís:
+            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 16 }}>
+              Un gesto simbólico para acompañar el proyecto — sin ninguna ventaja competitiva de por medio. A cambio, tu nombre queda marcado en la comunidad:
             </p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 20px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
               <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span style={{ fontSize: 15 }}>👑</span> Un símbolo junto a tu nombre en todo el sitio
+                <span style={{ fontSize: 15 }}>👑</span> Una insignia junto a tu nombre, en todo el sitio
               </li>
               <li style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)' }}>
-                <span style={{ fontSize: 15 }}>🎨</span> Elegir cualquier color para tu perfil, con 4 estilos de fondo
+                <span style={{ fontSize: 15 }}>🎨</span> El color de tu perfil, a tu elección — con el estilo de fondo que prefieras
               </li>
             </ul>
 
