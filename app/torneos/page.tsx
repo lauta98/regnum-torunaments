@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createPublicSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -52,7 +52,7 @@ export default async function TorneosPage({
   searchParams: Promise<Params>
 }) {
   const params = await searchParams
-  const supabase = await createServerSupabase()
+  const supabase = createPublicSupabase()
   const ordenAntiguos = params.orden === 'antiguos'
 
   let query = supabase

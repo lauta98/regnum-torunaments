@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createPublicSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import StatsBar from '@/components/StatsBar'
 import Leaderboard from '@/components/Leaderboard'
@@ -50,7 +50,7 @@ export default async function HomePage({
   searchParams: Promise<{ error?: string }>
 }) {
   const { error } = await searchParams
-  const supabase = await createServerSupabase()
+  const supabase = createPublicSupabase()
 
   const [
     { data: personajes },

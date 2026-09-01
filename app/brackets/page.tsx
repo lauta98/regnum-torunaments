@@ -1,4 +1,4 @@
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createPublicSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import type { Metadata } from 'next'
 import TorneoCard from '@/components/TorneoCard'
@@ -9,7 +9,7 @@ export const revalidate = 30
 export const metadata: Metadata = { title: 'Brackets' }
 
 export default async function BracketsPage() {
-  const supabase = await createServerSupabase()
+  const supabase = createPublicSupabase()
 
   const { data: tourneys } = await supabase
     .from('tournaments')

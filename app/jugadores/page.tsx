@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { createServerSupabase } from '@/lib/supabase-server'
+import { createPublicSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
@@ -79,7 +79,7 @@ export default async function JugadoresPage({
   searchParams: Promise<{ q?: string; reino?: string; clase?: string; page?: string; vista?: string; multiclase?: string }>
 }) {
   const params = await searchParams
-  const supabase = await createServerSupabase()
+  const supabase = createPublicSupabase()
   const vista = params.vista ?? 'personajes'
   const PAGE = 50
   const page = parseInt(params.page || '1')
