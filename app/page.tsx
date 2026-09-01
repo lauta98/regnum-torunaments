@@ -24,7 +24,10 @@ function hace(fecha: string) {
   return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export const dynamic = 'force-dynamic'
+// Página 100% pública, sin nada personalizado por usuario — cachear
+// 30s en vez de pegarle a la base en cada visita (era la mayor causa
+// de lentitud real, más que el plan de hosting en sí).
+export const revalidate = 30
 
 const IconTrophy = () => (
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -17,7 +17,9 @@ function qs(current: Params, changes: Partial<Params>) {
   return `/torneos${s ? `?${s}` : ''}`
 }
 
-export const dynamic = 'force-dynamic'
+// Página 100% pública, sin nada personalizado por usuario — cachear
+// 30s en vez de pegarle a la base en cada visita.
+export const revalidate = 30
 export const metadata: Metadata = { title: 'Torneos' }
 
 // Formato labels con override para 7v7
