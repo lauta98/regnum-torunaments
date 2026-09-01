@@ -10,8 +10,12 @@ import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 import PersonajesYHistorial from './PersonajesYHistorial'
 import SubirAvatar from './SubirAvatar'
 import ReportarAvatar from './ReportarAvatar'
+import HacersePremium from './HacersePremium'
+import ElegirTema from './ElegirTema'
+import PremiumBadge from '@/components/PremiumBadge'
 import { agruparTrofeos } from '@/lib/campeonatos'
 import { avatarSrc } from '@/lib/avatar'
+import { temaPremium } from '@/lib/premium'
 
 export const dynamic = 'force-dynamic'
 
@@ -85,6 +89,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
   const principal = personajes?.find(p => p.id === player.personaje_principal_id)
   const nombreCuenta = principal?.nickname_juego ?? player.discord_username ?? 'Jugador'
 
+  /* ── Premium: acento de color propio en la card de cuenta ────────── */
+  const tema = player.es_premium ? temaPremium(player.premium_theme) : null
+
   /* ── MMR history de TODOS los personajes (el usuario elige cuál ver) ── */
   const bestPersonaje = personajes?.[0]
   const { data: mmrHistoryRaw } = personajeIds.length ? await supabase
@@ -128,7 +135,11 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Tarjeta cuenta */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', padding: 24, textAlign: 'center' }}>
+            <div style={{
+              background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 24, textAlign: 'center',
+              border: `1px solid ${tema ? tema.border : 'var(--border-gold)'}`,
+              boxShadow: tema ? `var(--shadow-card), 0 0 24px ${tema.glow}` : 'var(--shadow-card)',
+            }}>
               <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {avatarSrc(player)
@@ -145,8 +156,9 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                   </div>
                 )}
               </div>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
+              <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
                 {nombreCuenta}
+                <PremiumBadge esPremium={player.es_premium} theme={player.premium_theme} size={15} />
               </h1>
               {player.role && player.role !== 'player' && (
                 <span style={{ display: 'inline-block', background: ROLE_BG[player.role as UserRole], color: ROLE_COLOR[player.role as UserRole], border: `1px solid ${ROLE_COLOR[player.role as UserRole]}55`, padding: '3px 10px', borderRadius: 4, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, marginBottom: 8 }}>
@@ -157,6 +169,19 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                 <svg width="14" height="11" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.6.7a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.6 37.6 0 0 0 25.5.8a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.8 4.9a.2.2 0 0 0-.1.1C1.6 18.7-.9 32.1.3 45.3a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1c1.4-1.9 2.6-3.9 3.6-5.9a.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4 30 30 0 0 0 .6-.5.2.2 0 0 1 .2 0c11.5 5.2 23.9 5.2 35.3 0a.2.2 0 0 1 .2 0l.6.5a.2.2 0 0 1 0 .4 36.2 36.2 0 0 1-5.5 2.6.2.2 0 0 0-.1.3c1 2 2.3 4 3.6 5.9a.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C72.9 30 70 16.7 60.2 5a.2.2 0 0 0-.1-.1Z"/></svg>
                 {player.discord_username}
               </div>
+
+              {isOwner && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                  {player.es_premium ? (
+                    <>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>PERSONALIZAR PERFIL</span>
+                      <ElegirTema playerId={player.id} temaActual={player.premium_theme} />
+                    </>
+                  ) : (
+                    <HacersePremium playerId={player.id} />
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Stats globales */}

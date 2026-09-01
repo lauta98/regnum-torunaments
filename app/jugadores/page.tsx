@@ -9,6 +9,7 @@ import TierLegend from '@/components/TierLegend'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { agruparTrofeos } from '@/lib/campeonatos'
 import { avatarSrc } from '@/lib/avatar'
+import PremiumBadge from '@/components/PremiumBadge'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Ranking — CoR Tournament Stats' }
@@ -88,7 +89,7 @@ export default async function JugadoresPage({
   // diferencia de select('*') suelto, que solo omite lo que falta).
   let query = supabase
     .from('personajes')
-    .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, avatar_url, role)', { count: 'exact' })
+    .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, avatar_url, role, es_premium, premium_theme)', { count: 'exact' })
     .order('mmr', { ascending: false })
 
   if (params.reino) query = query.eq('reino', params.reino as Reino)
@@ -285,6 +286,7 @@ export default async function JugadoresPage({
                         </div>
                         <div style={{ fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 12 : 11, fontWeight: 700, color: rank === 1 ? m.main : 'var(--text-primary)', letterSpacing: 0.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'center' }}>
                           {p.nickname_juego} {p.verificado && <span title="Verificado">✓</span>}
+                          <PremiumBadge esPremium={p.player?.es_premium} theme={p.player?.premium_theme} size={11} />
                           <TrofeoRow grupos={trofeosPorPersonaje.get(p.id) ?? []} />
                         </div>
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: rank === 1 ? 16 : 13, fontWeight: 700, color: m.main }}>{p.mmr}</div>
@@ -350,6 +352,7 @@ export default async function JugadoresPage({
                             <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 4 }}>
                               {p.nickname_juego}
                               {p.verificado && <span style={{ fontSize: 10, color: '#2196F3' }} title="Personaje verificado">✓</span>}
+                              <PremiumBadge esPremium={p.player?.es_premium} theme={p.player?.premium_theme} size={11} />
                               <TrofeoRow grupos={trofeosPorPersonaje.get(p.id) ?? []} />
                             </div>
                             <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{p.player?.discord_username ?? '—'}</div>
