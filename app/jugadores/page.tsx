@@ -71,7 +71,7 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos'
 export default async function JugadoresPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; reino?: string; clase?: string; page?: string; vista?: string }>
+  searchParams: Promise<{ q?: string; reino?: string; clase?: string; page?: string; vista?: string; multiclase?: string }>
 }) {
   const params = await searchParams
   const supabase = await createServerSupabase()
@@ -95,7 +95,10 @@ export default async function JugadoresPage({
   if (params.q)     query = query.ilike('nickname_juego', `%${params.q}%`)
 
   const { data: personajes, count } = await (
-    vista === 'cuentas' ? query.limit(200) : query.range(from, from + PAGE - 1)
+    // Sin tope real de paginado en esta vista (se agrupa por cuenta) — un
+    // límite bajo cortaría el personaje de menor MMR de una cuenta y la
+    // haría parecer mono-clase por error.
+    vista === 'cuentas' ? query.limit(1000) : query.range(from, from + PAGE - 1)
   )
 
   /* ── Campeonatos (para las insignias de copa) ──────── */
@@ -119,7 +122,18 @@ export default async function JugadoresPage({
         if (p.mmr > entry.best_personaje.mmr) entry.best_personaje = p
       }
     }
-    cuentas = Array.from(map.values()).sort((a, b) => b.best_personaje.mmr - a.best_personaje.mmr)
+    cuentas = Array.from(map.values())
+
+    // Subclases distintas jugadas por cada cuenta — un jugador que compitió
+    // con, por ejemplo, un Bárbaro y un Caballero (aunque sean personajes
+    // separados) cuenta como multiclase.
+    cuentas.forEach(c => {
+      c.clasesDistintas = [...new Set(c.personajes.map((p: any) => p.clase).filter(Boolean))] as Clase[]
+      c.esMulticlase = c.clasesDistintas.length >= 2
+    })
+
+    if (params.multiclase) cuentas = cuentas.filter(c => c.esMulticlase)
+    cuentas.sort((a, b) => b.best_personaje.mmr - a.best_personaje.mmr)
 
     // Personaje "principal" elegido por cada cuenta (aparte del select de
     // arriba a proposito — ver nota mas arriba). Si la columna todavia no
@@ -184,7 +198,7 @@ export default async function JugadoresPage({
   const isFiltered = !!(params.q || params.reino || params.clase)
 
   const buildUrl = (overrides: Record<string, string | undefined>) => {
-    const p = { q: params.q, reino: params.reino, clase: params.clase, page: params.page, vista, ...overrides }
+    const p = { q: params.q, reino: params.reino, clase: params.clase, page: params.page, vista, multiclase: params.multiclase, ...overrides }
     const parts = Object.entries(p).filter(([, v]) => v).map(([k, v]) => `${k}=${encodeURIComponent(v!)}`)
     return `/jugadores${parts.length ? '?' + parts.join('&') : ''}`
   }
@@ -386,22 +400,39 @@ export default async function JugadoresPage({
 
         {/* ── VISTA CUENTAS ────────────────────────────────── */}
         {vista === 'cuentas' && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <Link
+                href={buildUrl({ multiclase: params.multiclase ? undefined : '1' })}
+                className={`btn ${params.multiclase ? '' : 'btn-ghost'}`}
+                style={{ textDecoration: 'none', ...(params.multiclase ? { background: 'var(--gold-muted)', borderColor: 'var(--border-gold-strong)', color: 'var(--gold)' } : {}) }}
+                title="Jugadores que compitieron con 2 o más subclases distintas (aunque sea con personajes separados)"
+              >
+                🎭 Solo multiclase
+              </Link>
+              {params.multiclase && (
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{cuentas.length} jugadores</span>
+              )}
+            </div>
+
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 80px 80px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
-              {['#', 'JUGADOR', 'MEJOR PERSONAJE', 'PERSONAJES', 'BEST MMR'].map(col => (
+            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 80px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+              {['#', 'JUGADOR', 'MEJOR PERSONAJE', 'SUBCLASES', 'BEST MMR'].map(col => (
                 <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
               ))}
             </div>
 
             {!cuentas.length ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>No hay jugadores registrados.</div>
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+                {params.multiclase ? 'Ningún jugador compitió con 2+ subclases todavía.' : 'No hay jugadores registrados.'}
+              </div>
             ) : cuentas.map((c: any, i: number) => {
               const bp = c.best_personaje
               const rc = REINO_COLOR[bp?.reino as Reino] ?? 'var(--gold)'
               const tier = getTier(bp?.mmr ?? 0)
               return (
                 <Link key={c.id} href={`/jugadores/${c.id}`} style={{ textDecoration: 'none' }}>
-                  <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 80px 80px', padding: '12px 20px', borderBottom: i < cuentas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', cursor: 'pointer' }}>
+                  <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 80px', padding: '12px 20px', borderBottom: i < cuentas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', cursor: 'pointer' }}>
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
@@ -410,6 +441,7 @@ export default async function JugadoresPage({
                           : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{c.nombre_mostrado?.[0]?.toUpperCase()}</span>}
                       </div>
                       <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_mostrado ?? '—'}</span>
+                      {c.esMulticlase && <span title="Compitió con 2+ subclases distintas" style={{ fontSize: 12 }}>🎭</span>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <KingdomShield reino={bp?.reino} size={14} />
@@ -418,7 +450,14 @@ export default async function JugadoresPage({
                         <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{bp?.clase}</div>
                       </div>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)', textAlign: 'center' }}>{c.personajes.length}</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        {c.clasesDistintas.map((cl: Clase) => (
+                          <span key={cl} title={cl} style={{ color: CLASE_COLOR[cl], display: 'flex' }}>{CLASE_SVG[cl]}</span>
+                        ))}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{c.personajes.length} personaje{c.personajes.length === 1 ? '' : 's'}</span>
+                    </div>
                     <div>
                       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{bp?.mmr ?? '—'}</div>
                       <span className={`tier-pill ${tier.cssClass}`} style={{ display: 'inline-flex', marginTop: 2 }}>{tier.icon} {tier.name}</span>
@@ -428,6 +467,7 @@ export default async function JugadoresPage({
               )
             })}
           </div>
+          </>
         )}
 
         {/* ── VISTA REINOS ─────────────────────────────────── */}
