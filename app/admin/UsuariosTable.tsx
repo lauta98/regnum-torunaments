@@ -5,10 +5,12 @@ import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, isSuperAdmin } from '@/lib/roles'
 import type { UserRole } from '@/lib/types'
 import RoleManager from './RoleManager'
 import Pagination from '@/components/Pagination'
+import { avatarSrc } from '@/lib/avatar'
 
 type Player = {
   id: string; user_id: string | null; nickname_juego: string; reino: string; clase_principal: string
   role: UserRole; discord_username: string | null; discord_avatar: string | null
+  avatar_url?: string | null
 }
 
 const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
@@ -172,8 +174,8 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                  {p.discord_avatar
-                    ? <img src={p.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  {avatarSrc(p)
+                    ? <img src={avatarSrc(p)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                     : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{p.nickname_juego?.[0]?.toUpperCase()}</span>}
                 </div>
                 <div style={{ minWidth: 0 }}>

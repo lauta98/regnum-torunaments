@@ -1,7 +1,9 @@
 'use client'
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 
 export default function ResolverReclamo({ reclamoId }: { reclamoId: string }) {
+  const router = useRouter()
   const [status, setStatus]     = useState<'idle' | 'ok_transferir' | 'ok_rechazar' | 'error'>('idle')
   const [isPending, startTransition] = useTransition()
 
@@ -14,6 +16,12 @@ export default function ResolverReclamo({ reclamoId }: { reclamoId: string }) {
       })
       if (res.ok) {
         setStatus(accion === 'transferir' ? 'ok_transferir' : 'ok_rechazar')
+        // Sin esto el reclamo resuelto se queda pegado en la lista de
+        // "pendientes" (con el check ya marcado) hasta que alguien recargue
+        // a mano — mismo bug que ya se encontró y corrigió hoy en
+        // RoleManager, el resto de esta familia de componentes de admin
+        // tampoco refrescaba al padre.
+        router.refresh()
       } else {
         setStatus('error')
         setTimeout(() => setStatus('idle'), 2500)

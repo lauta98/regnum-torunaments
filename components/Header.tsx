@@ -7,6 +7,7 @@ import { signInWithDiscord, signOut } from '@/lib/auth'
 import { REINO_COLOR } from '@/lib/constants'
 import type { Reino, UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canOrganize, canAdmin } from '@/lib/roles'
+import { avatarSrc } from '@/lib/avatar'
 
 /* ── Icons ─────────────────────────────────────────────────────── */
 const IconHome = () => (
@@ -90,7 +91,7 @@ export default function Header() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
       supabase.from('players')
-        .select('id, nickname_juego, reino, role, discord_avatar')
+        .select('id, nickname_juego, reino, role, discord_avatar, avatar_url')
         .eq('user_id', user.id).single()
         .then(({ data }) => setPlayer(data))
     })
@@ -184,8 +185,8 @@ export default function Header() {
               cursor: 'pointer', color: 'var(--text-primary)',
             }}>
               <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${rc}22`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                {player.discord_avatar
-                  ? <img src={player.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Avatar de ${player.nickname_juego}`} />
+                {avatarSrc(player)
+                  ? <img src={avatarSrc(player)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Avatar de ${player.nickname_juego}`} />
                   : <span style={{ fontSize: 11, fontWeight: 700, color: rc }}>{player.nickname_juego?.[0]?.toUpperCase()}</span>}
               </div>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{player.nickname_juego}</span>

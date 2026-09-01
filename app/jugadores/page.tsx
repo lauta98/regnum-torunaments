@@ -8,6 +8,7 @@ import type { Reino, Clase } from '@/lib/types'
 import TierLegend from '@/components/TierLegend'
 import TrofeoBadge from '@/components/TrofeoBadge'
 import { agruparTrofeos } from '@/lib/campeonatos'
+import { avatarSrc } from '@/lib/avatar'
 
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Ranking — CoR Tournament Stats' }
@@ -87,7 +88,7 @@ export default async function JugadoresPage({
   // diferencia de select('*') suelto, que solo omite lo que falta).
   let query = supabase
     .from('personajes')
-    .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, role)', { count: 'exact' })
+    .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, avatar_url, role)', { count: 'exact' })
     .order('mmr', { ascending: false })
 
   if (params.reino) query = query.eq('reino', params.reino as Reino)
@@ -428,8 +429,8 @@ export default async function JugadoresPage({
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
-                        {c.discord_avatar
-                          ? <img src={c.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                        {avatarSrc(c)
+                          ? <img src={avatarSrc(c)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
                           : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{c.nombre_mostrado?.[0]?.toUpperCase()}</span>}
                       </div>
                       <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_mostrado ?? '—'}</span>

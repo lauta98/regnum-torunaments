@@ -7,6 +7,7 @@ import { canAdmin } from '@/lib/roles'
 import UsuariosTable from './UsuariosTable'
 import VerificarPersonaje from './VerificarPersonaje'
 import ResolverReclamo from './ResolverReclamo'
+import ResolverAvatar from './ResolverAvatar'
 import TorneosRecientes from './TorneosRecientes'
 
 export const dynamic = 'force-dynamic'
@@ -29,7 +30,7 @@ export default async function AdminPage() {
   /* ── Datos globales ─────────────────────────────────────────── */
   const { data: players } = await supabase
     .from('players')
-    .select('id, user_id, nickname_juego, reino, clase_principal, role, discord_username, discord_avatar, mmr_global, created_at')
+    .select('id, user_id, nickname_juego, reino, clase_principal, role, discord_username, discord_avatar, avatar_url, mmr_global, created_at')
     .order('created_at', { ascending: false })
 
   const { data: reports } = await supabase
@@ -44,6 +45,12 @@ export default async function AdminPage() {
     .select('*, personaje:personajes(id, nickname_juego, player:players!personajes_player_id_fkey(id, discord_username)), claimer:players!claimer_id(id, discord_username)')
     .eq('estado', 'pendiente')
     .eq('tipo', 'reclamo')
+    .order('created_at', { ascending: false })
+
+  const { data: avataresReportados } = await supabase
+    .from('players')
+    .select('id, nickname_juego, discord_username, avatar_url, avatar_reporte_motivo')
+    .eq('avatar_reportado', true)
     .order('created_at', { ascending: false })
 
   const { data: allTournaments } = await supabase
@@ -145,6 +152,33 @@ export default async function AdminPage() {
                   <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
                     Dueño: <span style={{ color: 'var(--text-secondary)' }}>{r.personaje?.player?.discord_username ?? '—'}</span>
                   </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Fotos de perfil reportadas ──────────────────── */}
+        {(avataresReportados?.length ?? 0) > 0 && (
+          <div style={{ marginTop: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>FOTOS DE PERFIL REPORTADAS</div>
+              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+                {avataresReportados!.length} pendiente{avataresReportados!.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+              {avataresReportados!.map((p: any, i: number) => (
+                <div key={p.id} style={{ padding: '14px 20px', borderBottom: i < avataresReportados!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
+                  {p.avatar_url
+                    ? <img src={p.avatar_url} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
+                    : <div style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>sin foto</div>}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego ?? p.discord_username ?? '—'}</div>
+                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{p.avatar_reporte_motivo}</p>
+                    <Link href={`/jugadores/${p.id}`} style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver perfil →</Link>
+                  </div>
+                  <ResolverAvatar targetId={p.id} />
                 </div>
               ))}
             </div>

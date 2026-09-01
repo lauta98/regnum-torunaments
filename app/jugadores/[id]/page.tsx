@@ -8,7 +8,10 @@ import { ROLE_LABEL, ROLE_COLOR, ROLE_BG } from '@/lib/roles'
 import { FORMAT_COLOR, STATUS_STYLE } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus } from '@/lib/types'
 import PersonajesYHistorial from './PersonajesYHistorial'
+import SubirAvatar from './SubirAvatar'
+import ReportarAvatar from './ReportarAvatar'
 import { agruparTrofeos } from '@/lib/campeonatos'
+import { avatarSrc } from '@/lib/avatar'
 
 export const dynamic = 'force-dynamic'
 
@@ -126,10 +129,21 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
 
             {/* Tarjeta cuenta */}
             <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-card)', padding: 24, textAlign: 'center' }}>
-              <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px', overflow: 'hidden' }}>
-                {player.discord_avatar
-                  ? <img src={player.discord_avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                  : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{nombreCuenta[0]?.toUpperCase()}</span>}
+              <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
+                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  {avatarSrc(player)
+                    ? <img src={avatarSrc(player)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                    : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{nombreCuenta[0]?.toUpperCase()}</span>}
+                </div>
+                {isOwner ? (
+                  <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
+                    <SubirAvatar playerId={player.id} />
+                  </div>
+                ) : avatarSrc(player) && (
+                  <div style={{ position: 'absolute', bottom: -2, right: -2, background: 'rgba(10,10,10,0.72)', borderRadius: '50%', border: '1px solid rgba(244,67,54,0.4)' }}>
+                    <ReportarAvatar targetId={player.id} />
+                  </div>
+                )}
               </div>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: 'var(--text-primary)', marginBottom: 8 }}>
                 {nombreCuenta}
