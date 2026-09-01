@@ -175,21 +175,35 @@ export default async function HomePage({
           </section>
         )}
 
-        {/* ── Actividad reciente (últimos campeones) ────────────── */}
+        {/* ── Actividad reciente (últimos campeones) ──────────────
+            Mismo lenguaje visual que el podio de /jugadores (glow dorado,
+            no una fila de tabla más) — StatsBar usa arte de fondo fijo por
+            categoría, pero acá no hay una imagen confiable por torneo, así
+            que el peso visual sale del glow/gradiente en vez de una foto. */}
         {campeonesOrdenados.length > 0 && (
           <section style={{ marginBottom: 20 }}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', letterSpacing: 1, marginBottom: 14 }}>Actividad Reciente</h2>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-              {campeonesOrdenados.map((c: any, i: number) => (
-                <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none' }}>
-                  <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 20px', borderBottom: i < campeonesOrdenados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <TrofeoBadge trofeo={c.torneo?.trofeo} puesto={1} size="sm" title={`Campeón de ${c.torneo?.nombre}`} />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>
-                        <span style={{ color: 'var(--gold)', fontWeight: 700 }}>{c.personaje?.nickname_juego ?? '—'}</span> ganó <span style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{c.torneo?.nombre}</span>
-                      </div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', marginTop: 2 }}>{hace(c.torneo.fecha_inicio)}</div>
+            <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 4 }}>
+              {campeonesOrdenados.map((c: any) => (
+                <Link key={c.id} href={`/jugadores/${c.player_id}`} style={{ textDecoration: 'none', flex: '0 0 220px' }}>
+                  <div className="card-hover" style={{
+                    position: 'relative', overflow: 'hidden', height: '100%',
+                    background: 'linear-gradient(160deg, #120f00, #1c1700)',
+                    border: '1px solid rgba(212,175,55,0.3)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '20px 18px',
+                    boxShadow: '0 0 32px rgba(212,175,55,0.14), inset 0 0 50px rgba(0,0,0,0.35)',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 8,
+                  }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, rgba(212,175,55,0.55), transparent)' }} />
+                    <TrofeoBadge trofeo={c.torneo?.trofeo} puesto={1} size="lg" title={`Campeón de ${c.torneo?.nombre}`} />
+                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 15, fontWeight: 700, color: 'var(--gold)', letterSpacing: 0.3, marginTop: 2 }}>
+                      {c.personaje?.nickname_juego ?? '—'}
                     </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                      {c.torneo?.nombre}
+                    </div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10.5, color: 'var(--text-muted)' }}>{hace(c.torneo.fecha_inicio)}</div>
                   </div>
                 </Link>
               ))}
