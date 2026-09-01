@@ -3,7 +3,7 @@ import { createServerSupabase } from '@/lib/supabase-server'
 import Header from '@/components/Header'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { REINO_COLOR, REINOS, CLASES, getTier } from '@/lib/constants'
+import { REINO_COLOR, REINOS, CLASES, CLASE_COLOR, getTier } from '@/lib/constants'
 import type { Reino, Clase } from '@/lib/types'
 import TierLegend from '@/components/TierLegend'
 import TrofeoBadge from '@/components/TrofeoBadge'
@@ -135,6 +135,39 @@ export default async function JugadoresPage({
     })
   }
 
+  /* ── Vistas Reinos / Clases / Rachas: agregados sobre TODOS los personajes,
+     no solo la página actual — piden su propio query sin paginar. ────── */
+  let todosPersonajes: any[] = []
+  if (vista === 'reinos' || vista === 'clases' || vista === 'rachas') {
+    const { data } = await supabase
+      .from('personajes')
+      .select('*, player:players!personajes_player_id_fkey(id, discord_username)')
+      .order('mmr', { ascending: false })
+      .limit(1000)
+    todosPersonajes = data ?? []
+  }
+
+  const promedio = (lista: any[], campo: string) =>
+    lista.length ? Math.round(lista.reduce((s, p) => s + (p[campo] ?? 0), 0) / lista.length) : 0
+
+  const porReino = vista === 'reinos'
+    ? REINOS.map(r => {
+        const lista = todosPersonajes.filter(p => p.reino === r)
+        return { reino: r, lista, count: lista.length, avgMmr: promedio(lista, 'mmr'), avgWr: promedio(lista, 'winrate'), top5: lista.slice(0, 5) }
+      })
+    : []
+
+  const porClase = vista === 'clases'
+    ? CLASES.map(c => {
+        const lista = todosPersonajes.filter(p => p.clase === c)
+        return { clase: c, lista, count: lista.length, avgMmr: promedio(lista, 'mmr'), avgWr: promedio(lista, 'winrate'), top: lista[0] ?? null }
+      }).sort((a, b) => b.avgMmr - a.avgMmr)
+    : []
+
+  const rachas = vista === 'rachas'
+    ? todosPersonajes.filter(p => (p.winstreak ?? 0) > 0).sort((a, b) => b.winstreak - a.winstreak).slice(0, 25)
+    : []
+
   const totalPages = Math.ceil((count || 0) / PAGE)
   const isFiltered = !!(params.q || params.reino || params.clase)
 
@@ -172,6 +205,9 @@ export default async function JugadoresPage({
           {[
             { id: 'personajes', label: 'Personajes' },
             { id: 'cuentas',    label: 'Jugadores'  },
+            { id: 'reinos',     label: 'Reinos'      },
+            { id: 'clases',     label: 'Clases'      },
+            { id: 'rachas',     label: '🔥 Rachas'   },
           ].map(({ id, label }) => (
             <Link key={id} href={buildUrl({ vista: id, page: '1' })} className={`segmented-btn${vista === id ? ' is-active' : ''}`} style={{ textDecoration: 'none' }}>
               {label}
@@ -179,7 +215,8 @@ export default async function JugadoresPage({
           ))}
         </div>
 
-        {/* Filtros */}
+        {/* Filtros — solo tienen sentido en las vistas paginadas/de lista */}
+        {(vista === 'personajes' || vista === 'cuentas') && (
         <form method="GET" style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
           <input type="hidden" name="vista" value={vista} />
           <input name="q" defaultValue={params.q} placeholder="Buscar personaje..."
@@ -197,6 +234,7 @@ export default async function JugadoresPage({
             <Link href={buildUrl({ q: undefined, reino: undefined, clase: undefined, page: '1' })} className="btn btn-ghost" style={{ textDecoration: 'none' }}>✕ Limpiar</Link>
           )}
         </form>
+        )}
 
         {/* ── VISTA PERSONAJES ─────────────────────────────── */}
         {vista === 'personajes' && (
@@ -373,6 +411,114 @@ export default async function JugadoresPage({
                       <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{bp?.mmr ?? '—'}</div>
                       <span className={`tier-pill ${tier.cssClass}`} style={{ display: 'inline-flex', marginTop: 2 }}>{tier.icon} {tier.name}</span>
                     </div>
+                  </div>
+                </Link>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── VISTA REINOS ─────────────────────────────────── */}
+        {vista === 'reinos' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+            {porReino.map(({ reino, count, avgMmr, avgWr, top5 }) => {
+              const rc = REINO_COLOR[reino as Reino]
+              return (
+                <div key={reino} style={{ background: 'var(--bg-card)', border: `1px solid ${rc}33`, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: `1px solid ${rc}22`, background: `linear-gradient(135deg, ${rc}14, transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <KingdomShield reino={reino} size={28} />
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: rc, letterSpacing: 0.5 }}>{reino}</div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>{count} personajes · {avgWr}% winrate prom.</div>
+                    </div>
+                  </div>
+                  <div style={{ padding: '14px 20px', display: 'flex', gap: 20, borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: rc }}>{avgMmr || '—'}</div>
+                      <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>MMR PROMEDIO</div>
+                    </div>
+                  </div>
+                  {top5.length === 0 ? (
+                    <div style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12 }}>Sin personajes.</div>
+                  ) : top5.map((p: any, i: number) => {
+                    const tier = getTier(p.mmr)
+                    return (
+                      <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
+                        <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', borderBottom: i < top5.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
+                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', width: 14 }}>{i + 1}</span>
+                          <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nickname_juego}</span>
+                          <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {p.mmr}</span>
+                        </div>
+                      </Link>
+                    )
+                  })}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── VISTA CLASES ─────────────────────────────────── */}
+        {vista === 'clases' && (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 110px 1fr', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+              {['CLASE', 'JUGADORES', 'MMR PROMEDIO', 'WINRATE PROM.', 'MEJOR PERSONAJE'].map(col => (
+                <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
+              ))}
+            </div>
+            {porClase.map(({ clase, count, avgMmr, avgWr, top }, i) => {
+              const cc = CLASE_COLOR[clase as Clase]
+              const tier = top ? getTier(top.mmr) : null
+              return (
+                <div key={clase} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 110px 1fr', padding: '13px 20px', borderBottom: i < porClase.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: cc, display: 'flex' }}>{CLASE_SVG[clase]}</span>
+                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: cc }}>{clase}</span>
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{avgMmr || '—'}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count ? `${avgWr}%` : '—'}</div>
+                  {top ? (
+                    <Link href={`/jugadores/${top.player_id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{top.nickname_juego}</span>
+                      {tier && <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {top.mmr}</span>}
+                    </Link>
+                  ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>}
+                </div>
+              )
+            })}
+          </div>
+        )}
+
+        {/* ── VISTA RACHAS ─────────────────────────────────── */}
+        {vista === 'rachas' && (
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 100px 90px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+              {['#', 'PERSONAJE', 'REINO', 'RACHA', 'MMR'].map(col => (
+                <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
+              ))}
+            </div>
+            {rachas.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>Nadie tiene una racha activa ahora mismo.</div>
+            ) : rachas.map((p: any, i: number) => {
+              const rc = REINO_COLOR[p.reino as Reino]
+              const tier = getTier(p.mmr)
+              return (
+                <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
+                  <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 100px 90px', padding: '12px 20px', borderBottom: i < rachas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: rc, flexShrink: 0 }}>
+                        {p.nickname_juego?.[0]?.toUpperCase()}
+                      </div>
+                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <KingdomShield reino={p.reino} size={16} />
+                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino}</span>
+                    </div>
+                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: '#4CAF50' }}>🔥 {p.winstreak}</span>
+                    <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {p.mmr}</span>
                   </div>
                 </Link>
               )
