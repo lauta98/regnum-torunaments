@@ -139,7 +139,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                   <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
                     <SubirAvatar playerId={player.id} />
                   </div>
-                ) : avatarSrc(player) && (
+                ) : player.avatar_url && (
                   <div style={{ position: 'absolute', bottom: -2, right: -2, background: 'rgba(10,10,10,0.72)', borderRadius: '50%', border: '1px solid rgba(244,67,54,0.4)' }}>
                     <ReportarAvatar targetId={player.id} />
                   </div>
