@@ -149,10 +149,10 @@ export default async function JugadoresPage({
     })
   }
 
-  /* ── Vistas Reinos / Clases / Rachas: agregados sobre TODOS los personajes,
+  /* ── Vistas Reinos / Rachas: agregados sobre TODOS los personajes,
      no solo la página actual — piden su propio query sin paginar. ────── */
   let todosPersonajes: any[] = []
-  if (vista === 'reinos' || vista === 'clases' || vista === 'rachas') {
+  if (vista === 'reinos' || vista === 'rachas') {
     const { data } = await supabase
       .from('personajes')
       .select('*, player:players!personajes_player_id_fkey(id, discord_username)')
@@ -181,13 +181,6 @@ export default async function JugadoresPage({
         const lista = todosPersonajes.filter(p => p.reino === r)
         return { reino: r, lista, count: lista.length, avgWr: promedio(lista, 'winrate'), topMmr: lista[0]?.mmr ?? 0, tiers: distribucionTiers(lista), top5: lista.slice(0, 5) }
       })
-    : []
-
-  const porClase = vista === 'clases'
-    ? CLASES.map(c => {
-        const lista = todosPersonajes.filter(p => p.clase === c)
-        return { clase: c, lista, count: lista.length, avgWr: promedio(lista, 'winrate'), top: lista[0] ?? null }
-      }).sort((a, b) => (b.top?.mmr ?? 0) - (a.top?.mmr ?? 0))
     : []
 
   const rachas = vista === 'rachas'
@@ -232,7 +225,6 @@ export default async function JugadoresPage({
             { id: 'personajes', label: 'Personajes' },
             { id: 'cuentas',    label: 'Jugadores'  },
             { id: 'reinos',     label: 'Reinos'      },
-            { id: 'clases',     label: 'Clases'      },
             { id: 'rachas',     label: '🔥 Rachas'   },
           ].map(({ id, label }) => (
             <Link key={id} href={buildUrl({ vista: id, page: '1' })} className={`segmented-btn${vista === id ? ' is-active' : ''}`} style={{ textDecoration: 'none' }}>
@@ -523,38 +515,6 @@ export default async function JugadoresPage({
                       </Link>
                     )
                   })}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── VISTA CLASES ─────────────────────────────────── */}
-        {vista === 'clases' && (
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 110px 1fr', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
-              {['CLASE', 'JUGADORES', 'MMR MÁS ALTO', 'WINRATE PROM.', 'MEJOR PERSONAJE'].map(col => (
-                <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
-              ))}
-            </div>
-            {porClase.map(({ clase, count, avgWr, top }, i) => {
-              const cc = CLASE_COLOR[clase as Clase]
-              const tier = top ? getTier(top.mmr) : null
-              return (
-                <div key={clase} style={{ display: 'grid', gridTemplateColumns: '1fr 100px 130px 110px 1fr', padding: '13px 20px', borderBottom: i < porClase.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: cc, display: 'flex' }}>{CLASE_SVG[clase]}</span>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: cc }}>{clase}</span>
-                  </div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count}</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{top?.mmr || '—'}</div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)' }}>{count ? `${avgWr}%` : '—'}</div>
-                  {top ? (
-                    <Link href={`/jugadores/${top.player_id}`} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-primary)', fontWeight: 600 }}>{top.nickname_juego}</span>
-                      {tier && <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {top.mmr}</span>}
-                    </Link>
-                  ) : <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>—</span>}
                 </div>
               )
             })}
