@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { PREMIUM_BG_KEYS, PREMIUM_BG_STYLES, PREMIUM_COLOR_DEFAULT, estiloPremium, type PremiumBg } from '@/lib/premium'
@@ -27,7 +28,13 @@ interface Player {
  * lo abre vive en el dropdown del Header, que se desmonta apenas se
  * cierra (onMouseLeave / click). Si este componente manejara su propio
  * estado "open", quedaría adentro de ese árbol que se destruye en el
- * mismo click que lo abre — el modal nunca llegaba a verse. */
+ * mismo click que lo abre — el modal nunca llegaba a verse.
+ *
+ * Se renderiza con un portal a document.body por el mismo motivo que
+ * el <header> tiene backdrop-filter: blur(...) — eso crea un nuevo
+ * "containing block" para cualquier descendiente position:fixed, así
+ * que sin el portal el modal quedaba atrapado dentro del header en vez
+ * de cubrir toda la pantalla. */
 export default function EditarPerfil({ player, open, onClose }: { player: Player; open: boolean; onClose: () => void }) {
   const router = useRouter()
   const [twitch, setTwitch] = useState(player.twitch_username ?? '')
@@ -58,7 +65,7 @@ export default function EditarPerfil({ player, open, onClose }: { player: Player
 
   if (!open) return null
 
-  return (
+  return createPortal(
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold-strong)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 380, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', marginBottom: 20, letterSpacing: 1, textAlign: 'center' }}>⚙ Editar perfil</h2>
@@ -120,6 +127,7 @@ export default function EditarPerfil({ player, open, onClose }: { player: Player
             {status === 'ok'    && <p style={{ fontSize: 10, color: '#4CAF50', fontFamily: 'var(--font-display)', textAlign: 'center', marginTop: 10 }}>Guardado</p>}
             {status === 'error' && <p style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)', textAlign: 'center', marginTop: 10 }}>Error al guardar</p>}
           </div>
-    </div>
+    </div>,
+    document.body
   )
 }
