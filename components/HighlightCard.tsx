@@ -1,4 +1,8 @@
+'use client'
+import { useState } from 'react'
+import { createClient } from '@/lib/supabase'
 import { YoutubeIcon, KickIcon } from './PlatformIcons'
+import ReportarHighlight from './ReportarHighlight'
 
 const TIPO_STYLE: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
   youtube: { label: 'YouTube', icon: <YoutubeIcon size={11} />, color: '#FF0000', bg: 'linear-gradient(160deg, #1a0505, #0c0202)' },
@@ -17,15 +21,27 @@ function hace(fecha: string) {
   return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
-export default function HighlightCard({ highlight }: { highlight: any }) {
+export default function HighlightCard({ highlight, viewerPlayerId, onDeleted }: { highlight: any; viewerPlayerId: string | null; onDeleted: (id: string) => void }) {
   const h = highlight
   const estilo = TIPO_STYLE[h.tipo] ?? TIPO_STYLE.youtube
+  const esPropio = viewerPlayerId && viewerPlayerId === h.jugador_id
+  const [borrando, setBorrando] = useState(false)
+
+  const borrar = async (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation()
+    if (!confirm('¿Borrar este post?')) return
+    setBorrando(true)
+    const supabase = createClient()
+    const { error } = await supabase.from('highlights').delete().eq('id', h.id)
+    if (!error) onDeleted(h.id)
+    else setBorrando(false)
+  }
 
   return (
     <a href={h.video_url} target="_blank" rel="noopener noreferrer" style={{
       display: 'flex', flexDirection: 'column', textDecoration: 'none', background: 'var(--bg-card)',
       border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)',
-      boxShadow: 'var(--shadow-card)', overflow: 'hidden', height: '100%',
+      boxShadow: 'var(--shadow-card)', overflow: 'hidden', height: '100%', opacity: borrando ? 0.4 : 1,
     }}>
       <div style={{ position: 'relative', aspectRatio: '16/9', background: h.thumbnail_url ? 'var(--bg-surface)' : estilo.bg }}>
         {h.thumbnail_url ? (
@@ -43,6 +59,21 @@ export default function HighlightCard({ highlight }: { highlight: any }) {
         }}>
           {estilo.icon} {estilo.label}
         </span>
+
+        <div style={{ position: 'absolute', top: 8, right: 8 }}>
+          {esPropio ? (
+            <button
+              onClick={borrar} disabled={borrando} title="Borrar"
+              style={{ background: 'rgba(10,10,10,0.75)', border: 'none', borderRadius: '50%', width: 24, height: 24, cursor: borrando ? 'not-allowed' : 'pointer', color: 'rgba(244,67,54,0.7)', fontSize: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#F44336')}
+              onMouseLeave={e => (e.currentTarget.style.color = 'rgba(244,67,54,0.7)')}
+            >
+              🗑
+            </button>
+          ) : viewerPlayerId && (
+            <ReportarHighlight highlightId={h.id} />
+          )}
+        </div>
       </div>
       <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', flex: 1 }}>
         <div style={{

@@ -8,6 +8,7 @@ import UsuariosTable from './UsuariosTable'
 import VerificarPersonaje from './VerificarPersonaje'
 import ResolverReclamo from './ResolverReclamo'
 import ResolverAvatar from './ResolverAvatar'
+import ResolverHighlight from './ResolverHighlight'
 import TorneosRecientes from './TorneosRecientes'
 
 export const dynamic = 'force-dynamic'
@@ -51,6 +52,12 @@ export default async function AdminPage() {
     .from('players')
     .select('id, nickname_juego, discord_username, avatar_url, avatar_reporte_motivo')
     .eq('avatar_reportado', true)
+    .order('created_at', { ascending: false })
+
+  const { data: highlightsReportados } = await supabase
+    .from('highlights')
+    .select('*, jugador:players!highlights_jugador_id_fkey(id, discord_username, nickname_juego)')
+    .eq('reportado', true)
     .order('created_at', { ascending: false })
 
   const { data: allTournaments } = await supabase
@@ -179,6 +186,36 @@ export default async function AdminPage() {
                     <Link href={`/jugadores/${p.id}`} style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver perfil →</Link>
                   </div>
                   <ResolverAvatar targetId={p.id} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Contenido de Multimedia reportado ──────────── */}
+        {(highlightsReportados?.length ?? 0) > 0 && (
+          <div style={{ marginTop: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>CONTENIDO REPORTADO</div>
+              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+                {highlightsReportados!.length} pendiente{highlightsReportados!.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+              {highlightsReportados!.map((h: any, i: number) => (
+                <div key={h.id} style={{ padding: '14px 20px', borderBottom: i < highlightsReportados!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
+                  {h.thumbnail_url
+                    ? <img src={h.thumbnail_url} alt="" style={{ width: 80, height: 45, borderRadius: 6, objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
+                    : <div style={{ width: 80, height: 45, borderRadius: 6, border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>sin miniatura</div>}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{h.titulo}</div>
+                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', margin: '2px 0' }}>
+                      Compartido por {h.jugador?.discord_username ?? h.jugador?.nickname_juego ?? '—'}
+                    </div>
+                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{h.reporte_motivo}</p>
+                    <a href={h.video_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver contenido →</a>
+                  </div>
+                  <ResolverHighlight highlightId={h.id} />
                 </div>
               ))}
             </div>
