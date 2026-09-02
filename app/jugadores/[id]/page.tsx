@@ -12,6 +12,7 @@ import SubirAvatar from './SubirAvatar'
 import ReportarAvatar from './ReportarAvatar'
 import HacersePremium from './HacersePremium'
 import PersonalizarPerfil from './PersonalizarPerfil'
+import EditarCanalTwitch from './EditarCanalTwitch'
 import PremiumBadge from '@/components/PremiumBadge'
 import PremiumAccentLine from '@/components/PremiumAccentLine'
 import { agruparTrofeos } from '@/lib/campeonatos'
@@ -176,6 +177,11 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                   ) : (
                     <HacersePremium playerId={player.id} />
                   )}
+                </div>
+              )}
+              {isOwner && (
+                <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
+                  <EditarCanalTwitch playerId={player.id} usernameActual={player.twitch_username} />
                 </div>
               )}
               </div>
