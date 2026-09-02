@@ -1,6 +1,8 @@
-const TIPO_STYLE: Record<string, { label: string; color: string; bg: string }> = {
-  youtube: { label: '▶ YouTube', color: '#FF0000', bg: 'linear-gradient(160deg, #1a0505, #0c0202)' },
-  kick:    { label: '🟢 Kick',   color: '#53FC18', bg: 'linear-gradient(160deg, #0a1505, #050a02)' },
+import { YoutubeIcon, KickIcon } from './PlatformIcons'
+
+const TIPO_STYLE: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string }> = {
+  youtube: { label: 'YouTube', icon: <YoutubeIcon size={11} />, color: '#FF0000', bg: 'linear-gradient(160deg, #1a0505, #0c0202)' },
+  kick:    { label: 'Kick',    icon: <KickIcon size={11} />,    color: '#53FC18', bg: 'linear-gradient(160deg, #0a1505, #050a02)' },
 }
 
 function hace(fecha: string) {
@@ -29,16 +31,17 @@ export default function HighlightCard({ highlight }: { highlight: any }) {
         {h.thumbnail_url ? (
           <img src={h.thumbnail_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40, color: estilo.color, opacity: 0.85 }}>
-            {h.tipo === 'kick' ? '🟢' : '▶'}
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.85, transform: 'scale(2.5)' }}>
+            {estilo.icon}
           </div>
         )}
         <span style={{
           position: 'absolute', top: 8, left: 8, background: 'rgba(10,10,10,0.8)',
           color: estilo.color, fontFamily: 'var(--font-display)', fontSize: 9, fontWeight: 700,
           letterSpacing: 0.5, padding: '3px 8px', borderRadius: 4, border: `1px solid ${estilo.color}44`,
+          display: 'flex', alignItems: 'center', gap: 5,
         }}>
-          {estilo.label}
+          {estilo.icon} {estilo.label}
         </span>
       </div>
       <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', flex: 1 }}>

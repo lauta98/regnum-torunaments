@@ -8,6 +8,7 @@ import { REINO_COLOR } from '@/lib/constants'
 import type { Reino, UserRole } from '@/lib/types'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, canOrganize, canAdmin } from '@/lib/roles'
 import { avatarSrc } from '@/lib/avatar'
+import EditarPerfil from './EditarPerfil'
 
 /* ── Icons ─────────────────────────────────────────────────────── */
 const IconHome = () => (
@@ -96,8 +97,13 @@ export default function Header() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return
+      // select('*') a propósito: es la propia fila del usuario (no un
+      // query pesado), y así esta consulta global (se ejecuta en TODAS
+      // las páginas) nunca se rompe por una columna nueva que todavía
+      // no corrió su migración — a diferencia de un select con nombres
+      // explícitos, que tira error 42703 y tumba el dropdown entero.
       supabase.from('players')
-        .select('id, nickname_juego, reino, role, discord_avatar, avatar_url')
+        .select('*')
         .eq('user_id', user.id).single()
         .then(({ data }) => setPlayer(data))
     })
@@ -222,6 +228,8 @@ export default function Header() {
                   onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}>
                   Mi perfil
                 </Link>
+
+                <EditarPerfil player={player} onOpen={() => setDropdownOpen(false)} />
 
                 {/* Panel Organizador (organizer + admin) */}
                 {canOrganize(player.role) && (

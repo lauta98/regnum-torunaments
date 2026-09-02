@@ -11,10 +11,9 @@ import PersonajesYHistorial from './PersonajesYHistorial'
 import SubirAvatar from './SubirAvatar'
 import ReportarAvatar from './ReportarAvatar'
 import HacersePremium from './HacersePremium'
-import PersonalizarPerfil from './PersonalizarPerfil'
-import EditarCanalTwitch from './EditarCanalTwitch'
 import PremiumBadge from '@/components/PremiumBadge'
 import PremiumAccentLine from '@/components/PremiumAccentLine'
+import { YoutubeIcon, TwitchIcon, KickIcon } from '@/components/PlatformIcons'
 import { agruparTrofeos } from '@/lib/campeonatos'
 import { avatarSrc } from '@/lib/avatar'
 import { estiloPremium, cardEstiloPremium } from '@/lib/premium'
@@ -170,28 +169,29 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                 {player.discord_username}
               </div>
 
-              {player.twitch_username && (
-                <a
-                  href={`https://twitch.tv/${player.twitch_username}`}
-                  target="_blank" rel="noopener noreferrer"
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#a970ff', textDecoration: 'none', marginTop: 6 }}
-                >
-                  🟣 twitch.tv/{player.twitch_username}
-                </a>
-              )}
-
-              {isOwner && (
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
-                  {player.es_premium ? (
-                    <PersonalizarPerfil playerId={player.id} colorActual={player.premium_color} bgActual={player.premium_bg} />
-                  ) : (
-                    <HacersePremium playerId={player.id} />
+              {(player.twitch_username || player.youtube_channel || player.kick_username) && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: 8 }}>
+                  {player.twitch_username && (
+                    <a href={`https://twitch.tv/${player.twitch_username}`} target="_blank" rel="noopener noreferrer" title={`twitch.tv/${player.twitch_username}`} style={{ display: 'flex' }}>
+                      <TwitchIcon size={18} />
+                    </a>
+                  )}
+                  {player.youtube_channel && (
+                    <a href={player.youtube_channel} target="_blank" rel="noopener noreferrer" title="YouTube" style={{ display: 'flex' }}>
+                      <YoutubeIcon size={18} />
+                    </a>
+                  )}
+                  {player.kick_username && (
+                    <a href={`https://kick.com/${player.kick_username}`} target="_blank" rel="noopener noreferrer" title={`kick.com/${player.kick_username}`} style={{ display: 'flex' }}>
+                      <KickIcon size={18} />
+                    </a>
                   )}
                 </div>
               )}
-              {isOwner && (
-                <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center' }}>
-                  <EditarCanalTwitch playerId={player.id} usernameActual={player.twitch_username} />
+
+              {isOwner && !player.es_premium && (
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
+                  <HacersePremium playerId={player.id} />
                 </div>
               )}
               </div>
