@@ -19,6 +19,8 @@ export default function CompartirContenido() {
   const [playerId, setPlayerId] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
   const [titulo, setTitulo] = useState('')
+  const [tituloEsAuto, setTituloEsAuto] = useState(false)
+  const [buscandoTitulo, setBuscandoTitulo] = useState(false)
   const [url, setUrl] = useState('')
   const [torneoId, setTorneoId] = useState('')
   const [torneos, setTorneos] = useState<{ id: string; nombre: string }[]>([])
@@ -48,6 +50,28 @@ export default function CompartirContenido() {
   // publicado (así se coló el primer post con título y link invertidos).
   const urlValida = url.trim() === '' || !!extraerIdYoutube(url)
 
+  // Autocompletar el título con el nombre real del video — solo pisa el
+  // campo si está vacío o si lo que hay ahí lo puso este mismo
+  // autocompletado (nunca un título que el jugador escribió a mano).
+  useEffect(() => {
+    const id = extraerIdYoutube(url)
+    if (!id) return
+    if (titulo.trim() && !tituloEsAuto) return
+
+    const timeout = setTimeout(async () => {
+      setBuscandoTitulo(true)
+      try {
+        const res = await fetch(`/api/multimedia/youtube-titulo?url=${encodeURIComponent(url.trim())}`)
+        const data = await res.json()
+        if (data.titulo) { setTitulo(data.titulo); setTituloEsAuto(true) }
+      } finally {
+        setBuscandoTitulo(false)
+      }
+    }, 500)
+    return () => clearTimeout(timeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [url])
+
   const compartir = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!playerId || !url.trim() || !titulo.trim() || !urlValida) return
@@ -65,7 +89,7 @@ export default function CompartirContenido() {
 
     setLoading(false)
     if (insErr) { setError('No se pudo compartir. Revisá el link.'); return }
-    setOpen(false); setTitulo(''); setUrl(''); setTorneoId('')
+    setOpen(false); setTitulo(''); setTituloEsAuto(false); setUrl(''); setTorneoId('')
     router.refresh()
   }
 
@@ -98,10 +122,10 @@ export default function CompartirContenido() {
               </div>
 
               <div>
-                <label style={LABEL_STYLE}>TÍTULO</label>
+                <label style={LABEL_STYLE}>TÍTULO {buscandoTitulo && <span style={{ color: 'var(--gold)', textTransform: 'none', letterSpacing: 0 }}>— buscando el título del video...</span>}</label>
                 <input
-                  value={titulo} onChange={e => setTitulo(e.target.value)}
-                  placeholder='Ej. "Mi mejor jugada del torneo"'
+                  value={titulo} onChange={e => { setTitulo(e.target.value); setTituloEsAuto(false) }}
+                  placeholder='Se completa solo al pegar el link, o escribí el tuyo'
                   maxLength={100} className="field"
                 />
               </div>
