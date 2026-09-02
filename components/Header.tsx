@@ -85,6 +85,7 @@ export default function Header() {
   const [player, setPlayer] = useState<any>(null)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
+  const [editarPerfilOpen, setEditarPerfilOpen] = useState(false)
 
   const isActive = (href: string) => {
     const hrefPath = href.split('?')[0]
@@ -229,7 +230,16 @@ export default function Header() {
                   Mi perfil
                 </Link>
 
-                <EditarPerfil player={player} onOpen={() => setDropdownOpen(false)} />
+                {/* Editar perfil — el modal en sí vive fuera de este dropdown
+                    (ver más abajo), porque se desmonta apenas se cierra */}
+                <button
+                  onClick={() => { setEditarPerfilOpen(true); setDropdownOpen(false) }}
+                  style={{ display: 'block', width: '100%', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
+                >
+                  ⚙ Editar perfil
+                </button>
 
                 {/* Panel Organizador (organizer + admin) */}
                 {canOrganize(player.role) && (
@@ -257,6 +267,7 @@ export default function Header() {
                 </button>
               </div>
             )}
+            <EditarPerfil player={player} open={editarPerfilOpen} onClose={() => setEditarPerfilOpen(false)} />
           </div>
         ) : (
           <button onClick={signInWithDiscord} style={{

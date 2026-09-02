@@ -21,12 +21,15 @@ interface Player {
 /** Modal único de "canales + apariencia" — antes eran dos botones
  * separados en la card del perfil (Personalizar perfil, Cargar mi
  * canal de Twitch). Los canales son para cualquier jugador; la
- * apariencia (color/fondo) solo para premium, igual que antes. Vive en
- * el dropdown del Header, no en la página de perfil, para que se
- * pueda editar desde cualquier lado del sitio. */
-export default function EditarPerfil({ player, onOpen }: { player: Player; onOpen?: () => void }) {
+ * apariencia (color/fondo) solo para premium, igual que antes.
+ *
+ * Controlado desde afuera (`open`/`onClose`) a propósito: el botón que
+ * lo abre vive en el dropdown del Header, que se desmonta apenas se
+ * cierra (onMouseLeave / click). Si este componente manejara su propio
+ * estado "open", quedaría adentro de ese árbol que se destruye en el
+ * mismo click que lo abre — el modal nunca llegaba a verse. */
+export default function EditarPerfil({ player, open, onClose }: { player: Player; open: boolean; onClose: () => void }) {
   const router = useRouter()
-  const [open, setOpen] = useState(false)
   const [twitch, setTwitch] = useState(player.twitch_username ?? '')
   const [youtube, setYoutube] = useState(player.youtube_channel ?? '')
   const [kick, setKick] = useState(player.kick_username ?? '')
@@ -34,8 +37,6 @@ export default function EditarPerfil({ player, onOpen }: { player: Player; onOpe
   const [bg, setBg] = useState<PremiumBg>((player.premium_bg as PremiumBg) || 'sutil')
   const [guardando, setGuardando] = useState(false)
   const [status, setStatus] = useState<'idle' | 'ok' | 'error'>('idle')
-
-  const abrir = () => { setOpen(true); onOpen?.() }
 
   const guardar = async () => {
     setGuardando(true)
@@ -49,25 +50,16 @@ export default function EditarPerfil({ player, onOpen }: { player: Player; onOpe
 
     const { error } = await supabase.from('players').update(payload).eq('id', player.id)
     setGuardando(false)
-    if (!error) { setStatus('ok'); router.refresh(); setTimeout(() => { setStatus('idle'); setOpen(false) }, 900) }
+    if (!error) { setStatus('ok'); router.refresh(); setTimeout(() => { setStatus('idle'); onClose() }, 900) }
     else setStatus('error')
   }
 
   const preview = estiloPremium(color, bg)
 
-  return (
-    <>
-      <button
-        type="button" onClick={abrir}
-        style={{ display: 'block', width: '100%', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer' }}
-        onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
-        onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
-      >
-        ⚙ Editar perfil
-      </button>
+  if (!open) return null
 
-      {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={() => setOpen(false)}>
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }} onClick={onClose}>
           <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold-strong)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-elevated)', padding: '28px 32px', width: '100%', maxWidth: 380, maxHeight: '85vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <h2 style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', marginBottom: 20, letterSpacing: 1, textAlign: 'center' }}>⚙ Editar perfil</h2>
 
@@ -120,7 +112,7 @@ export default function EditarPerfil({ player, onOpen }: { player: Player; onOpe
             )}
 
             <div style={{ display: 'flex', gap: 8 }}>
-              <button type="button" onClick={() => setOpen(false)} className="btn btn-ghost" style={{ flex: 1, fontSize: 11 }}>Cerrar</button>
+              <button type="button" onClick={onClose} className="btn btn-ghost" style={{ flex: 1, fontSize: 11 }}>Cerrar</button>
               <button type="button" onClick={guardar} disabled={guardando} className="btn btn-primary" style={{ flex: 1, fontSize: 11 }}>
                 {guardando ? 'Guardando...' : 'Guardar'}
               </button>
@@ -128,8 +120,6 @@ export default function EditarPerfil({ player, onOpen }: { player: Player; onOpe
             {status === 'ok'    && <p style={{ fontSize: 10, color: '#4CAF50', fontFamily: 'var(--font-display)', textAlign: 'center', marginTop: 10 }}>Guardado</p>}
             {status === 'error' && <p style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)', textAlign: 'center', marginTop: 10 }}>Error al guardar</p>}
           </div>
-        </div>
-      )}
-    </>
+    </div>
   )
 }
