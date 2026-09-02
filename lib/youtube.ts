@@ -17,3 +17,7 @@ export function thumbnailYoutube(url: string): string | null {
   const id = extraerIdYoutube(url)
   return id ? `https://img.youtube.com/vi/${id}/hqdefault.jpg` : null
 }
+
+export function esUrlKick(url: string): boolean {
+  return /^https?:\/\/(www\.)?kick\.com\//i.test(url.trim())
+}

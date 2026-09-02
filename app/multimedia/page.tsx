@@ -20,7 +20,7 @@ export default async function MultimediaPage() {
     supabase.from('players').select('id, discord_username, nickname_juego, avatar_url, twitch_username').not('twitch_username', 'is', null),
     supabase
       .from('highlights')
-      .select('*, jugador:players!highlights_jugador_id_fkey(id, discord_username, nickname_juego), torneo:tournaments(id, nombre)', { count: 'exact' })
+      .select('*, jugador:players!highlights_jugador_id_fkey(id, discord_username, nickname_juego, avatar_url), torneo:tournaments(id, nombre)', { count: 'exact' })
       .order('created_at', { ascending: false })
       .range(0, 23),
   ])

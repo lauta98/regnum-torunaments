@@ -170,6 +170,16 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                 {player.discord_username}
               </div>
 
+              {player.twitch_username && (
+                <a
+                  href={`https://twitch.tv/${player.twitch_username}`}
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#a970ff', textDecoration: 'none', marginTop: 6 }}
+                >
+                  🟣 twitch.tv/{player.twitch_username}
+                </a>
+              )}
+
               {isOwner && (
                 <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
                   {player.es_premium ? (
