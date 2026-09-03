@@ -39,6 +39,15 @@ export default async function MultimediaPage() {
   }
   const streamersEnVivo = enVivo.map(s => ({ ...s, jugador: streamers?.find(p => p.twitch_username === s.username) }))
 
+  // "Canales de la comunidad" no tenía orden propio (el que devolvía la
+  // consulta, sin criterio) — los que están en vivo ahora mismo van primero.
+  const usernamesEnVivo = new Set(streamersEnVivo.map(s => s.username))
+  const streamersOrdenados = (streamers ?? []).slice().sort((a, b) => {
+    const aVivo = a.twitch_username ? usernamesEnVivo.has(a.twitch_username) : false
+    const bVivo = b.twitch_username ? usernamesEnVivo.has(b.twitch_username) : false
+    return Number(bVivo) - Number(aVivo)
+  })
+
   return (
     <>
       <Header />
@@ -97,7 +106,7 @@ export default async function MultimediaPage() {
               CANALES DE LA COMUNIDAD
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12 }}>
-              {streamers!.map(s => {
+              {streamersOrdenados.map(s => {
                 const enVivo = streamersEnVivo.some(l => l.username === s.twitch_username)
                 return (
                   <div key={s.id} style={{
