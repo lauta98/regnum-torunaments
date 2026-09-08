@@ -576,11 +576,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
       <ViewCounter listingId={listing.id} />
 
       <style>{`
-        /* Desktop: imagen en sidebar derecha, oculta en hero */
+        /* Desktop: si hay foto real, manda ella en el hero (no el ícono
+           genérico) — antes el hero mostraba siempre el ícono aunque hubiera
+           foto, y con íconos reales eso confundía: parecía la foto real del
+           ítem sin serlo. La foto también se ve más grande en el sidebar. */
         @media (min-width: 681px) {
           .listing-mobile-sidebar { display: none !important; }
-          .listing-hero-image { display: none !important; }
-          .listing-hero-icon { display: flex !important; }
+          .listing-hero-image { display: flex !important; }
+          .listing-hero-icon { display: none !important; }
           .listing-sidebar-image { display: block !important; }
         }
         /* Mobile: imagen en hero, oculta en sidebar */

@@ -209,7 +209,11 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
             {RAREZA_LABEL[listing.rareza]}
           </span>
         )}
-        <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} px={36} />
+        {listing.item_image_url ? (
+          <img src={listing.item_image_url} alt={listing.item_name} style={{ maxHeight: 72, maxWidth: '80%', objectFit: 'contain', borderRadius: 6, position: 'relative' }} />
+        ) : (
+          <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} px={36} />
+        )}
       </div>
       {/* Body */}
       <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:8 }}>
