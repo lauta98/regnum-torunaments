@@ -146,8 +146,48 @@ function materialTier(material: string | null | undefined): string {
   return 'cuero'
 }
 
-export function getRealItemIcon(subcategoria: string, categoria: string, material?: string | null): string | null {
+// ── Íconos específicos por mazmorra (Evendim/Daenrha/Thorkul) ──────────────
+// A diferencia del resto, estos 3 sets SÍ tienen un ícono real distinto por
+// ítem de dungeon-set (no solo por categoría) — si el nombre/descripción de
+// la publicación menciona la mazmorra, ese ícono puntual gana por sobre el
+// genérico de categoría+material. No cubre las 3 mazmorras × todos los
+// tipos (el dataset real tiene huecos) — DUNGEON_ICONS es la lista exacta
+// de combinaciones que sí existen; lo que no está ahí cae al genérico.
+const DUNGEONS = ['evendim', 'daenrha', 'thorkul']
+
+// subcategoria → palabra usada en el nombre de archivo de estos sets
+const DUNGEON_WEAPON_TYPE: Record<string, string> = {
+  espadas: 'sword', hachas: 'axe', lanzas: 'spear', mazos: 'mace', martillos: 'hammer',
+  baculos: 'staff', arcos_largos: 'bow', arcos_cortos: 'bow', flechas: 'arrow',
+  anillos: 'ring', amuletos: 'amulet',
+}
+
+const DUNGEON_ICONS = new Set([
+  'evendim-amulet', 'evendim-arrow', 'evendim-axe', 'evendim-bow', 'evendim-hammer',
+  'evendim-ring', 'evendim-spear', 'evendim-staff', 'evendim-sword',
+  'daenrha-amulet', 'daenrha-bow', 'daenrha-mace', 'daenrha-ring', 'daenrha-staff',
+  'daenrha-spear', 'daenrha-sword', 'daenrha-arrow',
+  'thorkul-bow', 'thorkul-hammer', 'thorkul-ring', 'thorkul-spear', 'thorkul-staff', 'thorkul-sword',
+])
+
+function detectDungeon(text: string | null | undefined): string | null {
+  const t = (text || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace('daen rha', 'daenrha')
+  return DUNGEONS.find(d => t.includes(d)) || null
+}
+
+function getDungeonIcon(subcategoria: string, itemText: string | null | undefined): string | null {
+  const dungeon = detectDungeon(itemText)
+  if (!dungeon) return null
+  const weaponType = DUNGEON_WEAPON_TYPE[subcategoria]
+  if (!weaponType) return null
+  const key = `${dungeon}-${weaponType}`
+  return DUNGEON_ICONS.has(key) ? `${REAL_ICON_BASE}/dungeon-${key}.png` : null
+}
+
+export function getRealItemIcon(subcategoria: string, categoria: string, material?: string | null, itemText?: string | null): string | null {
   const sub = subcategoria || categoria
+  const dungeonIcon = getDungeonIcon(sub, itemText)
+  if (dungeonIcon) return dungeonIcon
   if (REAL_ICON_TIERED.has(sub)) return `${REAL_ICON_BASE}/${sub}-${materialTier(material)}.png`
   if (sub === 'escudos') {
     const esMadera = (material || '').toLowerCase().includes('madera')
@@ -157,8 +197,8 @@ export function getRealItemIcon(subcategoria: string, categoria: string, materia
   return null
 }
 
-export function getItemIconColored(subcategoria: string, categoria: string, color: string, material?: string | null): string {
-  const real = getRealItemIcon(subcategoria, categoria, material)
+export function getItemIconColored(subcategoria: string, categoria: string, color: string, material?: string | null, itemText?: string | null): string {
+  const real = getRealItemIcon(subcategoria, categoria, material, itemText)
   if (real) {
     // width/height="48" en el <svg> exterior (no solo el viewBox) porque los 5
     // lugares que consumen este string hacen replace('width="48"','width="64"')

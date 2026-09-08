@@ -232,7 +232,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
   let svgIcon = ''
   try {
-    svgIcon = getItemIconColored(listing.subcategoria || '', listing.item_category, iconColor, listing.material)
+    svgIcon = getItemIconColored(listing.subcategoria || '', listing.item_category, iconColor, listing.material, `${listing.item_name} ${listing.description||''}`)
   } catch { svgIcon = '' }
 
   const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic']

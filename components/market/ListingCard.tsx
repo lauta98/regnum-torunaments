@@ -87,9 +87,9 @@ function getLastSeen(d:string|null): LSD {
 }
 
 // ─── SvgIcon ────────────────────────────────────────────────────
-function SvgIcon({ sub, cat, color, material, px=52 }:{ sub?:string; cat:string; color:string; material?:string|null; px?:number }) {
+function SvgIcon({ sub, cat, color, material, itemText, px=52 }:{ sub?:string; cat:string; color:string; material?:string|null; itemText?:string|null; px?:number }) {
   let svg = ''
-  try { svg = getItemIconColored(sub||'', cat, color, material) }
+  try { svg = getItemIconColored(sub||'', cat, color, material, itemText) }
   catch { svg = `<svg width="${px}" height="${px}" viewBox="0 0 52 52"><text x="26" y="34" text-anchor="middle" font-size="26">📦</text></svg>` }
   return (
     <div
@@ -212,7 +212,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
         {listing.item_image_url ? (
           <img src={listing.item_image_url} alt={listing.item_name} style={{ maxHeight: 72, maxWidth: '80%', objectFit: 'contain', borderRadius: 6, position: 'relative' }} />
         ) : (
-          <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} px={36} />
+          <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={36} />
         )}
       </div>
       {/* Body */}
@@ -565,7 +565,7 @@ export default function ListingCard({
                 transition:'transform 0.45s ease',
                 transform: hovered ? 'scale(1.08)' : 'scale(1)',
               }}>
-                <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} px={62} />
+                <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={62} />
               </div>
             </div>
           )}

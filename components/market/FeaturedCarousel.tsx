@@ -29,7 +29,7 @@ export default function FeaturedCarousel({ listings }: { listings: any[] }) {
           const rarezaColor = RAREZA_COLOR[l.rareza] || '#888'
           const emojiColor = GREY_CATS.has(l.item_category) ? '#7A8A9A' : (rarezaColor || '#B8A157')
           let svg = ''
-          try { svg = getItemIconColored(l.subcategoria || '', l.item_category, emojiColor, l.material) } catch {}
+          try { svg = getItemIconColored(l.subcategoria || '', l.item_category, emojiColor, l.material, l.item_name) } catch {}
 
           return (
             <Link
