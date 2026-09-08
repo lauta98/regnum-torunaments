@@ -120,6 +120,31 @@ function StatRow({ label, value, color, icon }: { label: string; value: string |
   )
 }
 
+// Resistencias son una calificación (muy mala…muy buena), no un dato plano —
+// se muestran como pill de color en vez de texto suelto para que la calidad
+// se lea de un vistazo, mismo lenguaje visual que las badges de rareza.
+function ResistRow({ label, icon, calidad }: { label: string; icon: string; calidad: string }) {
+  const color = CALIDAD_COLOR[calidad] || 'var(--text-muted)'
+  return (
+    <div style={{
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      padding: '7px 12px', borderRadius: 6, marginBottom: 4,
+      background: 'var(--dark-bg)', gap: 8,
+    }}>
+      <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
+        {label}
+      </span>
+      <span style={{
+        fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99,
+        background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap',
+      }}>
+        {CALIDAD_LABEL[calidad] || calidad}
+      </span>
+    </div>
+  )
+}
+
 function ModChip({ text }: { text: string }) {
   return (
     <div style={{
@@ -374,10 +399,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               {resistencias.length > 0 && (
                 <>
                   <Divider label="RESISTENCIAS" />
-                  {resistencias.map(r => {
-                    const val = listing[`res_${r.key}`]
-                    return <StatRow key={r.key} icon={r.icon} label={r.label} value={CALIDAD_LABEL[val] || val} color={CALIDAD_COLOR[val]} />
-                  })}
+                  {resistencias.map(r => (
+                    <ResistRow key={r.key} icon={r.icon} label={r.label} calidad={listing[`res_${r.key}`]} />
+                  ))}
                 </>
               )}
 

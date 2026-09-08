@@ -160,7 +160,12 @@ export function getRealItemIcon(subcategoria: string, categoria: string, materia
 export function getItemIconColored(subcategoria: string, categoria: string, color: string, material?: string | null): string {
   const real = getRealItemIcon(subcategoria, categoria, material)
   if (real) {
-    return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><image href="${real}" x="2" y="2" width="60" height="60" preserveAspectRatio="xMidYMid meet"/></svg>`
+    // width/height="48" en el <svg> exterior (no solo el viewBox) porque los 5
+    // lugares que consumen este string hacen replace('width="48"','width="64"')
+    // para agrandar el ícono viejo — sin este atributo literal, el navegador
+    // caía al tamaño intrínseco por default de un <svg> sin medidas (300×150),
+    // y el ícono real se veía mal recortado/descentrado dentro del círculo.
+    return `<svg viewBox="0 0 64 64" width="48" height="48" xmlns="http://www.w3.org/2000/svg"><image href="${real}" x="5" y="5" width="54" height="54" preserveAspectRatio="xMidYMid meet"/></svg>`
   }
   const svg = ITEM_ICONS[subcategoria] || ITEM_ICONS[categoria] || ITEM_ICONS['crafting']
   const dark = darkenHex(color)
