@@ -95,7 +95,7 @@ function SvgIcon({ sub, cat, color, material, px=52 }:{ sub?:string; cat:string;
     <div
       suppressHydrationWarning
       style={{
-        width: px*1.55, height: px*1.55, borderRadius:'50%', flexShrink:0,
+        width: px*1.55, height: px*1.55, borderRadius: 16, flexShrink:0,
         background: `radial-gradient(circle, ${color}28 0%, ${color}08 65%, transparent 85%)`,
         display:'flex', alignItems:'center', justifyContent:'center',
         border:`1px solid ${color}22`,

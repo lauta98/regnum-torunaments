@@ -303,7 +303,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {svgIcon ? (
                 <div style={{
-                  width: 110, height: 110, borderRadius: '50%',
+                  width: 110, height: 110, borderRadius: 16,
                   background: `radial-gradient(circle, ${iconColor}28 0%, ${iconColor}06 65%, transparent 85%)`,
                   border: `1px solid ${iconColor}33`,
                   filter: `drop-shadow(0 0 16px ${iconColor}66)`,
