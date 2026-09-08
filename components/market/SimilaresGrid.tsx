@@ -11,7 +11,7 @@ function SimilarCard({ s }: { s: any }) {
   const { gold, money } = formatPrecioCard(s.price_gold, s.price_money, s.currency_label)
   const isSell = s.type === 'sell'
   let sSvg = ''
-  try { sSvg = getItemIconColored(s.subcategoria || '', s.item_category, sColor) } catch { sSvg = '' }
+  try { sSvg = getItemIconColored(s.subcategoria || '', s.item_category, sColor, s.material) } catch { sSvg = '' }
 
   return (
     <Link href={listingHref(s.item_name, s.id, s.short_id)} style={{ textDecoration: 'none' }}>

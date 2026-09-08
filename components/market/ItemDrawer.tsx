@@ -148,7 +148,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
   ].filter(Boolean)
 
   let iconSvg = ''
-  try { iconSvg = getItemIconColored(listing.subcategoria || '', listing.item_category, emojiColor) } catch {}
+  try { iconSvg = getItemIconColored(listing.subcategoria || '', listing.item_category, emojiColor, listing.material) } catch {}
 
   const href = listingHref(listing.item_name, listing.id, listing.short_id)
 

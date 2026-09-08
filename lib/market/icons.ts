@@ -118,7 +118,50 @@ function darkenHex(hex: string): string {
   return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`
 }
 
-export function getItemIconColored(subcategoria: string, categoria: string, color: string): string {
+// ── Íconos reales (arte del cliente de CoR, extraído vía tools4regnum.de) ──
+// Reemplazan la silueta genérica de arriba para las combinaciones donde ya
+// hay arte real subido a nuestro Storage propio — nada de esto depende de
+// un sitio externo, las imágenes viven en tournament-photos/item-icons/.
+const REAL_ICON_BASE = 'https://uwxzumlzuwcnvzsztdnh.supabase.co/storage/v1/object/public/tournament-photos/item-icons'
+
+// Subcategorías con un ícono real distinto por nivel de material.
+const REAL_ICON_TIERED = new Set(['yelmos', 'pecheras', 'hombreras', 'guanteletes', 'perneras'])
+
+// Resto de subcategorías con un solo ícono real (no varían por material en el juego).
+const REAL_ICON_SINGLE = new Set([
+  'espadas', 'rapier', 'hachas', 'mazos', 'martillos', 'garrotes', 'lanzas', 'baculos',
+  'arcos_largos', 'arcos_cortos', 'tunicas', 'guantes', 'brazaletes', 'sombreros',
+  'flechas', 'anillos', 'amuletos', 'gemas_magicas', 'magnanitas', 'lingotes',
+])
+
+// El juego tiene más materiales (Cuero, Tela Blanda/Fina, Hueso Duro, Acero,
+// Acero Fino, Aleación de Acero, Madera x3, Xymerald x2) de los que hay ícono
+// real por separado — se agrupan por peso/refinamiento visual: tela < cuero
+// < malla < placas. Cuero y Hueso Duro caen al tier base (cuero) por defecto.
+function materialTier(material: string | null | undefined): string {
+  const m = (material || '').toLowerCase()
+  if (m.includes('tela')) return 'tela'
+  if (m.includes('xymerald') || m.includes('fino') || m.includes('aleaci')) return 'placas'
+  if (m.includes('acero') || m.includes('madera')) return 'malla'
+  return 'cuero'
+}
+
+export function getRealItemIcon(subcategoria: string, categoria: string, material?: string | null): string | null {
+  const sub = subcategoria || categoria
+  if (REAL_ICON_TIERED.has(sub)) return `${REAL_ICON_BASE}/${sub}-${materialTier(material)}.png`
+  if (sub === 'escudos') {
+    const esMadera = (material || '').toLowerCase().includes('madera')
+    return `${REAL_ICON_BASE}/escudos-${esMadera ? 'madera' : 'metal'}.png`
+  }
+  if (REAL_ICON_SINGLE.has(sub)) return `${REAL_ICON_BASE}/${sub}.png`
+  return null
+}
+
+export function getItemIconColored(subcategoria: string, categoria: string, color: string, material?: string | null): string {
+  const real = getRealItemIcon(subcategoria, categoria, material)
+  if (real) {
+    return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg"><image href="${real}" x="2" y="2" width="60" height="60" preserveAspectRatio="xMidYMid meet"/></svg>`
+  }
   const svg = ITEM_ICONS[subcategoria] || ITEM_ICONS[categoria] || ITEM_ICONS['crafting']
   const dark = darkenHex(color)
   return svg.replace(/#C9A84C/gi, color).replace(/#7a5a18/gi, dark)
