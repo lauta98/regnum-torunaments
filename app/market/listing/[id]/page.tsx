@@ -109,7 +109,7 @@ function StatRow({ label, value, color, icon }: { label: string; value: string |
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: '7px 12px', borderRadius: 6, marginBottom: 4,
-      background: 'var(--dark-bg)', gap: 8,
+      background: 'var(--market-surface-deep)', gap: 8,
     }}>
       <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
         {icon && <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>}
@@ -129,7 +129,7 @@ function ResistRow({ label, icon, calidad }: { label: string; icon: string; cali
     <div style={{
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       padding: '7px 12px', borderRadius: 6, marginBottom: 4,
-      background: 'var(--dark-bg)', gap: 8,
+      background: 'var(--market-surface-deep)', gap: 8,
     }}>
       <span style={{ fontSize: 12, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6 }}>
         <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>

@@ -1108,7 +1108,7 @@ function CropModal({ src, onConfirm, onCancel }: {
               background: hasCrop
                 ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))'
                 : 'color-mix(in srgb, var(--gold) 20%, transparent)',
-              color: hasCrop ? 'var(--dark-bg)' : 'var(--gold)',
+              color: hasCrop ? 'var(--on-gold)' : 'var(--gold)',
               border:'none', borderRadius:8,
               padding:'9px 22px', cursor:'pointer',
               fontFamily:"'Cinzel',serif", fontSize:12, fontWeight:700, letterSpacing:0.5,
@@ -2506,7 +2506,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                 display:'flex', alignItems:'center', justifyContent:'center', padding:20,
               }} onClick={() => setShowPreview(false)}>
                 <div style={{
-                  background:'var(--dark-bg)', border:'1px solid var(--gold)',
+                  background:'var(--market-surface-deep)', border:'1px solid var(--gold)',
                   borderRadius:14, padding:24, maxWidth:340, width:'100%', position:'relative',
                   maxHeight:'calc(100vh - 40px)', overflowY:'auto',
                 }} onClick={e => e.stopPropagation()}>

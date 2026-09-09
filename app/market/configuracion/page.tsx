@@ -459,7 +459,7 @@ export default function ConfiguracionPage() {
         style={{
           width: '100%', padding: '12px 0', borderRadius: 8, cursor: 'pointer',
           background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-          color: 'var(--dark-bg)', border: 'none',
+          color: 'var(--on-gold)', border: 'none',
           fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700, letterSpacing: 1,
           opacity: saving || uploading ? 0.7 : 1,
         }}

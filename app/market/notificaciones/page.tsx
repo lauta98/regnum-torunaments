@@ -142,7 +142,7 @@ export default function NotificacionesPage() {
                 {/* Icono */}
                 <div style={{
                   width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                  background: n.read ? 'var(--dark-bg)' : 'rgba(201,168,76,0.1)',
+                  background: n.read ? 'var(--market-surface-deep)' : 'rgba(201,168,76,0.1)',
                   border: `1px solid ${n.read ? 'var(--dark-border)' : 'rgba(201,168,76,0.2)'}`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 20,

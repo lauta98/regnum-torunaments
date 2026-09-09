@@ -89,7 +89,7 @@ export default async function PerfilPage({ params }: { params: Promise<{ usernam
         {/* Overlay oscuro en la parte inferior */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 60,
-          background: 'linear-gradient(to top, var(--dark-bg), transparent)',
+          background: 'linear-gradient(to top, var(--market-surface-deep), transparent)',
         }} />
       </div>
 
@@ -103,7 +103,7 @@ export default async function PerfilPage({ params }: { params: Promise<{ usernam
             {/* Avatar */}
             <div style={{
               width: 72, height: 72, borderRadius: '50%', background: 'var(--burgundy)',
-              border: `3px solid ${profile.is_premium ? '#F59E0B' : 'var(--dark-bg)'}`,
+              border: `3px solid ${profile.is_premium ? '#F59E0B' : 'var(--market-surface-deep)'}`,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: "'Cinzel',serif", fontSize: 26, color: 'var(--gold-light)',
               flexShrink: 0, marginTop: -36, overflow: 'hidden', position: 'relative',

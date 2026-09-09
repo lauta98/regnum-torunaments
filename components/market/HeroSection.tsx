@@ -6,7 +6,7 @@ export default function HeroSection() {
   const { t } = useLanguage()
   return (
     <div className="home-hero" style={{ textAlign: 'center', padding: '28px 16px 20px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, rgba(107,30,46,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--burgundy) 25%, transparent) 0%, transparent 70%)', pointerEvents: 'none' }} />
       <h1 className="cinzel home-hero-title" style={{ fontSize: 28, color: 'var(--gold)', letterSpacing: 3, marginBottom: 8 }}>
         CHAMPIONS OF COMMERCE
       </h1>

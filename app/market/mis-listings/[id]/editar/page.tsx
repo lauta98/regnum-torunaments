@@ -148,12 +148,12 @@ export default function EditarListing({ params }: { params: Promise<{ id: string
           <button onClick={handleSave} disabled={saving} style={{
             flex: 2, padding: '10px', borderRadius: 8, cursor: saving ? 'not-allowed' : 'pointer',
             background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-            color: 'var(--dark-bg)', border: 'none',
+            color: 'var(--on-gold)', border: 'none',
             fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700, letterSpacing: 1,
           }}>
             {saving ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Spinner size={16} color="var(--dark-bg)" />
+                <Spinner size={16} color="var(--on-gold)" />
                 Guardando...
               </span>
             ) : '✓ GUARDAR CAMBIOS'}

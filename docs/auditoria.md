@@ -162,3 +162,70 @@ Esto es un inventario, no una lista de bugs — algunos de estos patrones (ej. l
 propia de Comercio, los emoji de clase) fueron decisiones deliberadas de sesiones
 anteriores, no necesariamente errores. La Fase 1 (tokens) y las fases de layout deciden
 qué hacer con cada uno.
+
+---
+
+## 6. Ampliación — colores en todo el repo
+
+Barrido completo sobre `app/` y `components/` (no solo las 5 páginas): **417 valores
+hex en 84 archivos**, 108 valores distintos. Necesario antes de tokenizar porque los
+tokens van a cubrir el repo entero aunque el rediseño visual sea solo de las 5 páginas.
+
+### Confirma lo ya visto en la sección 1
+- **Reino**: `#4CAF50` (35×), `#F44336` (35×), `#2196F3` (8×) — consistentes en todo el
+  repo, no solo en Ranking/Torneos.
+- **Rareza**: `#9CA3AF` normal, `#FB923C`/`#F59E0B` especial (30× combinado), `#22C55E`/
+  `#4ade80` mágico, `#8B5CF6` épico, `#EF4444` legendario — se repiten en `market/nuevo`,
+  `market/watchlist`, `market/destacar`, `FilterBar`, `ListingCard`, no solo en la grilla.
+- **Oro**: `#d4af37` (10× fuera de `var(--gold)`) — pero Comercio tiene su propio dorado,
+  ver más abajo.
+
+### Colapsos confirmados (mismo rol, valor casi idéntico)
+- **`#8B5CF6` (5 archivos: `market/destacar`, `market/nuevo`, `market/watchlist`,
+  `FilterBar`) vs `#8B5CF2` (solo `ListingCard.tsx:64`)** — mismo rol (épico), un solo
+  archivo con el valor distinto. Colapsa a `#8B5CF6`.
+- **`#5BC98B` (47×, en todo el repo: activo/verde genérico) vs `#6EE89A` (4×, solo el
+  texto del badge "Vende" en `ListingCard.tsx`/`FilterBar.tsx`)** — con esto colapsado,
+  el texto de "Vende" cambia de tono levemente (más oscuro). Aviso, no bloqueo.
+- **Rojos — 4 valores para roles parcialmente distintos, no un colapso limpio:**
+  `#F44336` (Ignis) es una cosa; `#EF4444` es el borde/glow de legendario en `ListingCard`
+  (`rgba(239,68,68,...)`); `#f87171` (67×) es el nombre de legendario en `ListingCard` PERO
+  también el color de texto de error genérico en ~10 paneles de `app/admin/*` (con fondo
+  `rgba(244,67,54,...)`, o sea F44336); `#E24B4A` (40×) es un cuarto rojo, usado como color
+  de "error/rechazado" en Comercio (`market/admin`, formularios). No colapsan entre sí sin
+  perder distinción semántica — quedan como 2 escalas: reino (F44336) y estado/rareza
+  (F87171 tinte claro + EF4444 borde), más un rojo de error propio de Comercio (E24B4A) que
+  habría que decidir si se funde con el de error general o se mantiene aparte.
+- **`#c9a84c` (~10 archivos, todos dentro de `market/`) vs `#d4af37` (`var(--gold)`, resto
+  del sitio)** — esto es Comercio usando su propio dorado, no un error de tipeo: es el
+  mismo patrón que la paleta de fondo propia. Relevante para la decisión de la sección 7.
+
+### No encajan en ninguna de las 4 escalas de `docs/design.md`
+- **Colores de marca de terceros** (correctos tal cual, no deberían tokenizarse al
+  sistema interno): `#5865F2` Discord (`login/page.tsx`, `Header.tsx`, `SellerCard.tsx`),
+  `#25D366` WhatsApp (`SellerCard.tsx`), `#53FC18` Kick (`PlatformIcons.tsx`,
+  `HighlightCard.tsx`).
+- **Colores de tipo de daño mágico/físico** (`app/market/nuevo/page.tsx`, formulario de
+  publicar ítem): Fuego `#F97316`, Hielo `#38BDF8`, Electricidad `#FDE047`, más Cortante/
+  Punzante/Aplastante reusando rojos y violetas de otras escalas. Es una quinta escala
+  real (tipo de daño del juego) que `docs/design.md` no contempla.
+- **Verde de éxito/estado "en línea" con múltiples tonos** sin agrupar aún:
+  `#5bc98b`/`#4ade80`/`#22c55e`/`#86efac` — puede que sea una escala de estado
+  (activo/conectado/éxito) separada de rareza-mágico, a decidir en la Fase 1.
+
+### Un vistazo a la lista completa (para no perder nada al tokenizar)
+```
+67 #f87171   47 #5bc98b   40 #e24b4a   35 #f44336   35 #4caf50   30 #f59e0b
+19 #fff      17 #ef4444   11 #5b9bdf   10 #d4af37   10 #c9a84c    9 #2e7d52
+ 9 #0d0a07    8 #fb923c    8 #7dc4ff    8 #2196f3    8 #1a5c35    8 #0a0a0a
+ 8 #000       7 #a78bfa    7 #22c55e    6 #888       6 #4ade80    5 #ffa500
+ 5 #f5c518    5 #8b5cf6    5 #7a8a9a    5 #1e4a7a    4 #6ee89a    4 #5b8fd4
+ 4 #2d9b4e    4 #1e6db5    4 #0f2d52    3 #fde047    3 #fca5a5    3 #f97316
+ 3 #e2744a    3 #c4b5fd    3 #c0c0c0    3 #b8a157    3 #b45309    3 #909090
+ 3 #7dd3fc    3 #5865f2    3 #38bdf8    3 #1a5c2e    3 #0f3460    2 #ff6b6b
+ 2 #ff0000    2 #fbbf24    2 #cd7f32    2 #9dc4e8    2 #9ca3af    2 #8a8a8a
+ 2 #6d28d9    2 #606060    2 #53fc18    2 #1c1700    2 #1a0a0a    2 #141414
+ 2 #120f00    2 #0f0d0a    2 #0d0d0d
+ (resto: 26 valores usados 1 sola vez — sombras/gradientes puntuales, se listan al
+ tokenizar cada componente si hace falta un token nuevo)
+```

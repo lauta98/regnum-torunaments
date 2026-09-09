@@ -256,7 +256,7 @@ export default function ChatBox({ transactionId, userId, otherUsername, unreadCo
               disabled={!draft.trim() || sending}
               style={{
                 background: draft.trim() ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))' : 'var(--dark-card)',
-                color: draft.trim() ? 'var(--dark-bg)' : 'var(--dark-border)',
+                color: draft.trim() ? 'var(--on-gold)' : 'var(--dark-border)',
                 border: 'none', borderRadius: 6, padding: '7px 14px',
                 cursor: draft.trim() ? 'pointer' : 'default',
                 fontSize: 16, transition: 'all 0.15s', flexShrink: 0,

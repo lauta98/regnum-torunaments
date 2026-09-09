@@ -127,7 +127,7 @@ export default function WatchlistPage() {
         <button onClick={addAlert} disabled={!cat || saving} style={{
           width: '100%', padding: '11px 0', borderRadius: 8, cursor: cat ? 'pointer' : 'default',
           background: cat ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))' : 'var(--dark-surface)',
-          color: cat ? 'var(--dark-bg)' : 'var(--text-muted)', border: 'none',
+          color: cat ? 'var(--on-gold)' : 'var(--text-muted)', border: 'none',
           fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700, letterSpacing: 1,
         }}>
           {saving ? t('watchlist.saving') : t('watchlist.create')}

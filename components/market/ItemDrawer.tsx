@@ -209,7 +209,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
             </span>
             <button
               onClick={onClose}
-              style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'var(--dark-bg)', border: '1px solid var(--dark-border)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
+              style={{ width: 28, height: 28, borderRadius: '50%', flexShrink: 0, background: 'var(--market-surface-deep)', border: '1px solid var(--dark-border)', color: 'var(--text-muted)', cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}
               onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--gold)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--gold)' }}
               onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--dark-border)'; (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)' }}
             >✕</button>
@@ -223,7 +223,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               width: '42%', flexShrink: 0,
               borderRight: `1px solid var(--dark-border)`,
               display: 'flex', flexDirection: 'column',
-              background: hasImages ? 'var(--dark-bg)' : `radial-gradient(ellipse at 50% 55%, color-mix(in srgb, ${emojiColor} 9%, transparent) 0%, transparent 70%), var(--dark-bg)`,
+              background: hasImages ? 'var(--market-surface-deep)' : `radial-gradient(ellipse at 50% 55%, color-mix(in srgb, ${emojiColor} 9%, transparent) 0%, transparent 70%), var(--market-surface-deep)`,
             }}>
               {/* Main image */}
               <div
@@ -271,7 +271,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               {totalImages > 1 && (
                 <div style={{ display: 'flex', gap: 5, padding: '7px 8px', borderTop: `1px solid var(--dark-border)`, background: 'var(--dark-surface)', flexShrink: 0, overflowX: 'auto' }}>
                   {allImages.map((src, i) => (
-                    <button key={i} onClick={() => setImgIdx(i)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 6, overflow: 'hidden', border: `2px solid ${i === imgIdx ? (rarezaColor || 'var(--gold)') : 'var(--dark-border)'}`, background: 'var(--dark-bg)', cursor: 'pointer', padding: 0, transition: 'all 0.15s', opacity: i === imgIdx ? 1 : 0.5 }}>
+                    <button key={i} onClick={() => setImgIdx(i)} style={{ width: 44, height: 44, flexShrink: 0, borderRadius: 6, overflow: 'hidden', border: `2px solid ${i === imgIdx ? (rarezaColor || 'var(--gold)') : 'var(--dark-border)'}`, background: 'var(--market-surface-deep)', cursor: 'pointer', padding: 0, transition: 'all 0.15s', opacity: i === imgIdx ? 1 : 0.5 }}>
                       <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </button>
                   ))}
@@ -390,7 +390,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                       {reviewCount === 0 && <span style={{ fontSize: 10, color: 'var(--text-muted)' }}>Sin reseñas aún</span>}
                       {servidor && (
-                        <span style={{ fontSize: 10, color: 'var(--text-muted)', background: 'var(--dark-bg)', borderRadius: 4, padding: '1px 6px', border: '1px solid var(--dark-border)' }}>🌐 {servidor}</span>
+                        <span style={{ fontSize: 10, color: 'var(--text-muted)', background: 'var(--market-surface-deep)', borderRadius: 4, padding: '1px 6px', border: '1px solid var(--dark-border)' }}>🌐 {servidor}</span>
                       )}
                       {lastSeen && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10 }}>

@@ -37,7 +37,7 @@ export default async function FavoritosPage() {
           <Link href="/market" style={{
             display: 'inline-block',
             background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-            color: 'var(--dark-bg)', padding: '10px 24px', borderRadius: 8,
+            color: 'var(--on-gold)', padding: '10px 24px', borderRadius: 8,
             fontFamily: "'Cinzel',serif", fontSize: 12, textDecoration: 'none', fontWeight: 700,
           }}>
             VER MERCADO

@@ -28,6 +28,34 @@ Regla: si un elemento no comunica acción primaria, reino o rareza, es neutro.
 Todo esto vive en un único archivo de tokens como CSS custom properties. Cero hex
 hardcodeado en componentes.
 
+### `--on-gold`
+Color de texto/ícono sobre un fondo dorado (botones con gradiente
+`var(--gold-dark)`→`var(--gold)`, spinners dentro de esos botones). Es el único rol que
+cumple — **no se usa como fondo de superficie**. Viene de separar `--dark-bg`, un token
+huérfano que estaba cumpliendo dos trabajos distintos bajo un solo nombre (mismo problema
+que tuvo `#f87171` en rareza legendaria): la mitad "texto sobre dorado" se resolvió como
+`--on-gold`; la mitad "fondo de superficie oscura" todavía no tiene token asignado.
+
+### Escalas adicionales (fuera de las 4 principales)
+Aparecieron al tokenizar que no encajan en Neutros/Dorado/Reino/Rareza. Documentadas acá
+para que no se fundan con otra escala ni se traten como error de tipeo:
+
+- **Formato de torneo** (1v1 / 2v2 / 3v3 / 7v7): cada formato tiene su propio color en
+  `FORMAT_COLOR` (`lib/constants.ts`). Escala real, en uso.
+- **Calidad del ítem** (muy buena / buena / normal / mala / muy mala): estado de
+  conservación de un ítem en Comercio, distinto de rareza. Vive como `CALIDAD_COLOR` en
+  `lib/market/constants.ts` y se redefine igual (con los mismos 5 valores) dentro de
+  `app/market/nuevo/page.tsx`. Sin tokenizar todavía.
+
+### Pendiente de unificar — no es una escala nueva
+**Gema-elemento** (Fuego / Hielo / Electricidad / Aplastante / Punzante / Cortante) en
+`app/market/nuevo/page.tsx` usa colores propios (`GEMA_ELEMENTO_COLOR`) distintos a los
+de **tipo de daño** (`FISICO_COLOR` / `MAGICO_COLOR`, mismo archivo), pese a compartir
+los mismos nombres de elemento. No es una escala nueva a tokenizar aparte — es un bug de
+contenido: el mismo elemento (ej. Fuego) se ve de un color en el selector de gema y de
+otro en el selector de tipo de daño, dentro del mismo formulario. Unificar valores en la
+Fase 5 antes de tokenizar cualquiera de las dos.
+
 ## Tipografía
 Una serif para display (títulos de sección, nombres de personaje, cifras de MMR) y una
 sans con `font-variant-numeric: tabular-nums` para datos y UI. Dos familias, no más.

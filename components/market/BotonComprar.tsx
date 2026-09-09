@@ -92,7 +92,7 @@ export default function BotonComprar({ listing, currentUserId }: {
       <button onClick={handleClick} disabled={loading} style={{
         width: '100%', padding: '12px', borderRadius: 8, cursor: 'pointer',
         fontFamily: "'Cinzel',serif", fontSize: 13, letterSpacing: 1, fontWeight: 700,
-        border: 'none', color: esVenta ? 'var(--dark-bg)' : 'white',
+        border: 'none', color: esVenta ? 'var(--on-gold)' : 'white',
         background: esVenta
           ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))'
           : 'linear-gradient(135deg, #0f2d52, #1E4A7A)',

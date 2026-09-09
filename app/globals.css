@@ -171,6 +171,28 @@
   --dark-card:    var(--bg-card);
   --dark-surface: var(--bg-surface);
   --dark-border:  var(--border);
+
+  /* Huérfanos: se usaban en 6-14 archivos de Comercio (ItemDrawer, SellerCard,
+     BotonComprar, market/nuevo, etc.) pero nunca tuvieron valor — venían del
+     port original ("feat: portar Comercio al repo unificado") sin su CSS. */
+  --burgundy: #6b1e2e;  /* mismo valor que el "maroon glow" rgba(107,30,46) de HeroSection.tsx */
+
+  /* --dark-bg estaba cumpliendo dos roles distintos bajo un solo nombre
+     (mismo problema que #f87171 en rareza legendario). Se separó en dos:
+     --on-gold es SOLO texto/ícono sobre fondo dorado (botones y spinners
+     dentro de un botón con gradient var(--gold-dark)→var(--gold)) — nunca
+     se usa como fondo.
+     --market-surface-deep es el lado "fondo de superficie oscura" (y el
+     anillo neutro del avatar no-premium, mismo rol: que no se note) —
+     distinto de --select-option-bg (#0d0a07, otro valor, otro rol). */
+  --on-gold: #1a1208;
+  --market-surface-deep: #0f0d0a;
+  /* mismo rol y mismo valor que el borde dorado atenuado que ya usa el
+     duplicado de este panel en market/nuevo/page.tsx línea ~1029
+     (`borderLeft: color-mix(var(--gold) 18%)`, antes rgba(201,168,76,0.18)) —
+     este bloque en línea ~1144 ya llamaba a var(--dark-border-gold) esperando
+     que existiera. */
+  --dark-border-gold: color-mix(in srgb, var(--gold) 18%, transparent);
 }
 
 * {

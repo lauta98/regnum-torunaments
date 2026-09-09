@@ -175,7 +175,7 @@ export default function CalificarPage() {
             </Link>
             <Link href={`/market/perfil/${otherUser?.username}`} style={{
               background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-              color: 'var(--dark-bg)', padding: '8px 20px', borderRadius: 8,
+              color: 'var(--on-gold)', padding: '8px 20px', borderRadius: 8,
               textDecoration: 'none', fontSize: 13, fontWeight: 700,
               fontFamily: "'Cinzel',serif",
             }}>
@@ -287,7 +287,7 @@ export default function CalificarPage() {
           </Link>
           <button onClick={submit} disabled={loading || !score} style={{
             flex: 2, background: score ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))' : 'var(--dark-surface)',
-            color: score ? 'var(--dark-bg)' : 'var(--dark-border)',
+            color: score ? 'var(--on-gold)' : 'var(--dark-border)',
             border: 'none', padding: '10px', borderRadius: 8,
             fontFamily: "'Cinzel',serif", fontSize: 13, letterSpacing: 1,
             cursor: score && !loading ? 'pointer' : 'default', fontWeight: 700,

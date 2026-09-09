@@ -242,7 +242,7 @@ function MisListingsInner() {
         </div>
         <Link href="/market/nuevo" style={{
           background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-          color: 'var(--dark-bg)', padding: '8px 16px', borderRadius: 8,
+          color: 'var(--on-gold)', padding: '8px 16px', borderRadius: 8,
           fontFamily: "'Cinzel',serif", fontSize: 11, textDecoration: 'none', fontWeight: 700,
         }}>
           + NUEVA
@@ -289,7 +289,7 @@ function MisListingsInner() {
           </p>
           <Link href="/market/nuevo" style={{
             background: 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-            color: 'var(--dark-bg)', padding: '12px 24px', borderRadius: 8,
+            color: 'var(--on-gold)', padding: '12px 24px', borderRadius: 8,
             fontFamily: "'Cinzel',serif", fontSize: 12, textDecoration: 'none',
             fontWeight: 700, letterSpacing: 1,
           }}>

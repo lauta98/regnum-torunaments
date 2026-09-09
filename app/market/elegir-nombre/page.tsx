@@ -189,7 +189,7 @@ export default function ElegirNombrePage() {
             background: loading || available === false || username.length < 3
               ? 'rgba(201,168,76,0.3)'
               : 'linear-gradient(135deg, var(--gold-dark), var(--gold))',
-            color: 'var(--dark-bg)', border: 'none', padding: '13px 20px', borderRadius: 8,
+            color: 'var(--on-gold)', border: 'none', padding: '13px 20px', borderRadius: 8,
             fontFamily: "'Cinzel', serif", fontSize: 13, letterSpacing: 1,
             cursor: loading || available === false || username.length < 3 ? 'not-allowed' : 'pointer',
             fontWeight: 700, transition: 'all 0.2s',
