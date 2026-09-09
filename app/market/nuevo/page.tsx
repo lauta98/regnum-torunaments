@@ -1552,13 +1552,18 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
       payload.slot_1 = `${GEMA_LABEL[gemaStandalone.tipo]}${subtipo}: +${gemaStandalone.valor}${isPercent ? '%' : ''}`
     }
 
-    const { error: insertError } = await supabase.from('listings').insert(payload)
+    const { data: nuevaListing, error: insertError } = await supabase.from('listings').insert(payload).select('id').single()
     if (insertError) {
       console.error('[listings insert error]', insertError)
       setError(insertError.message)
       setLoading(false)
       return
     }
+    // Best-effort: si el aviso de Discord falla, no debe frenar la publicación.
+    fetch('/api/discord/item-publicado', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId: nuevaListing.id }),
+    }).catch(() => {})
     router.push('/market')
   }
 

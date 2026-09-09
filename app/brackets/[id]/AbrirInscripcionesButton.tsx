@@ -15,6 +15,11 @@ export default function AbrirInscripcionesButton({ torneoId }: { torneoId: strin
       .eq('id', torneoId)
 
     if (err) { setError(err.message); setLoading(false); return }
+    // Best-effort: si el aviso de Discord falla, no debe frenar la apertura.
+    fetch('/api/discord/torneo-inscripciones', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ torneoId }),
+    }).catch(() => {})
     window.location.reload()
   }
 

@@ -2,6 +2,7 @@ import { createServerSupabase, createServiceSupabase } from '@/lib/supabase-serv
 import { NextResponse } from 'next/server'
 import { detectarCampeones, detectarSegundoPuesto } from '@/lib/campeonatos'
 import { esOrganizadorDelTorneo } from '@/lib/roles'
+import { notifyDiscord, siteUrl } from '@/lib/discord-webhook'
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: torneoId } = await params
@@ -11,7 +12,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { data: me } = await supabase.from('players').select('id, role').eq('user_id', user.id).single()
   if (!me) return NextResponse.json({ error: 'Sin permisos' }, { status: 403 })
-  const { data: torneo } = await supabase.from('tournaments').select('creator_id').eq('id', torneoId).single()
+  const { data: torneo } = await supabase.from('tournaments').select('creator_id, nombre').eq('id', torneoId).single()
   if (!torneo) return NextResponse.json({ error: 'Torneo no encontrado' }, { status: 404 })
   // Service role: `tournament_organizers` no tiene policy de RLS para el
   // cliente autenticado normal.
@@ -50,6 +51,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       { onConflict: 'torneo_id,personaje_id', ignoreDuplicates: true }
     )
     if (subcampeonesErr) return NextResponse.json({ error: `Torneo finalizado, pero no se pudo coronar al subcampeón: ${subcampeonesErr.message}` }, { status: 500 })
+  }
+
+  if (campeones.length > 0) {
+    let nombreCampeon = campeones[0].equipo_nombre
+    if (!nombreCampeon) {
+      const { data: pj } = await svc.from('personajes').select('nickname_juego').eq('id', campeones[0].personaje_id).single()
+      nombreCampeon = pj?.nickname_juego ?? null
+    }
+    await notifyDiscord({
+      title: `🏆 ${torneo.nombre} — ¡Torneo finalizado!`,
+      description: nombreCampeon ? `Campeón: **${nombreCampeon}**` : 'Mirá quién se coronó campeón.',
+      url: siteUrl(`/torneos/${torneoId}`),
+      footer: 'CoR Tournaments',
+    })
   }
 
   return NextResponse.json({ ok: true, campeones: campeones.length, subcampeones: subcampeones.length })
