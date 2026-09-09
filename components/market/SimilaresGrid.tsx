@@ -6,8 +6,8 @@ import { getItemIconColored } from '@/lib/market/icons'
 const GREY_CATS = new Set(['joyeria', 'crafting', 'minerales'])
 
 function SimilarCard({ s }: { s: any }) {
-  const sRarezaColor = s.rareza ? (RAREZA_COLOR[s.rareza] || '#C9A84C') : '#C9A84C'
-  const sColor = GREY_CATS.has(s.item_category) ? '#7A8A9A' : sRarezaColor
+  const sRarezaColor = s.rareza ? (RAREZA_COLOR[s.rareza] || 'var(--gold)') : 'var(--gold)'
+  const sColor = GREY_CATS.has(s.item_category) ? 'var(--category-grey)' : sRarezaColor
   const { gold, money } = formatPrecioCard(s.price_gold, s.price_money, s.currency_label)
   const isSell = s.type === 'sell'
   let sSvg = ''
@@ -17,36 +17,36 @@ function SimilarCard({ s }: { s: any }) {
     <Link href={listingHref(s.item_name, s.id, s.short_id)} style={{ textDecoration: 'none' }}>
       <div
         style={{
-          background: 'var(--dark-card)', border: `1px solid ${sColor}33`,
+          background: 'var(--dark-card)', border: `1px solid color-mix(in srgb, ${sColor} 20%, transparent)`,
           borderRadius: 10, overflow: 'hidden', transition: 'border-color 0.2s, transform 0.2s',
         }}
         onMouseOver={e => {
-          ;(e.currentTarget as HTMLDivElement).style.borderColor = `${sColor}77`
+          ;(e.currentTarget as HTMLDivElement).style.borderColor = `color-mix(in srgb, ${sColor} 47%, transparent)`
           ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(-2px)'
         }}
         onMouseOut={e => {
-          ;(e.currentTarget as HTMLDivElement).style.borderColor = `${sColor}33`
+          ;(e.currentTarget as HTMLDivElement).style.borderColor = `color-mix(in srgb, ${sColor} 20%, transparent)`
           ;(e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)'
         }}
       >
         {/* Mini hero */}
         <div style={{
           height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `radial-gradient(circle at center, ${sColor}20 0%, ${sColor}06 60%, var(--dark-surface) 85%)`,
+          background: `radial-gradient(circle at center, color-mix(in srgb, ${sColor} 12.5%, transparent) 0%, color-mix(in srgb, ${sColor} 2%, transparent) 60%, var(--dark-surface) 85%)`,
           position: 'relative',
         }}>
           <span style={{
             position: 'absolute', top: 6, left: 6,
             fontSize: 8, padding: '2px 6px', borderRadius: 3,
             fontFamily: "'Cinzel',serif", letterSpacing: 1, fontWeight: 700,
-            background: isSell ? '#1a5c2e' : '#0f3460',
-            color: isSell ? '#6EE89A' : '#7DC4FF',
-            border: `1px solid ${isSell ? '#2d9b4e' : '#1e6db5'}`,
+            background: isSell ? 'var(--type-sell-bg)' : 'var(--type-busca-bg)',
+            color: isSell ? 'var(--success)' : 'var(--info)',
+            border: `1px solid ${isSell ? 'var(--type-sell-border)' : 'var(--type-busca-border)'}`,
           }}>
             {isSell ? '▲' : '▼'}
           </span>
           {sSvg
-            ? <div suppressHydrationWarning style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: `drop-shadow(0 0 6px ${sColor}55)` }} dangerouslySetInnerHTML={{ __html: sSvg }} />
+            ? <div suppressHydrationWarning style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', filter: `drop-shadow(0 0 6px color-mix(in srgb, ${sColor} 33%, transparent))` }} dangerouslySetInnerHTML={{ __html: sSvg }} />
             : <span style={{ fontSize: 28 }}>{CAT_EMOJI[s.item_category] || '📦'}</span>
           }
         </div>

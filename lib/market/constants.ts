@@ -12,11 +12,11 @@ export function listingHref(itemName: string, id: string, shortId?: string | nul
 
 // ─── Rareza ───────────────────────────────────────────────────────
 export const RAREZA_COLOR: Record<string, string> = {
-  normal: '#9CA3AF',
-  especial: '#FBBF24',
-  magico: '#22C55E',
-  epico: '#8B5CF6',
-  legendario: '#EF4444',
+  normal: 'var(--rarity-normal)',
+  especial: 'var(--rarity-special)',
+  magico: 'var(--rarity-magic)',
+  epico: 'var(--rarity-epic)',
+  legendario: 'var(--rarity-legendary)',
 }
 
 export const RAREZA_LABEL: Record<string, string> = {

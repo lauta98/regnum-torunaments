@@ -21,7 +21,7 @@ const RAREZA_VALS = [
   { val: 'epico', key: 'rareza.epico' },
   { val: 'legendario', key: 'rareza.legendario' },
 ]
-const RAREZA_COLOR: Record<string, string> = { especial: '#FB923C', magico: '#22C55E', epico: '#8B5CF6', legendario: '#EF4444' }
+const RAREZA_COLOR: Record<string, string> = { especial: 'var(--rarity-special)', magico: 'var(--rarity-magic)', epico: 'var(--rarity-epic)', legendario: 'var(--rarity-legendary)' }
 const CAT_EMOJI: Record<string, string> = { armas: '⚔', armaduras: '🛡', proyectiles: '🏹', crafting: '🔨', gemas_magicas: '💎', joyeria: '💍', minerales: '⛏' }
 
 const inp: React.CSSProperties = {
@@ -31,7 +31,7 @@ const inp: React.CSSProperties = {
 const pill = (active: boolean, color?: string): React.CSSProperties => ({
   padding: '5px 12px', borderRadius: 16, cursor: 'pointer', fontSize: 12, fontFamily: 'inherit',
   border: `1px solid ${active ? (color || 'var(--gold)') : 'var(--dark-border)'}`,
-  background: active ? `${color || 'var(--gold)'}22` : 'var(--dark-surface)',
+  background: active ? `color-mix(in srgb, ${color || 'var(--gold)'} 13%, transparent)` : 'var(--dark-surface)',
   color: active ? (color || 'var(--gold)') : 'var(--text-muted)',
 })
 
@@ -134,8 +134,8 @@ export default function WatchlistPage() {
         </button>
 
         {saveError && (
-          <div style={{ marginTop: 10, background: 'rgba(226,75,74,0.1)', border: '1px solid rgba(226,75,74,0.4)', borderRadius: 8, padding: '8px 12px' }}>
-            <p style={{ color: '#E24B4A', fontSize: 12, margin: 0 }}>⚠ {saveError}</p>
+          <div style={{ marginTop: 10, background: 'color-mix(in srgb, var(--error) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--error) 40%, transparent)', borderRadius: 8, padding: '8px 12px' }}>
+            <p style={{ color: 'var(--error)', fontSize: 12, margin: 0 }}>⚠ {saveError}</p>
           </div>
         )}
       </div>
@@ -157,7 +157,7 @@ export default function WatchlistPage() {
             {a.keyword && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)' }}>· "{a.keyword}"</span>}
             {a.tipo !== 'any' && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)' }}>· {a.tipo === 'sell' ? t('watchlist.sells_type') : t('watchlist.buys_type')}</span>}
           </div>
-          <button onClick={() => deleteAlert(a.id)} style={{ background: 'none', border: '1px solid rgba(226,75,74,0.3)', color: '#E24B4A', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', flexShrink: 0 }}>
+          <button onClick={() => deleteAlert(a.id)} style={{ background: 'none', border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)', color: 'var(--error)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 11, fontFamily: 'inherit', flexShrink: 0 }}>
             {t('watchlist.delete')}
           </button>
         </div>

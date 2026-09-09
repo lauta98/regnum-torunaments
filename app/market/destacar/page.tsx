@@ -37,7 +37,7 @@ export default function DestacarPage() {
             { ok: false, text: 'Foto de perfil personalizada' },
           ].map((f, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
-              <span style={{ color: f.ok ? '#5BC98B' : 'var(--dark-border)', fontSize: 14, flexShrink: 0, marginTop: 1 }}>
+              <span style={{ color: f.ok ? 'var(--success)' : 'var(--dark-border)', fontSize: 14, flexShrink: 0, marginTop: 1 }}>
                 {f.ok ? '✓' : '✗'}
               </span>
               <span style={{ fontSize: 13, color: f.ok ? 'var(--text-primary)' : 'var(--text-muted)' }}>{f.text}</span>
@@ -48,18 +48,18 @@ export default function DestacarPage() {
         {/* Destacado $500 */}
         <div style={{
           background: 'var(--dark-card)',
-          border: '1px solid rgba(245,158,11,0.5)',
+          border: '1px solid color-mix(in srgb, var(--featured) 50%, transparent)',
           borderRadius: 12, padding: 24, position: 'relative',
         }}>
           <div style={{
             position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-            background: '#F59E0B', color: '#000', fontSize: 10, fontFamily: "'Cinzel',serif",
+            background: 'var(--featured)', color: '#000', fontSize: 10, fontFamily: "'Cinzel',serif",
             padding: '3px 14px', borderRadius: 20, letterSpacing: 1, fontWeight: 700,
             whiteSpace: 'nowrap',
           }}>
             RECOMENDADO
           </div>
-          <h2 className="cinzel" style={{ fontSize: 15, color: '#F59E0B', marginBottom: 6 }}>★ Destacar</h2>
+          <h2 className="cinzel" style={{ fontSize: 15, color: 'var(--featured)', marginBottom: 6 }}>★ Destacar</h2>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
             <span style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>$500</span>
             <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>ARS</span>
@@ -76,7 +76,7 @@ export default function DestacarPage() {
             { ok: false, text: 'Foto de perfil personalizada' },
           ].map((f: any, i) => (
             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: 10 }}>
-              <span style={{ color: f.ok === false ? 'var(--dark-border)' : '#F59E0B', fontSize: 14, flexShrink: 0, marginTop: 1 }}>
+              <span style={{ color: f.ok === false ? 'var(--dark-border)' : 'var(--featured)', fontSize: 14, flexShrink: 0, marginTop: 1 }}>
                 {f.ok === false ? '✗' : '★'}
               </span>
               <span style={{ fontSize: 13, color: f.ok === false ? 'var(--text-muted)' : 'var(--text-primary)' }}>{f.text}</span>
@@ -88,7 +88,7 @@ export default function DestacarPage() {
             rel="noopener noreferrer"
             style={{
               display: 'block', marginTop: 20, textAlign: 'center',
-              background: 'linear-gradient(135deg, #b45309, #F59E0B)',
+              background: 'linear-gradient(135deg, #b45309, var(--featured))',
               color: '#000', padding: '10px 0', borderRadius: 8,
               fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
               letterSpacing: 1, textDecoration: 'none',
@@ -100,13 +100,13 @@ export default function DestacarPage() {
 
         {/* Premium $3000 */}
         <div style={{
-          background: 'linear-gradient(160deg, var(--dark-card) 0%, rgba(139,92,246,0.06) 100%)',
-          border: '1px solid rgba(139,92,246,0.5)',
+          background: 'linear-gradient(160deg, var(--dark-card) 0%, color-mix(in srgb, var(--rarity-epic) 6%, transparent) 100%)',
+          border: '1px solid color-mix(in srgb, var(--rarity-epic) 50%, transparent)',
           borderRadius: 12, padding: 24, position: 'relative',
         }}>
           <div style={{
             position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
-            background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)', color: '#fff',
+            background: 'linear-gradient(135deg, #6D28D9, var(--rarity-epic))', color: '#fff',
             fontSize: 10, fontFamily: "'Cinzel',serif",
             padding: '3px 14px', borderRadius: 20, letterSpacing: 1, fontWeight: 700,
             whiteSpace: 'nowrap',
@@ -137,7 +137,7 @@ export default function DestacarPage() {
             href="/market/configuracion"
             style={{
               display: 'block', marginTop: 20, textAlign: 'center',
-              background: 'linear-gradient(135deg, #6D28D9, #8B5CF6)',
+              background: 'linear-gradient(135deg, #6D28D9, var(--rarity-epic))',
               color: '#fff', padding: '10px 0', borderRadius: 8,
               fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
               letterSpacing: 1, textDecoration: 'none',
@@ -165,9 +165,9 @@ export default function DestacarPage() {
           <div key={s.n} style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
             <div style={{
               width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
-              background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.4)',
+              background: 'color-mix(in srgb, var(--featured) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--featured) 40%, transparent)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: "'Cinzel',serif", fontSize: 14, color: '#F59E0B',
+              fontFamily: "'Cinzel',serif", fontSize: 14, color: 'var(--featured)',
             }}>{s.n}</div>
             <div>
               <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>{s.title}</p>
@@ -181,7 +181,7 @@ export default function DestacarPage() {
       <div style={{ textAlign: 'center' }}>
         <Link href="/market/mis-listings" style={{
           display: 'inline-block',
-          background: 'linear-gradient(135deg, #b45309, #F59E0B)',
+          background: 'linear-gradient(135deg, #b45309, var(--featured))',
           color: '#000', padding: '14px 36px', borderRadius: 10,
           fontFamily: "'Cinzel',serif", fontSize: 13, fontWeight: 700,
           letterSpacing: 1, textDecoration: 'none',

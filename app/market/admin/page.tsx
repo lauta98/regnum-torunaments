@@ -6,9 +6,9 @@ import Link from 'next/link'
 import PublicacionesTab from './PublicacionesTab'
 
 const STATUS_COLOR: Record<string, { color: string; label: string }> = {
-  pending:  { color: '#F59E0B', label: '⏳ Pendiente' },
-  approved: { color: '#5BC98B', label: '✓ Aprobado' },
-  rejected: { color: '#E24B4A', label: '✗ Rechazado' },
+  pending:  { color: 'var(--featured)', label: '⏳ Pendiente' },
+  approved: { color: 'var(--success)', label: '✓ Aprobado' },
+  rejected: { color: 'var(--error)', label: '✗ Rechazado' },
 }
 
 function timeAgo(date: string) {
@@ -118,7 +118,7 @@ export default function AdminPage() {
         <Link href="/market" style={{ color: 'var(--text-muted)', fontSize: 13, textDecoration: 'none' }}>← Volver</Link>
         <h1 className="cinzel" style={{ fontSize: 20, color: 'var(--gold)' }}>⚙ Panel de Admin</h1>
         {(pendingCount + premiumPending) > 0 && (
-          <span style={{ background: '#F59E0B', color: '#000', borderRadius: 20, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
+          <span style={{ background: 'var(--featured)', color: '#000', borderRadius: 20, padding: '2px 10px', fontSize: 12, fontWeight: 700 }}>
             {pendingCount + premiumPending}
           </span>
         )}
@@ -135,15 +135,15 @@ export default function AdminPage() {
           <button key={t.key} onClick={() => setTab(t.key as any)} style={{
             fontSize: 13, padding: '8px 18px', borderRadius: 8, cursor: 'pointer',
             fontFamily: "'Cinzel',serif", border: '1px solid',
-            borderColor: tab === t.key ? (t.key === 'reportes' ? '#E24B4A' : 'var(--gold)') : 'var(--dark-border)',
-            background: tab === t.key ? (t.key === 'reportes' ? 'rgba(226,75,74,0.1)' : 'rgba(201,168,76,0.1)') : 'none',
-            color: tab === t.key ? (t.key === 'reportes' ? '#E24B4A' : 'var(--gold)') : 'var(--text-muted)',
+            borderColor: tab === t.key ? (t.key === 'reportes' ? 'var(--error)' : 'var(--gold)') : 'var(--dark-border)',
+            background: tab === t.key ? (t.key === 'reportes' ? 'color-mix(in srgb, var(--error) 10%, transparent)' : 'color-mix(in srgb, var(--gold) 10%, transparent)') : 'none',
+            color: tab === t.key ? (t.key === 'reportes' ? 'var(--error)' : 'var(--gold)') : 'var(--text-muted)',
           }}>{t.label}</button>
         ))}
       </div>
 
       {error && (
-        <div style={{ background: 'rgba(226,75,74,0.1)', border: '1px solid rgba(226,75,74,0.3)', borderRadius: 8, padding: 14, color: '#E24B4A', marginBottom: 16 }}>
+        <div style={{ background: 'color-mix(in srgb, var(--error) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)', borderRadius: 8, padding: 14, color: 'var(--error)', marginBottom: 16 }}>
           {error}
         </div>
       )}
@@ -156,7 +156,7 @@ export default function AdminPage() {
               fontSize: 12, padding: '6px 14px', borderRadius: 20, cursor: 'pointer',
               fontFamily: "'Cinzel',serif", border: '1px solid',
               borderColor: filter === f ? 'var(--gold)' : 'var(--dark-border)',
-              background: filter === f ? 'rgba(201,168,76,0.1)' : 'none',
+              background: filter === f ? 'color-mix(in srgb, var(--gold) 10%, transparent)' : 'none',
               color: filter === f ? 'var(--gold)' : 'var(--text-muted)',
             }}>
               {f === 'all' ? 'Todas' : f === 'pending' ? `Pendientes` : f === 'approved' ? 'Aprobadas' : 'Rechazadas'}
@@ -179,12 +179,12 @@ export default function AdminPage() {
             <>
               {pendingReports.length > 0 && (
                 <>
-                  <div style={{ fontSize: 11, color: '#E24B4A', fontFamily: "'Cinzel',serif", letterSpacing: 1, marginBottom: 12 }}>
+                  <div style={{ fontSize: 11, color: 'var(--error)', fontFamily: "'Cinzel',serif", letterSpacing: 1, marginBottom: 12 }}>
                     PENDIENTES ({pendingReports.length})
                   </div>
                   {pendingReports.map(r => (
                     <div key={r.id} style={{
-                      background: 'var(--dark-card)', border: '1px solid rgba(226,75,74,0.35)',
+                      background: 'var(--dark-card)', border: '1px solid color-mix(in srgb, var(--error) 35%, transparent)',
                       borderRadius: 10, padding: 16, marginBottom: 12,
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
@@ -195,12 +195,12 @@ export default function AdminPage() {
                             </span>
                             {r.listing_id && !r.resolved && (
                               <Link href={`/market/listing/${r.listing_id}`} target="_blank"
-                                style={{ fontSize: 11, color: 'var(--gold)', border: '1px solid var(--gold-dark)', borderRadius: 6, padding: '2px 8px', textDecoration: 'none', whiteSpace: 'nowrap', background: 'rgba(201,168,76,0.08)' }}>
+                                style={{ fontSize: 11, color: 'var(--gold)', border: '1px solid var(--gold-dark)', borderRadius: 6, padding: '2px 8px', textDecoration: 'none', whiteSpace: 'nowrap', background: 'color-mix(in srgb, var(--gold) 8%, transparent)' }}>
                                 Ver publicación ↗
                               </Link>
                             )}
                             {r.resolved && (
-                              <span style={{ fontSize: 11, color: '#E24B4A', background: 'rgba(226,75,74,0.1)', padding: '2px 8px', borderRadius: 10 }}>
+                              <span style={{ fontSize: 11, color: 'var(--error)', background: 'color-mix(in srgb, var(--error) 10%, transparent)', padding: '2px 8px', borderRadius: 10 }}>
                                 Eliminada
                               </span>
                             )}
@@ -213,7 +213,7 @@ export default function AdminPage() {
                         <div style={{ fontSize: 11, color: 'var(--text-muted)', flexShrink: 0 }}>{timeAgo(r.created_at)}</div>
                       </div>
                       <div style={{ background: 'var(--dark-surface)', borderRadius: 6, padding: '8px 12px', marginBottom: 12 }}>
-                        <div style={{ fontSize: 12, color: '#E24B4A', marginBottom: r.details ? 4 : 0 }}>
+                        <div style={{ fontSize: 12, color: 'var(--error)', marginBottom: r.details ? 4 : 0 }}>
                           ⚠ {r.reason}
                         </div>
                         {r.details && <div style={{ fontSize: 12, color: 'var(--text-muted)', fontStyle: 'italic' }}>"{r.details}"</div>}
@@ -225,8 +225,8 @@ export default function AdminPage() {
                             disabled={processing === r.id}
                             style={{
                               flex: 1, padding: '8px 0', borderRadius: 6, cursor: 'pointer',
-                              background: 'rgba(226,75,74,0.15)', border: '1px solid rgba(226,75,74,0.4)',
-                              color: '#E24B4A', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
+                              background: 'color-mix(in srgb, var(--error) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--error) 40%, transparent)',
+                              color: 'var(--error)', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
                               opacity: processing === r.id ? 0.6 : 1,
                             }}
                           >
@@ -267,7 +267,7 @@ export default function AdminPage() {
                         <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{r.listing?.item_name || '—'}</span>
                         <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 8 }}>· {r.reason}</span>
                       </div>
-                      <span style={{ fontSize: 11, color: r.listing?.status === 'removed' ? '#E24B4A' : '#5BC98B' }}>
+                      <span style={{ fontSize: 11, color: r.listing?.status === 'removed' ? 'var(--error)' : 'var(--success)' }}>
                         {r.listing?.status === 'removed' ? 'Eliminada' : 'Descartado'}
                       </span>
                     </div>
@@ -290,7 +290,7 @@ export default function AdminPage() {
           return (
             <div key={r.id} style={{
               background: 'var(--dark-card)',
-              border: `1px solid ${r.status === 'pending' ? 'rgba(245,158,11,0.35)' : 'var(--dark-border)'}`,
+              border: `1px solid ${r.status === 'pending' ? 'color-mix(in srgb, var(--featured) 35%, transparent)' : 'var(--dark-border)'}`,
               borderRadius: 10, padding: 18, marginBottom: 12,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
@@ -311,7 +311,7 @@ export default function AdminPage() {
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, background: 'var(--dark-surface)', borderRadius: 6, padding: '8px 12px' }}>
                 📋 Verificar pago en{' '}
-                <a href="https://cafecito.app/lautarey" target="_blank" rel="noopener noreferrer" style={{ color: '#F59E0B', textDecoration: 'none' }}>
+                <a href="https://cafecito.app/lautarey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--featured)', textDecoration: 'none' }}>
                   cafecito.app/lautarey ↗
                 </a>
                 {' '}— buscá un pago de{' '}
@@ -323,16 +323,16 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => handleAction(r.id, 'approve', 'featured')} disabled={processing === r.id} style={{
                     flex: 1, padding: '8px 0', borderRadius: 6, cursor: 'pointer',
-                    background: 'rgba(91,201,139,0.15)', border: '1px solid rgba(91,201,139,0.4)',
-                    color: '#5BC98B', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
+                    background: 'color-mix(in srgb, var(--success) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--success) 40%, transparent)',
+                    color: 'var(--success)', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
                     opacity: processing === r.id ? 0.6 : 1,
                   }}>
                     {processing === r.id ? '...' : '✓ Aprobar · 7 días'}
                   </button>
                   <button onClick={() => handleAction(r.id, 'reject', 'featured')} disabled={processing === r.id} style={{
                     padding: '8px 16px', borderRadius: 6, cursor: 'pointer',
-                    background: 'none', border: '1px solid rgba(226,75,74,0.3)',
-                    color: '#E24B4A', fontFamily: 'inherit', fontSize: 12,
+                    background: 'none', border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)',
+                    color: 'var(--error)', fontFamily: 'inherit', fontSize: 12,
                     opacity: processing === r.id ? 0.6 : 1,
                   }}>✗ Rechazar</button>
                 </div>
@@ -356,12 +356,12 @@ export default function AdminPage() {
           return (
             <div key={r.id} style={{
               background: 'var(--dark-card)',
-              border: `1px solid ${r.status === 'pending' ? 'rgba(245,158,11,0.5)' : 'var(--dark-border)'}`,
+              border: `1px solid ${r.status === 'pending' ? 'color-mix(in srgb, var(--featured) 50%, transparent)' : 'var(--dark-border)'}`,
               borderRadius: 10, padding: 18, marginBottom: 12,
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 10 }}>
                 <div>
-                  <span className="cinzel" style={{ fontSize: 15, color: '#F59E0B' }}>🧉 Mercader Elite</span>
+                  <span className="cinzel" style={{ fontSize: 15, color: 'var(--featured)' }}>🧉 Mercader Elite</span>
                   <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 3 }}>
                     por <strong style={{ color: 'var(--text-primary)' }}>{r.seller?.username}</strong>
                     {r.seller?.discord && <span style={{ marginLeft: 8 }}>💬 {r.seller.discord}</span>}
@@ -374,7 +374,7 @@ export default function AdminPage() {
               </div>
               <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12, background: 'var(--dark-surface)', borderRadius: 6, padding: '8px 12px' }}>
                 📋 Verificar pago en{' '}
-                <a href="https://cafecito.app/lautarey" target="_blank" rel="noopener noreferrer" style={{ color: '#F59E0B', textDecoration: 'none' }}>
+                <a href="https://cafecito.app/lautarey" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--featured)', textDecoration: 'none' }}>
                   cafecito.app/lautarey ↗
                 </a>
                 {' '}— buscá un pago de{' '}
@@ -386,16 +386,16 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button onClick={() => handleAction(r.id, 'approve', 'premium')} disabled={processing === r.id} style={{
                     flex: 1, padding: '8px 0', borderRadius: 6, cursor: 'pointer',
-                    background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.5)',
-                    color: '#F59E0B', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
+                    background: 'color-mix(in srgb, var(--featured) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--featured) 50%, transparent)',
+                    color: 'var(--featured)', fontFamily: "'Cinzel',serif", fontSize: 12, fontWeight: 700,
                     opacity: processing === r.id ? 0.6 : 1,
                   }}>
                     {processing === r.id ? '...' : '🧉 Activar Premium · 30 días'}
                   </button>
                   <button onClick={() => handleAction(r.id, 'reject', 'premium')} disabled={processing === r.id} style={{
                     padding: '8px 16px', borderRadius: 6, cursor: 'pointer',
-                    background: 'none', border: '1px solid rgba(226,75,74,0.3)',
-                    color: '#E24B4A', fontFamily: 'inherit', fontSize: 12,
+                    background: 'none', border: '1px solid color-mix(in srgb, var(--error) 30%, transparent)',
+                    color: 'var(--error)', fontFamily: 'inherit', fontSize: 12,
                     opacity: processing === r.id ? 0.6 : 1,
                   }}>✗ Rechazar</button>
                 </div>

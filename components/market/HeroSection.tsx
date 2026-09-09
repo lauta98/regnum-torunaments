@@ -15,10 +15,10 @@ export default function HeroSection() {
       </p>
       <Link href="/market/nuevo" style={{
         display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 16,
-        background: 'linear-gradient(135deg, #1a5c35, #2E7D52)',
+        background: 'linear-gradient(135deg, var(--cta-sell-from), var(--cta-sell-to))',
         color: '#fff', padding: '11px 26px', borderRadius: 8,
         fontFamily: "'Cinzel',serif", fontSize: 12, letterSpacing: 1, fontWeight: 700,
-        textDecoration: 'none', boxShadow: '0 2px 12px rgba(46,125,82,0.3)', position: 'relative', zIndex: 1,
+        textDecoration: 'none', boxShadow: '0 2px 12px color-mix(in srgb, var(--cta-sell-to) 30%, transparent)', position: 'relative', zIndex: 1,
       }}>
         🗡 Publicar un artículo
       </Link>

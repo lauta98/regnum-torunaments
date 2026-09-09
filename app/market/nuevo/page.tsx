@@ -78,11 +78,13 @@ const RAREZA_LABEL: Record<string,string> = {
   normal:'Normal', especial:'Especial', magico:'Mágico', epico:'Épico', legendario:'Legendario'
 }
 const RAREZA_COLOR: Record<string,string> = {
-  normal:'#9CA3AF', especial:'#FB923C', magico:'#22C55E', epico:'#8B5CF6', legendario:'#EF4444'
+  normal:'var(--rarity-normal)', especial:'var(--rarity-special)', magico:'var(--rarity-magic)', epico:'var(--rarity-epic)', legendario:'var(--rarity-legendary)'
 }
 const CALIDAD_LABEL: Record<string,string> = {
   muy_buena:'Muy buena', buena:'Buena', normal:'Normal', mala:'Mala', muy_mala:'Muy mala'
 }
+// Escala de "calidad" (estado del ítem) — no está en docs/design.md, no encaja en
+// ninguna escala existente (distinta de rareza/reino/estado). Reportada, no tokenizada.
 const CALIDAD_COLOR: Record<string,string> = {
   muy_buena:'#22c55e', buena:'#86efac', normal:'#888', mala:'#f87171', muy_mala:'#ef4444'
 }
@@ -107,6 +109,9 @@ const GEMA_LABEL: Record<string,string> = {
   daño:'Daño', velocidad_ataque:'Vel. de ataque', velocidad_invocacion:'Vel. de invocación', chance_critico:'Chance de crítico'
 }
 const GEMA_ELEMENTOS = ['Fuego','Hielo','Electricidad','Aplastante','Punzante','Cortante']
+// Escala de "elemento de gema" — no está en docs/design.md y usa valores propios,
+// distintos de FISICO_COLOR/MAGICO_COLOR (mismos nombres de elemento, otro color).
+// No encaja en ninguna escala existente. Reportada, no tokenizada.
 const GEMA_ELEMENTO_COLOR: Record<string,string> = {
   Fuego:'#E05A2B', Hielo:'#5BB8E8', Electricidad:'#E8C84A', Aplastante:'#8899AA', Punzante:'#5BC98B', Cortante:'#E24B4A'
 }
@@ -190,17 +195,17 @@ function SlotArmadura({ index, subcategoria, rareza, clase, value, onChange, usa
   const btn = (active: boolean, color?: string): React.CSSProperties => ({
     flex:1, padding:'6px 4px', borderRadius:6, cursor:'pointer', fontSize:12, fontFamily:'inherit',
     border:`1px solid ${active ? (color || 'var(--gold)') : 'var(--dark-border)'}`,
-    background: active ? `${color || 'var(--gold)'}22` : 'var(--dark-surface)',
+    background: active ? `color-mix(in srgb, ${color || 'var(--gold)'} 13%, transparent)` : 'var(--dark-surface)',
     color: active ? (color || 'var(--gold)') : 'var(--text-muted)',
   })
 
   return (
     <div style={{
       background:'var(--dark-surface)',
-      border:`1px solid ${esSlotLegendario ? 'rgba(239,68,68,0.4)' : 'var(--dark-border)'}`,
+      border:`1px solid ${esSlotLegendario ? 'color-mix(in srgb, var(--rarity-legendary) 40%, transparent)' : 'var(--dark-border)'}`,
       borderRadius:8, padding:12, marginBottom:10,
     }}>
-      <span style={{fontFamily:"'Cinzel',serif", fontSize:10, color: esSlotLegendario ? '#EF4444' : 'var(--gold)', letterSpacing:1, display:'block', marginBottom:8}}>
+      <span style={{fontFamily:"'Cinzel',serif", fontSize:10, color: esSlotLegendario ? 'var(--rarity-legendary)' : 'var(--gold)', letterSpacing:1, display:'block', marginBottom:8}}>
         {esSlotLegendario ? '⚡ SLOT LEGENDARIO' : `SLOT ${index+1}`}
       </span>
       <div style={{marginBottom:8}}>
@@ -354,20 +359,22 @@ function SlotArma({ index, subcategoria, rareza, clase, value, onChange, usados 
   const btn = (active: boolean, color?: string): React.CSSProperties => ({
     flex:1, padding:'6px 4px', borderRadius:6, cursor:'pointer', fontSize:12, fontFamily:'inherit',
     border:`1px solid ${active ? (color||'var(--gold)') : 'var(--dark-border)'}`,
-    background: active ? `${color||'var(--gold)'}22` : 'var(--dark-surface)',
+    background: active ? `color-mix(in srgb, ${color||'var(--gold)'} 13%, transparent)` : 'var(--dark-surface)',
     color: active ? (color||'var(--gold)') : 'var(--text-muted)',
   })
 
+  // Escala "tipo de daño" — ya reportada como escala nueva no contemplada por
+  // docs/design.md. No encaja en ninguna escala existente. Reportada, no tokenizada.
   const FISICO_COLOR: Record<string,string> = { Cortante:'#F87171', Punzante:'#FB923C', Aplastante:'#A78BFA' }
   const MAGICO_COLOR: Record<string,string> = { Fuego:'#F97316', Hielo:'#38BDF8', Electricidad:'#FDE047' }
 
   return (
     <div style={{
       background:'var(--dark-surface)',
-      border:`1px solid ${esSlotLegendario ? 'rgba(239,68,68,0.4)' : 'var(--dark-border)'}`,
+      border:`1px solid ${esSlotLegendario ? 'color-mix(in srgb, var(--rarity-legendary) 40%, transparent)' : 'var(--dark-border)'}`,
       borderRadius:8, padding:12, marginBottom:10,
     }}>
-      <span style={{fontFamily:"'Cinzel',serif", fontSize:10, color: esSlotLegendario ? '#EF4444' : 'var(--gold)', letterSpacing:1, display:'block', marginBottom:8}}>
+      <span style={{fontFamily:"'Cinzel',serif", fontSize:10, color: esSlotLegendario ? 'var(--rarity-legendary)' : 'var(--gold)', letterSpacing:1, display:'block', marginBottom:8}}>
         {esSlotLegendario ? '⚡ SLOT LEGENDARIO' : `SLOT ${index+1}`}
       </span>
       <div style={{marginBottom:8}}>
@@ -480,10 +487,12 @@ function SlotProyectil({ index, rareza, value, onChange, usados }: {
   const btn = (active: boolean, color?: string): React.CSSProperties => ({
     flex:1, padding:'6px 4px', borderRadius:6, cursor:'pointer', fontSize:12, fontFamily:'inherit',
     border:`1px solid ${active ? (color||'var(--gold)') : 'var(--dark-border)'}`,
-    background: active ? `${color||'var(--gold)'}22` : 'var(--dark-surface)',
+    background: active ? `color-mix(in srgb, ${color||'var(--gold)'} 13%, transparent)` : 'var(--dark-surface)',
     color: active ? (color||'var(--gold)') : 'var(--text-muted)',
   })
 
+  // Escala "tipo de daño" — ya reportada como escala nueva no contemplada por
+  // docs/design.md. No encaja en ninguna escala existente. Reportada, no tokenizada.
   const FISICO_COLOR: Record<string,string> = { Cortante:'#F87171', Punzante:'#FB923C', Aplastante:'#A78BFA' }
   const MAGICO_COLOR: Record<string,string> = { Fuego:'#F97316', Hielo:'#38BDF8', Electricidad:'#FDE047' }
 
@@ -793,7 +802,7 @@ const [priceReal, setPriceReal] = useState('')
   const pillBtn = (active: boolean, color?: string): React.CSSProperties => ({
     padding:'5px 10px', borderRadius:6, cursor:'pointer', fontSize:12, fontFamily:'inherit',
     border:`1px solid ${active ? (color||'var(--gold)') : 'var(--dark-border)'}`,
-    background: active ? `${color||'var(--gold)'}22` : 'var(--dark-surface)',
+    background: active ? `color-mix(in srgb, ${color||'var(--gold)'} 13%, transparent)` : 'var(--dark-surface)',
     color: active ? (color||'var(--gold)') : 'var(--text-muted)',
   })
 // Escala la imagen a mínimo minWidth px de ancho y aplica grayscale + boost de
@@ -962,7 +971,7 @@ function CropModal({ src, onConfirm, onCancel }: {
       <div style={{
         display:'flex', alignItems:'center', justifyContent:'space-between',
         padding:'10px 16px', flexShrink:0,
-        background:'var(--dark-surface)', borderBottom:'1px solid rgba(201,168,76,0.2)',
+        background:'var(--dark-surface)', borderBottom:'1px solid color-mix(in srgb, var(--gold) 20%, transparent)',
       }}>
         <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <span style={{ fontFamily:"'Cinzel',serif", fontSize:13, color:'var(--gold)', letterSpacing:1 }}>✂ Recortá el ítem</span>
@@ -981,8 +990,8 @@ function CropModal({ src, onConfirm, onCancel }: {
             <div key={w.type} style={{
               display:'flex', alignItems:'center', gap:6,
               padding:'5px 12px', borderRadius:99, fontSize:11.5, lineHeight:1.35,
-              background: w.severity === 'error' ? 'rgba(239,68,68,0.15)' : 'rgba(251,191,36,0.12)',
-              border: `1px solid ${w.severity === 'error' ? 'rgba(239,68,68,0.45)' : 'rgba(251,191,36,0.35)'}`,
+              background: w.severity === 'error' ? 'color-mix(in srgb, var(--rarity-legendary) 15%, transparent)' : 'color-mix(in srgb, var(--rarity-special) 12%, transparent)',
+              border: `1px solid ${w.severity === 'error' ? 'color-mix(in srgb, var(--rarity-legendary) 45%, transparent)' : 'color-mix(in srgb, var(--rarity-special) 35%, transparent)'}`,
               color: w.severity === 'error' ? '#f87171' : '#fcd34d',
             }}>
               <span style={{ fontSize:14, flexShrink:0 }}>{w.severity === 'error' ? '🚫' : '⚠️'}</span>
@@ -1017,7 +1026,7 @@ function CropModal({ src, onConfirm, onCancel }: {
         <div style={{
           width:196, flexShrink:0, overflowY:'auto',
           background:'var(--dark-surface)',
-          borderLeft:'1px solid rgba(201,168,76,0.18)',
+          borderLeft:'1px solid color-mix(in srgb, var(--gold) 18%, transparent)',
           padding:'14px 13px 20px',
         }}>
           <div style={{ fontFamily:"'Cinzel',serif", fontSize:10, color:'var(--gold)', letterSpacing:1.5, marginBottom:12, textTransform:'uppercase' }}>
@@ -1026,7 +1035,7 @@ function CropModal({ src, onConfirm, onCancel }: {
 
           {/* ✅ BIEN */}
           <div style={{ marginBottom:14 }}>
-            <div style={{ fontSize:11, fontWeight:700, color:'#4ade80', marginBottom:7 }}>✅ BIEN</div>
+            <div style={{ fontSize:11, fontWeight:700, color:'var(--rarity-magic)', marginBottom:7 }}>✅ BIEN</div>
             {[
               'Solo el tooltip de stats del ítem',
               'Imagen nítida, sin desenfoque',
@@ -1034,7 +1043,7 @@ function CropModal({ src, onConfirm, onCancel }: {
               'Buena iluminación',
             ].map(tip => (
               <div key={tip} style={{ display:'flex', gap:6, marginBottom:5, alignItems:'flex-start' }}>
-                <span style={{ color:'#4ade80', flexShrink:0, fontSize:11 }}>›</span>
+                <span style={{ color:'var(--rarity-magic)', flexShrink:0, fontSize:11 }}>›</span>
                 <span style={{ fontSize:11, color:'var(--text-muted)', lineHeight:1.4 }}>{tip}</span>
               </div>
             ))}
@@ -1060,7 +1069,7 @@ function CropModal({ src, onConfirm, onCancel }: {
           {/* Tip IA */}
           <div style={{
             padding:'9px 10px', borderRadius:8,
-            background:'rgba(201,168,76,0.07)', border:'1px solid rgba(201,168,76,0.2)',
+            background:'color-mix(in srgb, var(--gold) 7%, transparent)', border:'1px solid color-mix(in srgb, var(--gold) 20%, transparent)',
           }}>
             <div style={{ fontSize:10.5, color:'var(--text-muted)', lineHeight:1.5 }}>
               💡 Un recorte preciso del tooltip mejora la detección automática de stats.
@@ -1072,7 +1081,7 @@ function CropModal({ src, onConfirm, onCancel }: {
       {/* Footer con acciones */}
       <div style={{
         flexShrink:0, padding:'12px 16px',
-        background:'var(--dark-surface)', borderTop:'1px solid rgba(201,168,76,0.15)',
+        background:'var(--dark-surface)', borderTop:'1px solid color-mix(in srgb, var(--gold) 15%, transparent)',
         display:'flex', alignItems:'center', gap:10, flexWrap:'wrap',
       }}>
         <span style={{ fontSize:11, color:'var(--text-muted)', flex:1, minWidth:160 }}>
@@ -1087,7 +1096,7 @@ function CropModal({ src, onConfirm, onCancel }: {
             Cancelar
           </button>
           <button onClick={async () => onConfirm(await getCroppedBlob(undefined))} style={{
-            background:'rgba(201,168,76,0.1)', border:'1px solid rgba(201,168,76,0.35)',
+            background:'color-mix(in srgb, var(--gold) 10%, transparent)', border:'1px solid color-mix(in srgb, var(--gold) 35%, transparent)',
             color:'var(--gold)', borderRadius:8, padding:'9px 16px',
             cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:11, letterSpacing:0.5,
           }}>
@@ -1098,7 +1107,7 @@ function CropModal({ src, onConfirm, onCancel }: {
             style={{
               background: hasCrop
                 ? 'linear-gradient(135deg, var(--gold-dark), var(--gold))'
-                : 'rgba(201,168,76,0.2)',
+                : 'color-mix(in srgb, var(--gold) 20%, transparent)',
               color: hasCrop ? 'var(--dark-bg)' : 'var(--gold)',
               border:'none', borderRadius:8,
               padding:'9px 22px', cursor:'pointer',
@@ -1140,12 +1149,12 @@ function ImageQualityGuide() {
       </div>
 
       <div style={{ marginBottom:16 }}>
-        <div style={{ fontSize:12, fontWeight:700, color:'#4ade80', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
+        <div style={{ fontSize:12, fontWeight:700, color:'var(--rarity-magic)', marginBottom:8, display:'flex', alignItems:'center', gap:5 }}>
           ✅ BIEN
         </div>
         {good.map(tip => (
           <div key={tip} style={{ display:'flex', gap:7, marginBottom:6, alignItems:'flex-start' }}>
-            <span style={{ color:'#4ade80', flexShrink:0, marginTop:1 }}>›</span>
+            <span style={{ color:'var(--rarity-magic)', flexShrink:0, marginTop:1 }}>›</span>
             <span style={{ fontSize:11.5, color:'var(--text-muted)', lineHeight:1.45 }}>{tip}</span>
           </div>
         ))}
@@ -1165,7 +1174,7 @@ function ImageQualityGuide() {
 
       <div style={{
         padding:'10px 12px', borderRadius:8,
-        background:'rgba(201,168,76,0.07)', border:'1px solid rgba(201,168,76,0.2)',
+        background:'color-mix(in srgb, var(--gold) 7%, transparent)', border:'1px solid color-mix(in srgb, var(--gold) 20%, transparent)',
       }}>
         <div style={{ fontSize:10.5, color:'var(--text-muted)', lineHeight:1.55 }}>
           💡 Un recorte preciso del tooltip mejora la detección automática de estadísticas.
@@ -1629,7 +1638,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
               ) : errorAnalisis ? (
                 <p style={{ fontSize: 13, color: '#f87171', margin: 0 }}>⚠ {errorAnalisis}</p>
               ) : imageSlots[0]?.ocrStatus === 'done' ? (
-                <p style={{ fontSize: 13, color: '#5BC98B', margin: 0 }}>✅ Campos completados — revisá y ajustá si es necesario</p>
+                <p style={{ fontSize: 13, color: 'var(--success)', margin: 0 }}>✅ Campos completados — revisá y ajustá si es necesario</p>
               ) : null}
             </div>
           )}
@@ -1643,7 +1652,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
             {imageSlots.map((slot, idx) => (
               <div key={slot.id} style={{
                 position: 'relative', borderRadius: 8, overflow: 'hidden',
-                border: `2px solid ${idx === 0 ? 'rgba(201,168,76,0.5)' : 'rgba(255,255,255,0.1)'}`,
+                border: `2px solid ${idx === 0 ? 'color-mix(in srgb, var(--gold) 50%, transparent)' : 'rgba(255,255,255,0.1)'}`,
                 aspectRatio: '1',
                 background: '#0f0d0a',
               }}>
@@ -1657,7 +1666,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                   <span className="cinzel" style={{
                     position: 'absolute', top: 5, left: 5,
                     fontSize: 8, padding: '2px 6px', borderRadius: 4, letterSpacing: 1,
-                    background: 'rgba(201,168,76,0.85)', color: '#1a1208', fontWeight: 700,
+                    background: 'color-mix(in srgb, var(--gold) 85%, transparent)', color: '#1a1208', fontWeight: 700,
                   }}>PRINCIPAL</span>
                 )}
                 {/* Badge OCR status */}
@@ -1682,7 +1691,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                   <button
                     onClick={() => setCropSlotId(slot.id)}
                     style={{
-                      background: 'rgba(201,168,76,0.15)', border: '1px solid var(--gold-dark)',
+                      background: 'color-mix(in srgb, var(--gold) 15%, transparent)', border: '1px solid var(--gold-dark)',
                       color: 'var(--gold)', padding: '4px 10px', borderRadius: 6,
                       cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
                     }}
@@ -1693,7 +1702,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                       setImageSlots(prev => prev.filter(s => s.id !== slot.id))
                     }}
                     style={{
-                      background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.4)',
+                      background: 'color-mix(in srgb, var(--rarity-legendary) 15%, transparent)', border: '1px solid color-mix(in srgb, var(--rarity-legendary) 40%, transparent)',
                       color: '#f87171', padding: '4px 10px', borderRadius: 6,
                       cursor: 'pointer', fontSize: 11, fontFamily: 'inherit',
                     }}
@@ -1753,9 +1762,9 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
             {(['sell','buy'] as const).map(t => (
               <button key={t} onClick={() => setType(t)} style={{
                 flex:1, padding:10, borderRadius:8, cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:11,
-                border:`1px solid ${type===t?(t==='sell'?'#2E7D52':'#1E4A7A'):'var(--dark-border)'}`,
-                background:type===t?(t==='sell'?'rgba(46,125,82,0.2)':'rgba(30,74,122,0.2)'):'var(--dark-surface)',
-                color:type===t?(t==='sell'?'#5BC98B':'#5B9BDF'):'var(--text-muted)',
+                border:`1px solid ${type===t?(t==='sell'?'var(--cta-sell-to)':'#1E4A7A'):'var(--dark-border)'}`,
+                background:type===t?(t==='sell'?'color-mix(in srgb, var(--cta-sell-to) 20%, transparent)':'color-mix(in srgb, #1E4A7A 20%, transparent)'):'var(--dark-surface)',
+                color:type===t?(t==='sell'?'var(--success)':'var(--info)'):'var(--text-muted)',
               }}>
                 {t === 'sell' ? '🗡 Tengo para vender' : '🛡 Quiero comprar'}
               </button>
@@ -1774,8 +1783,8 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
               <button key={String(opt.val)} onClick={() => setIsSet(opt.val)} style={{
                 flex:1, padding:'10px 8px', borderRadius:8, cursor:'pointer',
                 fontFamily:"'Cinzel',serif", fontSize:11, letterSpacing:0.5,
-                border:`1px solid ${isSet===opt.val ? 'rgba(139,92,246,0.7)' : 'var(--dark-border)'}`,
-                background: isSet===opt.val ? 'rgba(139,92,246,0.15)' : 'var(--dark-surface)',
+                border:`1px solid ${isSet===opt.val ? 'color-mix(in srgb, var(--rarity-epic) 70%, transparent)' : 'var(--dark-border)'}`,
+                background: isSet===opt.val ? 'color-mix(in srgb, var(--rarity-epic) 15%, transparent)' : 'var(--dark-surface)',
                 color: isSet===opt.val ? '#C4B5FD' : 'var(--text-muted)',
                 display:'flex', alignItems:'center', justifyContent:'center', gap:6,
               }}>
@@ -1797,7 +1806,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
         {imageSlots.length === 0 && (
           <div style={{
             padding:'8px 14px', borderRadius:8, marginBottom:16,
-            background:'rgba(239,68,68,0.07)', border:'1px solid rgba(239,68,68,0.25)',
+            background:'color-mix(in srgb, var(--rarity-legendary) 7%, transparent)', border:'1px solid color-mix(in srgb, var(--rarity-legendary) 25%, transparent)',
             fontSize:12, color:'#f87171',
           }}>
             ℹ Sin foto, los campos marcados con <strong>*</strong> son obligatorios.
@@ -1807,8 +1816,8 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
         {imageSlots.length > 0 && (
           <div style={{
             padding:'8px 14px', borderRadius:8, marginBottom:16,
-            background:'rgba(91,201,139,0.07)', border:'1px solid rgba(91,201,139,0.2)',
-            fontSize:12, color:'#5BC98B',
+            background:'color-mix(in srgb, var(--success) 7%, transparent)', border:'1px solid color-mix(in srgb, var(--success) 20%, transparent)',
+            fontSize:12, color:'var(--success)',
           }}>
             ✅ Con foto, solo el precio es obligatorio. Los demás campos son opcionales.
           </div>
@@ -1821,7 +1830,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
             <button key={c.val} onClick={() => { setCategoria(c.val); setSubcategoria(''); setClase('todas') }} style={{
               padding:'10px 6px', borderRadius:8, cursor:'pointer', textAlign:'center',
               border:`1px solid ${categoria===c.val?'var(--gold)':'var(--dark-border)'}`,
-              background:categoria===c.val?'rgba(201,168,76,0.12)':'var(--dark-surface)',
+              background:categoria===c.val?'color-mix(in srgb, var(--gold) 12%, transparent)':'var(--dark-surface)',
               color:categoria===c.val?'var(--gold)':'var(--text-muted)',
             }}>
               <div style={{fontSize:20, marginBottom:4}}>{c.icon}</div>
@@ -1931,7 +1940,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                   <span style={{fontSize:11, color:'var(--text-muted)'}}>máx. {GEMA_MAX[gemaStandalone.tipo]}{gemaStandalone.tipo !== 'daño' ? '%' : ''}</span>
                 </div>
                 {gemaStandalone.tipo && gemaStandalone.valor && (
-                  <div style={{marginTop:8, padding:'8px 12px', background:'rgba(201,168,76,0.08)', border:'1px solid rgba(201,168,76,0.25)', borderRadius:8, fontSize:13, color:'#5BC98B'}}>
+                  <div style={{marginTop:8, padding:'8px 12px', background:'color-mix(in srgb, var(--gold) 8%, transparent)', border:'1px solid color-mix(in srgb, var(--gold) 25%, transparent)', borderRadius:8, fontSize:13, color:'var(--success)'}}>
                     Preview: <strong>{GEMA_LABEL[gemaStandalone.tipo]}{gemaStandalone.subtipo ? ` (${gemaStandalone.subtipo})` : ''}: +{gemaStandalone.valor}{gemaStandalone.tipo !== 'daño' ? '%' : ''}</strong>
                   </div>
                 )}
@@ -1975,8 +1984,8 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                   return (
                     <div style={{
                       marginTop: 8, padding: '10px 14px',
-                      background: 'rgba(201,168,76,0.06)',
-                      border: '1px solid rgba(201,168,76,0.2)',
+                      background: 'color-mix(in srgb, var(--gold) 6%, transparent)',
+                      border: '1px solid color-mix(in srgb, var(--gold) 20%, transparent)',
                       borderRadius: 8,
                     }}>
                       {base.descripcion.split('\n').map((stat: string, i: number) => (
@@ -2033,7 +2042,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                     <label style={lbl}>
                       Rareza / Color
                       {imageSlots.length === 0
-                        ? <span style={{color:'#EF4444', fontSize:9, marginLeft:4}}>*</span>
+                        ? <span style={{color:'var(--rarity-legendary)', fontSize:9, marginLeft:4}}>*</span>
                         : <span style={{color:'var(--text-muted)', fontSize:9, marginLeft:4}}>(opc.)</span>}
                     </label>
                     <div style={{display:'flex', flexWrap:'wrap', gap:6}}>
@@ -2118,7 +2127,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                       onChange={e => { const nd=[...danos]; nd[i].max=e.target.value; setDanos(nd) }}/>
                     {i > 0 && (
                       <button onClick={() => setDanos(danos.filter((_,j) => j!==i))} style={{
-                        background:'none', border:'1px solid rgba(226,75,74,0.3)', color:'#E24B4A',
+                        background:'none', border:'1px solid color-mix(in srgb, var(--error) 30%, transparent)', color:'var(--error)',
                         borderRadius:6, padding:'6px 10px', cursor:'pointer', fontSize:12,
                       }}>✕</button>
                     )}
@@ -2134,7 +2143,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                 <div style={{marginBottom:12}}>
                   <label style={lbl}>Bonus (+XX)</label>
                   {bonusAutoFound ? (
-                    <div style={{background:'rgba(46,125,82,0.1)', border:'1px solid rgba(46,125,82,0.4)', borderRadius:8, padding:'8px 14px', fontSize:14, color:'#5BC98B'}}>
+                    <div style={{background:'color-mix(in srgb, var(--cta-sell-to) 10%, transparent)', border:'1px solid color-mix(in srgb, var(--cta-sell-to) 40%, transparent)', borderRadius:8, padding:'8px 14px', fontSize:14, color:'var(--success)'}}>
                       ✅ Calculado automáticamente: <strong>+{bonusXX}</strong>
                     </div>
                   ) : (
@@ -2355,9 +2364,12 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                     flex:1, padding:'12px 6px', borderRadius:8, cursor:'pointer',
                     display:'flex', flexDirection:'column', alignItems:'center', gap:6,
                     fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:1,
-                    border:`1px solid ${reino===r ? (r==='alsius'?'#5B9BDF':r==='syrtis'?'#5BC98B':'#EF4444') : 'var(--dark-border)'}`,
-                    background:reino===r ? (r==='alsius'?'rgba(91,155,223,0.15)':r==='syrtis'?'rgba(91,201,139,0.15)':'rgba(239,68,68,0.15)') : 'var(--dark-surface)',
-                    color:reino===r ? (r==='alsius'?'#5B9BDF':r==='syrtis'?'#5BC98B':'#EF4444') : 'var(--text-muted)',
+                    // OJO: usa #5B9BDF/#5BC98B/#EF4444, NO los tokens canónicos --alsius/--syrtis/--ignis
+                    // (#2196F3/#4CAF50/#F44336) — son los mismos valores que --info/--success/--rarity-legendary,
+                    // se preserva ese colapso ya establecido en vez de --alsius/--syrtis/--ignis para no cambiar el color.
+                    border:`1px solid ${reino===r ? (r==='alsius'?'var(--info)':r==='syrtis'?'var(--success)':'var(--rarity-legendary)') : 'var(--dark-border)'}`,
+                    background:reino===r ? (r==='alsius'?'color-mix(in srgb, var(--info) 15%, transparent)':r==='syrtis'?'color-mix(in srgb, var(--success) 15%, transparent)':'color-mix(in srgb, var(--rarity-legendary) 15%, transparent)') : 'var(--dark-surface)',
+                    color:reino===r ? (r==='alsius'?'var(--info)':r==='syrtis'?'var(--success)':'var(--rarity-legendary)') : 'var(--text-muted)',
                   }}>
                     <img src={`/${r}.png`} alt={r} style={{width:32, height:32, objectFit:'contain'}} />
                 <div>{r === 'alsius' ? 'Alsius' : r === 'syrtis' ? 'Syrtis' : 'Ignis'}</div>
@@ -2374,7 +2386,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
             <label style={lbl}>
               Nombre del set
               {imageSlots.length === 0
-                ? <span style={{color:'#EF4444', fontSize:10}}> * requerido</span>
+                ? <span style={{color:'var(--rarity-legendary)', fontSize:10}}> * requerido</span>
                 : <span style={{color:'var(--text-muted)', fontSize:10}}> (recomendado)</span>}
             </label>
             <input style={inp} placeholder="Ej: Set del Dragón Completo"
@@ -2387,7 +2399,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
             <label style={lbl}>
               Listado de ítems y estadísticas
               {imageSlots.length === 0
-                ? <span style={{color:'#EF4444', fontSize:10}}> * requerido sin foto</span>
+                ? <span style={{color:'var(--rarity-legendary)', fontSize:10}}> * requerido sin foto</span>
                 : <span style={{color:'var(--text-muted)', fontSize:10}}> (opcional con foto)</span>}
             </label>
             <textarea
@@ -2418,9 +2430,9 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                 flex:1, padding:'12px 6px', borderRadius:8, cursor:'pointer',
                 display:'flex', flexDirection:'column', alignItems:'center', gap:6,
                 fontFamily:"'Cinzel',serif", fontSize:12, letterSpacing:1,
-                border:`1px solid ${reino===r ? (r==='alsius'?'#5B9BDF':r==='syrtis'?'#5BC98B':'#EF4444') : 'var(--dark-border)'}`,
-                background:reino===r ? (r==='alsius'?'rgba(91,155,223,0.15)':r==='syrtis'?'rgba(91,201,139,0.15)':'rgba(239,68,68,0.15)') : 'var(--dark-surface)',
-                color:reino===r ? (r==='alsius'?'#5B9BDF':r==='syrtis'?'#5BC98B':'#EF4444') : 'var(--text-muted)',
+                border:`1px solid ${reino===r ? (r==='alsius'?'var(--info)':r==='syrtis'?'var(--success)':'var(--rarity-legendary)') : 'var(--dark-border)'}`,
+                background:reino===r ? (r==='alsius'?'color-mix(in srgb, var(--info) 15%, transparent)':r==='syrtis'?'color-mix(in srgb, var(--success) 15%, transparent)':'color-mix(in srgb, var(--rarity-legendary) 15%, transparent)') : 'var(--dark-surface)',
+                color:reino===r ? (r==='alsius'?'var(--info)':r==='syrtis'?'var(--success)':'var(--rarity-legendary)') : 'var(--text-muted)',
               }}>
                 <img src={`/${r}.png`} alt={r} style={{width:32, height:32, objectFit:'contain'}} />
                 <div>{r === 'alsius' ? 'Alsius' : r === 'syrtis' ? 'Syrtis' : 'Ignis'}</div>
@@ -2463,7 +2475,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                 Al menos uno de los dos es obligatorio. Podés combinar ambos.
               </p>
             </div>
-            {error && <p style={{color:'#E24B4A', fontSize:13, marginBottom:12}}>{error}</p>}
+            {error && <p style={{color:'var(--error)', fontSize:13, marginBottom:12}}>{error}</p>}
             <div style={{display:'flex', gap:8}}>
               <button onClick={() => setShowPreview(true)} style={{
                 flex:1, padding:'12px 0', borderRadius:8, cursor:'pointer',
@@ -2474,7 +2486,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
               </button>
               <button onClick={handleSubmit} disabled={loading} style={{
                 flex:2, padding:'12px 0', borderRadius:8, cursor:loading?'not-allowed':'pointer',
-                background:type==='sell'?'linear-gradient(135deg, #1a5c35, #2E7D52)':'linear-gradient(135deg, #0f2d52, #1E4A7A)',
+                background:type==='sell'?'linear-gradient(135deg, var(--cta-sell-from), var(--cta-sell-to))':'linear-gradient(135deg, #0f2d52, #1E4A7A)',
                 color:'white', border:'none',
                 fontFamily:"'Cinzel',serif", fontSize:13, letterSpacing:1, fontWeight:700,
               }}>
@@ -2522,7 +2534,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                       <span style={{
                         position:'absolute', top:8, left:8, padding:'2px 8px', borderRadius:4,
                         fontFamily:"'Cinzel',serif", fontSize:9, letterSpacing:1, fontWeight:700, zIndex:2,
-                        background:type==='sell'?'rgba(46,125,82,0.9)':'rgba(30,74,122,0.9)',
+                        background:type==='sell'?'color-mix(in srgb, var(--cta-sell-to) 90%, transparent)':'color-mix(in srgb, #1E4A7A 90%, transparent)',
                         color:type==='sell'?'#8EEDB3':'#8BC0F0',
                       }}>
                         {type==='sell'?'VENDE':'BUSCA'}
@@ -2556,7 +2568,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                         {itemNombreManual || '(sin nombre)'}
                       </div>
                       {desc && (
-                        <div style={{fontSize:11, color:'#5BC98B', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
+                        <div style={{fontSize:11, color:'var(--success)', marginBottom:6, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
                           {desc}
                         </div>
                       )}
@@ -2574,7 +2586,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                   <button onClick={() => { setShowPreview(false); handleSubmit() }} disabled={loading} style={{
                     width:'100%', marginTop:14, padding:'12px 0', borderRadius:8,
                     cursor:loading?'not-allowed':'pointer',
-                    background:type==='sell'?'linear-gradient(135deg,#1a5c35,#2E7D52)':'linear-gradient(135deg,#0f2d52,#1E4A7A)',
+                    background:type==='sell'?'linear-gradient(135deg,var(--cta-sell-from),var(--cta-sell-to))':'linear-gradient(135deg,#0f2d52,#1E4A7A)',
                     color:'white', border:'none',
                     fontFamily:"'Cinzel',serif", fontSize:13, letterSpacing:1, fontWeight:700,
                   }}>

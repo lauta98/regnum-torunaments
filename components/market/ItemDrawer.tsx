@@ -8,13 +8,14 @@ import { getItemIconColored } from '@/lib/market/icons'
 const GREY_CATS = new Set(['joyeria', 'crafting', 'minerales'])
 
 const BADGE = {
-  sell: { bg: 'rgba(26,92,46,0.92)', border: '#2d9b4e', color: '#6EE89A', label: 'VENDE' },
-  buy:  { bg: 'rgba(15,52,96,0.92)', border: '#1e6db5', color: '#7DC4FF', label: 'BUSCA' },
+  sell: { bg: 'color-mix(in srgb, var(--type-sell-bg) 92%, transparent)', border: 'var(--type-sell-border)', color: 'var(--success)', label: 'VENDE' },
+  buy:  { bg: 'color-mix(in srgb, var(--type-busca-bg) 92%, transparent)', border: 'var(--type-busca-border)', color: 'var(--info)', label: 'BUSCA' },
 }
 
 // 1-5 score labels & colors (same as calificar/page)
+// #E2744A (Malo) no encaja en ninguna escala existente — reportado, no tokenizado
 const SCORE_LABEL = ['', 'Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente']
-const SCORE_COLOR = ['', '#E24B4A', '#E2744A', '#C9A84C', '#7DC4FF', '#5BC98B']
+const SCORE_COLOR = ['', 'var(--error)', '#E2744A', 'var(--gold)', 'var(--info)', 'var(--success)']
 
 function Stars({ score }: { score: number }) {
   return (
@@ -126,7 +127,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
   const rareza      = listing.rareza
   const rarezaColor = rareza ? RAREZA_COLOR[rareza] : null
   const accentColor = rarezaColor || 'var(--gold)'
-  const emojiColor  = GREY_CATS.has(listing.item_category) ? '#7A8A9A' : (rarezaColor || '#B8A157')
+  const emojiColor  = GREY_CATS.has(listing.item_category) ? 'var(--category-grey)' : (rarezaColor || 'var(--category-grey-alt)')
   const badge       = listing.type === 'sell' ? BADGE.sell : BADGE.buy
   const lastSeen    = getLastSeen(listing.profiles?.last_sign_in_at || null)
   const isActive    = lastSeen === 'Activo ahora'
@@ -176,11 +177,11 @@ export default function ItemDrawer({ listing, onClose }: Props) {
             height: 'min(600px, 90vh)',
             background: 'var(--dark-card)',
             borderRadius: 14,
-            border: `1px solid ${rarezaColor ? rarezaColor + '44' : 'var(--dark-border-gold)'}`,
+            border: `1px solid ${rarezaColor ? `color-mix(in srgb, ${rarezaColor} 27%, transparent)` : 'var(--dark-border-gold)'}`,
             display: 'flex', flexDirection: 'column',
             overflow: 'hidden',
             animation: 'modalZoomIn 0.22s cubic-bezier(0.32,0.72,0,1)',
-            boxShadow: `0 32px 80px rgba(0,0,0,0.85)${rarezaColor ? `, 0 0 50px ${rarezaColor}16` : ''}`,
+            boxShadow: `0 32px 80px rgba(0,0,0,0.85)${rarezaColor ? `, 0 0 50px color-mix(in srgb, ${rarezaColor} 9%, transparent)` : ''}`,
           }}
         >
           {/* ── Header ──────────────────────────────────────────────── */}
@@ -195,12 +196,12 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               {badge.label}
             </span>
             {rareza && rareza !== 'normal' && (
-              <span style={{ padding: '3px 9px', borderRadius: 4, fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: 1, fontWeight: 700, background: `${rarezaColor}22`, color: rarezaColor!, border: `1px solid ${rarezaColor}55` }}>
+              <span style={{ padding: '3px 9px', borderRadius: 4, fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: 1, fontWeight: 700, background: `color-mix(in srgb, ${rarezaColor} 13%, transparent)`, color: rarezaColor!, border: `1px solid color-mix(in srgb, ${rarezaColor} 33%, transparent)` }}>
                 {RAREZA_LABEL[rareza]}
               </span>
             )}
             {listing.is_set && (
-              <span style={{ padding: '3px 9px', borderRadius: 4, fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: 1, fontWeight: 700, color: 'var(--gold)', background: 'rgba(201,168,76,0.1)', border: '1px solid rgba(201,168,76,0.3)' }}>SET</span>
+              <span style={{ padding: '3px 9px', borderRadius: 4, fontFamily: "'Cinzel',serif", fontSize: 9, letterSpacing: 1, fontWeight: 700, color: 'var(--gold)', background: 'color-mix(in srgb, var(--gold) 10%, transparent)', border: '1px solid color-mix(in srgb, var(--gold) 30%, transparent)' }}>SET</span>
             )}
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
@@ -222,7 +223,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               width: '42%', flexShrink: 0,
               borderRight: `1px solid var(--dark-border)`,
               display: 'flex', flexDirection: 'column',
-              background: hasImages ? 'var(--dark-bg)' : `radial-gradient(ellipse at 50% 55%, ${emojiColor}18 0%, transparent 70%), var(--dark-bg)`,
+              background: hasImages ? 'var(--dark-bg)' : `radial-gradient(ellipse at 50% 55%, color-mix(in srgb, ${emojiColor} 9%, transparent) 0%, transparent 70%), var(--dark-bg)`,
             }}>
               {/* Main image */}
               <div
@@ -232,12 +233,12 @@ export default function ItemDrawer({ listing, onClose }: Props) {
                 onClick={() => currentImg && setLightboxSrc(currentImg)}
               >
                 {rarezaColor && (
-                  <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: `radial-gradient(ellipse at 50% 100%, ${rarezaColor}18 0%, transparent 65%)` }} />
+                  <div style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none', background: `radial-gradient(ellipse at 50% 100%, color-mix(in srgb, ${rarezaColor} 9%, transparent) 0%, transparent 65%)` }} />
                 )}
                 {currentImg ? (
                   <img src={currentImg} alt={listing.item_name} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 8, position: 'relative', zIndex: 1, transition: 'transform 0.3s ease', transform: imgHover ? 'scale(1.04)' : 'scale(1)' }} />
                 ) : iconSvg ? (
-                  <div suppressHydrationWarning style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, filter: `drop-shadow(0 0 32px ${emojiColor}88)` }} dangerouslySetInnerHTML={{ __html: iconSvg }} />
+                  <div suppressHydrationWarning style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', zIndex: 1, filter: `drop-shadow(0 0 32px color-mix(in srgb, ${emojiColor} 53%, transparent))` }} dangerouslySetInnerHTML={{ __html: iconSvg }} />
                 ) : (
                   <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 80, opacity: 0.2 }}>📦</span>
@@ -284,7 +285,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               {/* Name + Price */}
               <div style={{ padding: '14px 18px 11px', borderBottom: `1px solid var(--dark-border)`, flexShrink: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
-                  <h2 className="cinzel" style={{ fontSize: 18, color: rarezaColor || 'var(--gold)', margin: 0, lineHeight: 1.25, flex: 1, minWidth: 0, wordBreak: 'break-word', textShadow: rarezaColor ? `0 0 20px ${rarezaColor}44` : undefined }}>
+                  <h2 className="cinzel" style={{ fontSize: 18, color: rarezaColor || 'var(--gold)', margin: 0, lineHeight: 1.25, flex: 1, minWidth: 0, wordBreak: 'break-word', textShadow: rarezaColor ? `0 0 20px color-mix(in srgb, ${rarezaColor} 27%, transparent)` : undefined }}>
                     {listing.item_name}
                   </h2>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -315,14 +316,14 @@ export default function ItemDrawer({ listing, onClose }: Props) {
                   {listing.dano_min_1 && (
                     <div style={{ flex: 1, padding: '10px 18px', textAlign: 'center', borderRight: (listing.armadura_base || listing.velocidad) ? `1px solid var(--dark-border)` : undefined }}>
                       <div style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: 1.5, marginBottom: 4, fontFamily: "'Cinzel',serif" }}>DAÑO</div>
-                      <div style={{ fontSize: 16, color: '#fca5a5', fontWeight: 700, fontFamily: 'monospace' }}>{listing.dano_min_1}–{listing.dano_max_1}</div>
+                      <div style={{ fontSize: 16, color: 'var(--stat-damage)', fontWeight: 700, fontFamily: 'monospace' }}>{listing.dano_min_1}–{listing.dano_max_1}</div>
                       {listing.bonus_xx && <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 2 }}>+{listing.bonus_xx} bonus</div>}
                     </div>
                   )}
                   {listing.armadura_base && (
                     <div style={{ flex: 1, padding: '10px 18px', textAlign: 'center', borderRight: listing.velocidad ? `1px solid var(--dark-border)` : undefined }}>
                       <div style={{ fontSize: 8, color: 'var(--text-muted)', letterSpacing: 1.5, marginBottom: 4, fontFamily: "'Cinzel',serif" }}>ARMADURA</div>
-                      <div style={{ fontSize: 16, color: '#7dd3fc', fontWeight: 700, fontFamily: 'monospace' }}>{listing.armadura_base}</div>
+                      <div style={{ fontSize: 16, color: 'var(--stat-armor)', fontWeight: 700, fontFamily: 'monospace' }}>{listing.armadura_base}</div>
                       {listing.armadura_bonus && <div style={{ fontSize: 11, color: 'var(--gold)', marginTop: 2 }}>+{listing.armadura_bonus} bonus</div>}
                     </div>
                   )}
@@ -342,8 +343,8 @@ export default function ItemDrawer({ listing, onClose }: Props) {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                     {mods.map((mod, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                        <div style={{ width: 15, height: 15, borderRadius: '50%', flexShrink: 0, background: 'rgba(91,201,139,0.12)', border: '1px solid rgba(91,201,139,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: '#5BC98B' }}>+</div>
-                        <span style={{ fontSize: 12, color: '#5BC98B', lineHeight: 1.3 }}>{formatSlot(mod)}</span>
+                        <div style={{ width: 15, height: 15, borderRadius: '50%', flexShrink: 0, background: 'color-mix(in srgb, var(--success) 12%, transparent)', border: '1px solid color-mix(in srgb, var(--success) 28%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'var(--success)' }}>+</div>
+                        <span style={{ fontSize: 12, color: 'var(--success)', lineHeight: 1.3 }}>{formatSlot(mod)}</span>
                       </div>
                     ))}
                   </div>
@@ -393,12 +394,12 @@ export default function ItemDrawer({ listing, onClose }: Props) {
                       )}
                       {lastSeen && (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 3, fontSize: 10 }}>
-                          {isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#5BC98B', boxShadow: '0 0 5px rgba(91,201,139,0.7)', display: 'inline-block', animation: 'activePulse 2s ease-in-out infinite' }} />}
-                          <span style={{ color: isActive ? '#5BC98B' : 'var(--text-muted)' }}>{lastSeen}</span>
+                          {isActive && <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 5px color-mix(in srgb, var(--success) 70%, transparent)', display: 'inline-block', animation: 'activePulse 2s ease-in-out infinite' }} />}
+                          <span style={{ color: isActive ? 'var(--success)' : 'var(--text-muted)' }}>{lastSeen}</span>
                         </span>
                       )}
                       {isTrusted && (
-                        <span style={{ fontSize: 10, color: '#5BC98B', background: 'rgba(91,201,139,0.1)', borderRadius: 4, padding: '1px 6px', border: '1px solid rgba(91,201,139,0.22)' }}>✓ Confiable</span>
+                        <span style={{ fontSize: 10, color: 'var(--success)', background: 'color-mix(in srgb, var(--success) 10%, transparent)', borderRadius: 4, padding: '1px 6px', border: '1px solid color-mix(in srgb, var(--success) 22%, transparent)' }}>✓ Confiable</span>
                       )}
                     </div>
                   </div>
@@ -440,7 +441,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
               <div style={{ padding: '12px 18px 18px', flexShrink: 0, marginTop: 'auto' }}>
                 <Link
                   href={href}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '13px 0', borderRadius: 10, background: listing.type === 'sell' ? 'linear-gradient(135deg, #1a5c35, #2E7D52)' : 'linear-gradient(135deg, #0f2d52, #1E4A7A)', color: '#fff', textDecoration: 'none', fontFamily: "'Cinzel',serif", fontSize: 13, letterSpacing: 1, fontWeight: 700, boxShadow: listing.type === 'sell' ? '0 4px 20px rgba(46,125,82,0.3)' : '0 4px 20px rgba(30,74,122,0.3)', transition: 'filter 0.2s' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: '100%', padding: '13px 0', borderRadius: 10, background: listing.type === 'sell' ? 'linear-gradient(135deg, var(--cta-sell-from), var(--cta-sell-to))' : 'linear-gradient(135deg, #0f2d52, #1E4A7A)', color: '#fff', textDecoration: 'none', fontFamily: "'Cinzel',serif", fontSize: 13, letterSpacing: 1, fontWeight: 700, boxShadow: listing.type === 'sell' ? '0 4px 20px color-mix(in srgb, var(--cta-sell-to) 30%, transparent)' : '0 4px 20px color-mix(in srgb, #1E4A7A 30%, transparent)', transition: 'filter 0.2s' }}
                   onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.filter = 'brightness(1.12)' }}
                   onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.filter = 'brightness(1)' }}
                 >
@@ -456,7 +457,7 @@ export default function ItemDrawer({ listing, onClose }: Props) {
         @keyframes modalFadeIn  { from { opacity: 0 } to { opacity: 1 } }
         @keyframes modalZoomIn  { from { transform: scale(0.94); opacity: 0 } to { transform: scale(1); opacity: 1 } }
         @keyframes lbZoomIn     { from { transform: scale(0.88); opacity: 0 } to { transform: scale(1); opacity: 1 } }
-        @keyframes activePulse  { 0%,100% { box-shadow: 0 0 5px rgba(91,201,139,0.7) } 50% { box-shadow: 0 0 9px rgba(91,201,139,0.3) } }
+        @keyframes activePulse  { 0%,100% { box-shadow: 0 0 5px color-mix(in srgb, var(--success) 70%, transparent) } 50% { box-shadow: 0 0 9px color-mix(in srgb, var(--success) 30%, transparent) } }
       `}</style>
     </>
   )

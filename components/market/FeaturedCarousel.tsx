@@ -13,21 +13,21 @@ export default function FeaturedCarousel({ listings }: { listings: any[] }) {
   return (
     <div style={{ marginBottom: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.4))' }} />
-        <span style={{ fontFamily: "'Cinzel',serif", fontSize: 10, color: '#F59E0B', letterSpacing: 2 }}>
+        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, transparent, color-mix(in srgb, var(--featured) 40%, transparent))' }} />
+        <span style={{ fontFamily: "'Cinzel',serif", fontSize: 10, color: 'var(--featured)', letterSpacing: 2 }}>
           {t('carousel.featured')}
         </span>
-        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, rgba(245,158,11,0.4))' }} />
+        <div style={{ flex: 1, height: 1, background: 'linear-gradient(to left, transparent, color-mix(in srgb, var(--featured) 40%, transparent))' }} />
       </div>
 
       <div style={{
         display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8,
-        scrollbarWidth: 'thin', scrollbarColor: 'rgba(245,158,11,0.3) transparent',
+        scrollbarWidth: 'thin', scrollbarColor: 'color-mix(in srgb, var(--featured) 30%, transparent) transparent',
         justifyContent: listings.length < 5 ? 'center' : 'flex-start',
       }}>
         {listings.map(l => {
           const rarezaColor = RAREZA_COLOR[l.rareza] || '#888'
-          const emojiColor = GREY_CATS.has(l.item_category) ? '#7A8A9A' : (rarezaColor || '#B8A157')
+          const emojiColor = GREY_CATS.has(l.item_category) ? 'var(--category-grey)' : (rarezaColor || 'var(--category-grey-alt)')
           let svg = ''
           try { svg = getItemIconColored(l.subcategoria || '', l.item_category, emojiColor, l.material, l.item_name) } catch {}
 
@@ -38,25 +38,25 @@ export default function FeaturedCarousel({ listings }: { listings: any[] }) {
               style={{
                 flexShrink: 0, width: 200, textDecoration: 'none',
                 background: 'var(--dark-card)',
-                border: `1px solid rgba(245,158,11,0.35)`,
+                border: `1px solid color-mix(in srgb, var(--featured) 35%, transparent)`,
                 borderRadius: 10, overflow: 'hidden',
                 transition: 'border-color 0.2s, transform 0.2s',
               }}
               onMouseEnter={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,158,11,0.7)'
+                (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--featured) 70%, transparent)'
                 ;(e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'
               }}
               onMouseLeave={e => {
-                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,158,11,0.35)'
+                (e.currentTarget as HTMLElement).style.borderColor = 'color-mix(in srgb, var(--featured) 35%, transparent)'
                 ;(e.currentTarget as HTMLElement).style.transform = 'translateY(0)'
               }}
             >
               <div style={{
                 height: 100,
-                background: `radial-gradient(circle at center, ${emojiColor}22 0%, ${emojiColor}06 55%, var(--dark-surface) 80%)`,
+                background: `radial-gradient(circle at center, color-mix(in srgb, ${emojiColor} 13%, transparent) 0%, color-mix(in srgb, ${emojiColor} 2%, transparent) 55%, var(--dark-surface) 80%)`,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
-                filter: `drop-shadow(0 0 10px ${emojiColor}44)`,
+                filter: `drop-shadow(0 0 10px color-mix(in srgb, ${emojiColor} 27%, transparent))`,
               }}>
                 {svg
                   ? <div suppressHydrationWarning dangerouslySetInnerHTML={{ __html: svg }} />
@@ -66,8 +66,8 @@ export default function FeaturedCarousel({ listings }: { listings: any[] }) {
                   <span style={{
                     position: 'absolute', top: 6, right: 6,
                     fontSize: 9, padding: '2px 6px', borderRadius: 4,
-                    background: `${rarezaColor}22`, color: rarezaColor,
-                    border: `1px solid ${rarezaColor}44`,
+                    background: `color-mix(in srgb, ${rarezaColor} 13%, transparent)`, color: rarezaColor,
+                    border: `1px solid color-mix(in srgb, ${rarezaColor} 27%, transparent)`,
                     fontFamily: "'Cinzel',serif",
                   }}>
                     {RAREZA_LABEL[l.rareza] || l.rareza}
@@ -76,8 +76,8 @@ export default function FeaturedCarousel({ listings }: { listings: any[] }) {
                 <span style={{
                   position: 'absolute', top: 6, left: 6,
                   fontSize: 9, padding: '2px 6px', borderRadius: 4,
-                  background: 'rgba(245,158,11,0.15)', color: '#F59E0B',
-                  border: '1px solid rgba(245,158,11,0.4)',
+                  background: 'color-mix(in srgb, var(--featured) 15%, transparent)', color: 'var(--featured)',
+                  border: '1px solid color-mix(in srgb, var(--featured) 40%, transparent)',
                   fontFamily: "'Cinzel',serif",
                 }}>{t('carousel.badge')}</span>
               </div>

@@ -87,23 +87,28 @@ const SUBCLASES = [
 
 const RAREZAS = [
   { val: 'all',        label: 'Rareza',     color: 'var(--text-muted)' },
-  { val: 'normal',     label: 'Normal',     color: '#9CA3AF'           },
-  { val: 'especial',   label: 'Especial',   color: '#FB923C'           },
-  { val: 'magico',     label: 'Mágico',     color: '#22C55E'           },
-  { val: 'epico',      label: 'Épico',      color: '#8B5CF6'           },
-  { val: 'legendario', label: 'Legendario', color: '#EF4444'           },
+  { val: 'normal',     label: 'Normal',     color: 'var(--rarity-normal)'    },
+  { val: 'especial',   label: 'Especial',   color: 'var(--rarity-special)'   },
+  { val: 'magico',     label: 'Mágico',     color: 'var(--rarity-magic)'     },
+  { val: 'epico',      label: 'Épico',      color: 'var(--rarity-epic)'      },
+  { val: 'legendario', label: 'Legendario', color: 'var(--rarity-legendary)' },
 ]
 
 const TIPO_TABS = [
-  { val: 'all',  label: 'Todos', color: 'var(--gold)', bg: 'rgba(201,168,76,0.14)' },
-  { val: 'sell', label: 'Vende', color: '#5BC98B',     bg: 'rgba(46,125,82,0.18)'  },
-  { val: 'buy',  label: 'Busca', color: '#5B9BDF',     bg: 'rgba(30,74,122,0.18)'  },
+  { val: 'all',  label: 'Todos', color: 'var(--gold)',    bg: 'color-mix(in srgb, var(--gold) 14%, transparent)' },
+  { val: 'sell', label: 'Vende', color: 'var(--success)', bg: 'var(--wash-green-bg)'  },
+  { val: 'buy',  label: 'Busca', color: 'var(--info)',    bg: 'var(--wash-blue-bg)'  },
 ]
 
+// OJO: el botón de Alsius acá usaba #5B9BDF, NO el #2196F3 que es el azul
+// de reino "canónico" en el resto del sitio (Ranking, Torneos, REINO_COLOR)
+// — es el mismo valor que ya veníamos colapsando como --info en el badge
+// "Busca". Se mantiene ese colapso acá para no introducir un tercer azul;
+// avisado en el resumen, no se fuerza a --alsius porque cambiaría el valor.
 const REINOS = [
-  { val: 'alsius', color: '#5B9BDF', bg: 'rgba(30,74,122,0.18)'  },
-  { val: 'syrtis', color: '#5BC98B', bg: 'rgba(46,125,82,0.18)'  },
-  { val: 'ignis',  color: '#EF4444', bg: 'rgba(127,29,29,0.18)'  },
+  { val: 'alsius', color: 'var(--info)',   bg: 'var(--wash-blue-bg)'  },
+  { val: 'syrtis', color: 'var(--syrtis)', bg: 'var(--wash-green-bg)'  },
+  { val: 'ignis',  color: 'var(--ignis)',  bg: 'var(--wash-red-bg)'  },
 ]
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
@@ -111,10 +116,10 @@ const REINOS = [
 const ARROW_SVG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5' viewBox='0 0 9 5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%23C9A84C77'/%3E%3C/svg%3E")`
 
 const glassSelect: React.CSSProperties = {
-  background: 'rgba(10,8,5,0.82)',
+  background: 'var(--glass-bg)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(201,168,76,0.18)',
+  border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)',
   borderRadius: 8,
   padding: '7px 30px 7px 11px',
   color: 'var(--text-primary)',
@@ -133,10 +138,10 @@ const glassSelect: React.CSSProperties = {
 }
 
 const glassInput: React.CSSProperties = {
-  background: 'rgba(10,8,5,0.82)',
+  background: 'var(--glass-bg)',
   backdropFilter: 'blur(12px)',
   WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid rgba(201,168,76,0.18)',
+  border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)',
   borderRadius: 8,
   padding: '7px 11px',
   color: 'var(--text-primary)',
@@ -231,10 +236,10 @@ export default function FilterBar() {
 
       {/* ── Barra de filtros jerárquica ──────────────────────────────── */}
       <div style={{
-        background: 'rgba(10,8,5,0.75)',
+        background: 'color-mix(in srgb, var(--glass-bg) 91%, transparent)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid rgba(201,168,76,0.14)',
+        border: '1px solid color-mix(in srgb, var(--gold) 14%, transparent)',
         borderRadius: 12, padding: '10px 12px',
         marginBottom: 10,
       }}>
@@ -250,11 +255,11 @@ export default function FilterBar() {
             style={{
               ...glassSelect,
               color: cat !== 'all' ? 'var(--gold)' : 'var(--text-muted)',
-              borderColor: cat !== 'all' ? 'rgba(201,168,76,0.45)' : 'rgba(201,168,76,0.18)',
+              borderColor: cat !== 'all' ? 'color-mix(in srgb, var(--gold) 45%, transparent)' : 'color-mix(in srgb, var(--gold) 18%, transparent)',
             }}
           >
             {CATS.map(c => (
-              <option key={c.val} value={c.val} style={{ background: '#0d0a07' }}>
+              <option key={c.val} value={c.val} style={{ background: 'var(--select-option-bg)' }}>
                 {c.icon} {c.label}
               </option>
             ))}
@@ -269,11 +274,11 @@ export default function FilterBar() {
               style={{
                 ...glassSelect,
                 color: subcat !== 'all' ? 'var(--gold)' : 'var(--text-muted)',
-                borderColor: subcat !== 'all' ? 'rgba(201,168,76,0.45)' : 'rgba(201,168,76,0.18)',
+                borderColor: subcat !== 'all' ? 'color-mix(in srgb, var(--gold) 45%, transparent)' : 'color-mix(in srgb, var(--gold) 18%, transparent)',
               }}
             >
               {subcats.map(s => (
-                <option key={s.val} value={s.val} style={{ background: '#0d0a07' }}>{s.label}</option>
+                <option key={s.val} value={s.val} style={{ background: 'var(--select-option-bg)' }}>{s.label}</option>
               ))}
             </select>
           ) : (
@@ -289,12 +294,12 @@ export default function FilterBar() {
             onChange={e => setSubclase(e.target.value)}
             style={{
               ...glassSelect,
-              color: subclase !== 'all' ? '#7DC4FF' : 'var(--text-muted)',
-              borderColor: subclase !== 'all' ? 'rgba(91,155,223,0.5)' : 'rgba(201,168,76,0.18)',
+              color: subclase !== 'all' ? 'var(--info)' : 'var(--text-muted)',
+              borderColor: subclase !== 'all' ? 'color-mix(in srgb, var(--info) 50%, transparent)' : 'color-mix(in srgb, var(--gold) 18%, transparent)',
             }}
           >
             {SUBCLASES.map(s => (
-              <option key={s.val} value={s.val} style={{ background: '#0d0a07' }}>{s.label}</option>
+              <option key={s.val} value={s.val} style={{ background: 'var(--select-option-bg)' }}>{s.label}</option>
             ))}
           </select>
 
@@ -309,22 +314,22 @@ export default function FilterBar() {
                 ? (RAREZAS.find(r => r.val === rareza)?.color || 'var(--text-primary)')
                 : 'var(--text-muted)',
               borderColor: rareza !== 'all'
-                ? `${RAREZAS.find(r => r.val === rareza)?.color || 'transparent'}66`
-                : 'rgba(201,168,76,0.18)',
+                ? `color-mix(in srgb, ${RAREZAS.find(r => r.val === rareza)?.color || 'transparent'} 40%, transparent)`
+                : 'color-mix(in srgb, var(--gold) 18%, transparent)',
             }}
           >
             {RAREZAS.map(r => (
-              <option key={r.val} value={r.val} style={{ background: '#0d0a07', color: r.color }}>{r.label}</option>
+              <option key={r.val} value={r.val} style={{ background: 'var(--select-option-bg)', color: r.color }}>{r.label}</option>
             ))}
           </select>
 
           {/* Separador visual */}
-          <div style={{ width: 1, background: 'rgba(201,168,76,0.15)', margin: '2px 2px', flexShrink: 0 }} className="fb-sep" />
+          <div style={{ width: 1, background: 'color-mix(in srgb, var(--gold) 15%, transparent)', margin: '2px 2px', flexShrink: 0 }} className="fb-sep" />
 
           {/* Moneda */}
           <div style={{
             display: 'flex', flexShrink: 0, alignItems: 'center',
-            border: '1px solid rgba(201,168,76,0.18)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
           }}>
             {[
               { val: 'mag', icon: '/magnanita.png', label: 'Mag' },
@@ -336,9 +341,9 @@ export default function FilterBar() {
                 title={m.label}
                 style={{
                   padding: '4px 9px', border: 'none',
-                  borderLeft: i > 0 ? '1px solid rgba(201,168,76,0.18)' : 'none',
+                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
-                  background: moneda === m.val ? 'rgba(201,168,76,0.14)' : 'transparent',
+                  background: moneda === m.val ? 'color-mix(in srgb, var(--gold) 14%, transparent)' : 'transparent',
                   color: moneda === m.val ? 'var(--gold)' : 'var(--text-muted)',
                   display: 'flex', alignItems: 'center', gap: 4,
                   fontSize: 11, fontFamily: "'Cinzel',serif",
@@ -398,7 +403,7 @@ export default function FilterBar() {
           {/* Tipo: Todos / Vende / Busca */}
           <div style={{
             display: 'flex', flexShrink: 0,
-            border: '1px solid rgba(201,168,76,0.18)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
           }}>
             {TIPO_TABS.map((tab, i) => (
               <button
@@ -408,7 +413,7 @@ export default function FilterBar() {
                   padding: '6px 11px',
                   fontFamily: "'Cinzel',serif", fontSize: 10, letterSpacing: 0.8,
                   border: 'none',
-                  borderLeft: i > 0 ? '1px solid rgba(201,168,76,0.18)' : 'none',
+                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
                   background: tipo === tab.val ? tab.bg : 'transparent',
                   color: tipo === tab.val ? tab.color : 'var(--text-muted)',
@@ -423,7 +428,7 @@ export default function FilterBar() {
           {/* Reino */}
           <div style={{
             display: 'flex', flexShrink: 0,
-            border: '1px solid rgba(201,168,76,0.18)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
           }}>
             {REINOS.map((r, i) => (
               <button
@@ -433,11 +438,11 @@ export default function FilterBar() {
                 style={{
                   padding: '4px 8px',
                   border: 'none',
-                  borderLeft: i > 0 ? '1px solid rgba(201,168,76,0.18)' : 'none',
+                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
                   background: reino === r.val ? r.bg : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: reino === r.val ? `0 0 8px ${r.color}55` : 'none',
+                  boxShadow: reino === r.val ? `0 0 8px color-mix(in srgb, ${r.color} 33%, transparent)` : 'none',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -462,10 +467,10 @@ export default function FilterBar() {
             onChange={e => push({ sort: e.target.value })}
             style={{ ...glassSelect, flex: '0 0 auto', width: 'auto' }}
           >
-            <option value="newest"     style={{ background: '#0d0a07' }}>↓ Recientes</option>
-            <option value="oldest"     style={{ background: '#0d0a07' }}>↑ Antiguos</option>
-            <option value="price_asc"  style={{ background: '#0d0a07' }}>↑ Menor precio (mag)</option>
-            <option value="price_desc" style={{ background: '#0d0a07' }}>↓ Mayor precio (mag)</option>
+            <option value="newest"     style={{ background: 'var(--select-option-bg)' }}>↓ Recientes</option>
+            <option value="oldest"     style={{ background: 'var(--select-option-bg)' }}>↑ Antiguos</option>
+            <option value="price_asc"  style={{ background: 'var(--select-option-bg)' }}>↑ Menor precio (mag)</option>
+            <option value="price_desc" style={{ background: 'var(--select-option-bg)' }}>↓ Mayor precio (mag)</option>
           </select>
 
           {/* Limpiar filtros */}
@@ -476,8 +481,8 @@ export default function FilterBar() {
                 ...glassSelect,
                 flex: '0 0 auto', width: 'auto', backgroundImage: 'none',
                 padding: '6px 12px',
-                color: '#E24B4A', borderColor: 'rgba(226,75,74,0.35)',
-                background: 'rgba(226,75,74,0.08)',
+                color: 'var(--error)', borderColor: 'color-mix(in srgb, var(--error) 35%, transparent)',
+                background: 'color-mix(in srgb, var(--error) 8%, transparent)',
                 display: 'flex', alignItems: 'center', gap: 5,
                 fontSize: 11, fontFamily: "'Cinzel',serif", letterSpacing: 0.5,
               }}
@@ -492,7 +497,7 @@ export default function FilterBar() {
         @media (max-width: 640px) {
           .fb-sep { display: none; }
         }
-        select option { background: #0d0a07; color: #e8e0d0; }
+        select option { background: var(--select-option-bg); color: var(--select-option-text); }
       `}</style>
     </div>
   )

@@ -137,7 +137,7 @@ function ResistRow({ label, icon, calidad }: { label: string; icon: string; cali
       </span>
       <span style={{
         fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 99,
-        background: `${color}22`, color, border: `1px solid ${color}55`, whiteSpace: 'nowrap',
+        background: `color-mix(in srgb, ${color} 13%, transparent)`, color, border: `1px solid color-mix(in srgb, ${color} 33%, transparent)`, whiteSpace: 'nowrap',
       }}>
         {CALIDAD_LABEL[calidad] || calidad}
       </span>
@@ -203,8 +203,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
     .order('created_at', { ascending: false })
     .limit(6)
   const rareza = listing.rareza
-  const rarezaColor = rareza ? RAREZA_COLOR[rareza] : '#C9A84C'
-  const iconColor = GREY_CATS.has(listing.item_category) ? '#7A8A9A' : rarezaColor
+  const rarezaColor = rareza ? RAREZA_COLOR[rareza] : 'var(--gold)'
+  const iconColor = GREY_CATS.has(listing.item_category) ? 'var(--category-grey)' : rarezaColor
 
   const isSell = listing.type === 'sell'
   const badge = isSell
@@ -257,14 +257,14 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {/* Hero: ícono + nombre + precio */}
           <div style={{
             borderRadius: 12, overflow: 'hidden', marginBottom: 20,
-            border: `1px solid ${rarezaColor}33`,
+            border: `1px solid color-mix(in srgb, ${rarezaColor} 20%, transparent)`,
             background: `linear-gradient(160deg, var(--dark-card) 0%, var(--dark-surface) 100%)`,
           }}>
             {/* Área del ícono */}
             <div style={{
               height: 180, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: `radial-gradient(ellipse at 50% 30%, ${iconColor}20 0%, ${iconColor}06 50%, transparent 80%)`,
-              borderBottom: `1px solid ${rarezaColor}22`, position: 'relative',
+              background: `radial-gradient(ellipse at 50% 30%, color-mix(in srgb, ${iconColor} 12.5%, transparent) 0%, color-mix(in srgb, ${iconColor} 2%, transparent) 50%, transparent 80%)`,
+              borderBottom: `1px solid color-mix(in srgb, ${rarezaColor} 13%, transparent)`, position: 'relative',
             }}>
               {/* Badge tipo — top left */}
               <span style={{
@@ -282,7 +282,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
                   position: 'absolute', top: 12, right: 12,
                   padding: '4px 10px', borderRadius: 4, fontSize: 10,
                   fontFamily: "'Cinzel',serif", letterSpacing: 1, fontWeight: 700,
-                  background: `${rarezaColor}22`, color: rarezaColor, border: `1px solid ${rarezaColor}55`,
+                  background: `color-mix(in srgb, ${rarezaColor} 13%, transparent)`, color: rarezaColor, border: `1px solid color-mix(in srgb, ${rarezaColor} 33%, transparent)`,
                 }}>
                   {RAREZA_LABEL[rareza]}
                 </span>
@@ -304,9 +304,9 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               {svgIcon ? (
                 <div style={{
                   width: 110, height: 110, borderRadius: 16,
-                  background: `radial-gradient(circle, ${iconColor}28 0%, ${iconColor}06 65%, transparent 85%)`,
-                  border: `1px solid ${iconColor}33`,
-                  filter: `drop-shadow(0 0 16px ${iconColor}66)`,
+                  background: `radial-gradient(circle, color-mix(in srgb, ${iconColor} 16%, transparent) 0%, color-mix(in srgb, ${iconColor} 2%, transparent) 65%, transparent 85%)`,
+                  border: `1px solid color-mix(in srgb, ${iconColor} 20%, transparent)`,
+                  filter: `drop-shadow(0 0 16px color-mix(in srgb, ${iconColor} 40%, transparent))`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
                   suppressHydrationWarning
@@ -332,7 +332,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
 
               <h1 className="cinzel" style={{
                 fontSize: 24, color: rarezaColor, marginBottom: 12, lineHeight: 1.25,
-                textShadow: `0 0 24px ${rarezaColor}44`,
+                textShadow: `0 0 24px color-mix(in srgb, ${rarezaColor} 27%, transparent)`,
               }}>
                 {listing.item_name}
               </h1>
@@ -349,7 +349,7 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
             <div style={{
               background: 'var(--dark-card)', border: '1px solid var(--dark-border)',
               borderRadius: 10, padding: '14px 18px', marginBottom: 20,
-              borderLeft: `3px solid ${rarezaColor}66`,
+              borderLeft: `3px solid color-mix(in srgb, ${rarezaColor} 40%, transparent)`,
             }}>
               <p style={{ color: 'var(--text-primary)', fontSize: 15, lineHeight: 1.8, fontStyle: 'italic', margin: 0 }}>
                 "{listing.description}"
@@ -464,12 +464,15 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
               </span>
             )}
             {listing.reino && (() => {
-              const reinoColors: Record<string, string> = { alsius: '#5B9BDF', syrtis: '#5BC98B', ignis: '#EF4444' }
+              // OJO: usa #5B9BDF/#5BC98B/#EF4444, NO los tokens canónicos --alsius/--syrtis/--ignis
+              // (#2196F3/#4CAF50/#F44336) — son los mismos valores que --info/--success/--rarity-legendary,
+              // se preserva ese colapso ya establecido (mismo caso que market/nuevo/page.tsx) para no cambiar el color.
+              const reinoColors: Record<string, string> = { alsius: 'var(--info)', syrtis: 'var(--success)', ignis: 'var(--rarity-legendary)' }
               const reinoLabel: Record<string, string> = { alsius: 'Alsius', syrtis: 'Syrtis', ignis: 'Ignis' }
               const color = reinoColors[listing.reino] || 'var(--text-muted)'
               return (
                 <span style={{
-                  background: `${color}18`, border: `1px solid ${color}44`,
+                  background: `color-mix(in srgb, ${color} 9%, transparent)`, border: `1px solid color-mix(in srgb, ${color} 27%, transparent)`,
                   padding: '4px 12px', borderRadius: 20, fontSize: 11, color,
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                 }}>
@@ -508,8 +511,8 @@ export default async function ListingPage({ params }: { params: Promise<{ id: st
           {listing.item_image_url && (
             <div className="listing-sidebar-image" style={{
               marginTop: 16, borderRadius: 10, overflow: 'hidden',
-              border: `1px solid ${rarezaColor}33`,
-              background: `radial-gradient(ellipse at 50% 30%, ${iconColor}12 0%, var(--dark-card) 80%)`,
+              border: `1px solid color-mix(in srgb, ${rarezaColor} 20%, transparent)`,
+              background: `radial-gradient(ellipse at 50% 30%, color-mix(in srgb, ${iconColor} 7%, transparent) 0%, var(--dark-card) 80%)`,
             }}>
               <img
                 src={listing.item_image_url}

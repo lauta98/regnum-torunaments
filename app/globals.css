@@ -99,6 +99,33 @@
   --set-purple-border: rgba(139,92,246,0.5);
   --favorite: #fb7185;
 
+  /* "Wash" de fondo de tabs activos (Vende/Busca/Reino en FilterBar) — no
+     son la misma variante que --success/--info/--ignis a otra opacidad,
+     son un tono más oscuro elegido a mano para que el ícono/texto se lea
+     encima. Se preservan tal cual en vez de derivar con color-mix. */
+  --wash-green-bg: rgba(46,125,82,0.18);
+  --wash-blue-bg:  rgba(30,74,122,0.18);
+  --wash-red-bg:   rgba(127,29,29,0.18);
+
+  /* Fondo "glass" de inputs/selects de Comercio (FilterBar) — más oscuro
+     que --bg-surface del tema de Comercio, no coincide con ningún token
+     existente. */
+  --glass-bg: rgba(10,8,5,0.82);
+
+  /* Fondo/texto del <option> de los <select> de Comercio */
+  --select-option-bg:   #0d0a07;
+  --select-option-text: #e8e0d0;
+
+  /* Gradiente del botón CTA "Publicar/Vender" — se repite igual en
+     varios archivos de Comercio (HeroSection, ItemDrawer, BotonComprar,
+     market/nuevo, market/transacciones, EditarPerfil, ListingsGrid) */
+  --cta-sell-from: #1a5c35;
+  --cta-sell-to:   #2E7D52;
+
+  /* Acento "Destacado/Premium" — distinto del dorado normal, se repite en
+     3 archivos de Comercio (admin, destacar, carrusel de destacados) */
+  --featured: #F59E0B;
+
   /* Text */
   --text-primary:   #e8e8e8;
   --text-secondary: #909090;
