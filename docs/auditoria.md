@@ -1,0 +1,164 @@
+# Auditoría — Fase 0
+
+Relevamiento sobre 5 áreas: Home (`app/page.tsx`), Torneos (`app/torneos/`), Comercio
+(`app/market/page.tsx` + `components/market/*` que arman la grilla), Jugadores/Ranking
+(`app/jugadores/page.tsx`, `app/jugadores/RankingContent.tsx`) y Salón de la Fama
+(`app/salon-de-la-fama/`). Además se incluye `components/Header.tsx` donde aparece algo
+relevante, porque se renderiza en las cinco.
+
+Solo inventario — sin recomendaciones ni cambios de código.
+
+---
+
+## 1. Colores hardcodeados
+
+Agrupados por valor. No incluye los que ya vienen de `var(--...)`.
+
+### Reino (consistentes en todo el sitio, mismo significado en cada lugar)
+- `#4CAF50` (Syrtis, verde) — `app/jugadores/RankingContent.tsx:33,439`
+- `#F44336` (Ignis, rojo) — `app/torneos/TorneosContent.tsx:23`, `app/jugadores/RankingContent.tsx:33`
+- `#2196F3` (Alsius, azul) — `app/torneos/TorneosContent.tsx:23`, `app/jugadores/RankingContent.tsx:242`
+
+### Rareza / Comercio (escala propia, no comparte tokens con el resto del sitio)
+- `#9CA3AF` normal, `#FB923C`/`#FBBF24`/`#fbbf24` especial, `#22C55E`/`#4ade80` mágico,
+  `#8B5CF6`/`#8B5CF2`/`#a78bfa` épico, `#EF4444`/`#f87171` legendario — repetidos en
+  `components/market/FilterBar.tsx:90-94`, `components/market/ListingCard.tsx:52-70`
+- Colores de tipo Vende/Busca: `#1a5c2e`/`#6EE89A`/`#2d9b4e` (vende) y `#0f3460`/`#7DC4FF`/
+  `#1e6db5` (busca) — duplicados en `ListingCard.tsx:122-124` y `FilterBar.tsx:99-106`
+  (con valores parecidos pero no idénticos: `#5BC98B`/`#5B9BDF` en un lugar, `#6EE89A`/
+  `#7DC4FF` en otro)
+
+### Medallas / podio (Salón de la Fama y Ranking, cada uno con su propia paleta)
+- Oro `#d4af37`, plata `#c0c0c0`, bronce `#cd7f32` — `RankingContent.tsx:43-45`
+- Gradientes de fondo por puesto: `#120f00`→`#1c1700` (oro), `#0d0d0d`→`#141414` (plata),
+  `#0e0a00`→`#141008` (bronce) — mismos valores de oro que usa también `app/page.tsx:202`
+  para las cards de "Actividad reciente" (repetido, no tokenizado)
+
+### Fondo oscuro cálido de Comercio (paleta propia, distinta a `--bg-card`/`--bg-surface`
+del resto del sitio — ya señalado como decisión de diseño en un comentario del código)
+- `#211B14`, `#1A1510` — `ListingCard.tsx:6`
+- `#1a1410`, `#0f0d0a`, `#14100c` — `ListingCard.tsx:187,197`
+- `#0d0a07` (repetido 6 veces) — `FilterBar.tsx:257,276,297,317,465-468,495`
+
+### Sueltos, un solo uso
+- `#909090` — `RankingContent.tsx:33`
+- `#E8D9B8` (nombre rareza normal) — `ListingCard.tsx:46`
+- `#c4b5fd`/`#fb7185` (set/favorito) — `ListingCard.tsx:462,481,597`
+- `#7A8A9A`/`#B8A157` (categorías "grises": joyería/crafting/minerales) — `ListingCard.tsx:330`,
+  `FeaturedCarousel.tsx:30`
+- `#F59E0B` — `FeaturedCarousel.tsx:17,79`
+- `#E24B4A` — `FilterBar.tsx:479`
+- `#5b8fd4` — `app/salon-de-la-fama/page.tsx:142,178`
+- `#1a0a0a`/`#f87171` (estado de error) — `app/salon-de-la-fama/SubirFoto.tsx:70,82`
+- `#241c08`/`#120e04`/`#0a0a0a` — `app/salon-de-la-fama/page.tsx:84`
+- `#1a5c35`/`#2E7D52` (botón "Publicar venta", verde) — `HeroSection.tsx:18`, `FeaturedCarousel.tsx:18`
+  (mismo par, dos archivos)
+- `#fff`/`#e8e0d0` sueltos en varios lugares
+
+**Patrón general:** Home, Torneos, Jugadores y Salón de la Fama usan mayormente
+`var(--gold)`/`var(--text-muted)`/etc. + los 3 colores de reino sueltos. Comercio es la
+zona con más hex hardcodeado y con su propia paleta de fondo, declarada aparte del resto
+del sitio.
+
+---
+
+## 2. Emojis
+
+### Íconos de interfaz (candidatos a reemplazar)
+- **Header** (en las 5 páginas): ninguno — el logo usa texto, no emoji.
+- **Home** (`app/page.tsx`): ninguno encontrado.
+- **Torneos** (`TorneosContent.tsx:114`): ⚔️ como imagen central del estado vacío
+  ("no hay torneos").
+- **Jugadores/Ranking** (`RankingContent.tsx`): 🥇🥈🥉 como ícono de puesto en el podio
+  (líneas 43-45, 227), 🔥 en el tab "Rachas" (118) y junto al valor de racha (439),
+  🎭 en el toggle "Solo multiclase" (295) y junto a la cuenta (328), ✓ como check de
+  verificado (176, 242).
+- **Salón de la Fama** (`page.tsx`/`SubirFoto.tsx`): 🏆 como imagen principal de cada
+  card de campeón (49, 93), 🏅 como fallback de clase (166), 📷 en el botón de subir
+  foto (`SubirFoto.tsx:67,80`), set de emoji por clase — ⚔️🛡️✨🔮🏹🐺 para Bárbaro/
+  Caballero/Conjurador/Brujo/Tirador/Cazador (`page.tsx:15`).
+- **Comercio** — es la zona con más uso:
+  - `HeroSection.tsx`: 🗡 en el botón "Publicar un artículo" (23), 🔒👤🗑 en la fila de
+    garantías (30-33, falta el cuarto ítem "Gratis para usar" que usa 🆓 en otro lugar
+    del archivo).
+  - `FilterBar.tsx`: ✦⚔🛡🏹💎💍🔨⛏ como ícono de cada categoría (8-15), 💵 para moneda
+    real (331), 🔍 en el placeholder de búsqueda (385), ✕ para limpiar filtros (485).
+  - `ListingCard.tsx`: ⚔🔮🏹 por clase requerida (31), 📦 como fallback de ítem sin
+    ícono y como badge de "SET" (93, 463), ♥/♡ para favorito (487), 👤 fallback de
+    clase (581, 676), ⚔🛡 junto a daño/armadura (687, 693).
+
+### Emoji que es contenido (no tocar)
+- Descripciones y nombres de ítem escritos por los usuarios en Comercio pueden traer
+  emoji propio — no relevado acá porque es dato, no vino del código.
+
+---
+
+## 3. Texto en mayúsculas
+
+### Por CSS (`textTransform`/`text-transform`)
+- `components/Header.tsx:147` — "COMMUNITY" bajo el logo, visible en las 5 páginas.
+- También aparece en `app/market/nuevo/page.tsx`, `components/CompartirContenido.tsx`,
+  `app/brackets/page.tsx`, `app/brackets/[id]/page.tsx`, `app/market/mis-listings/[id]/editar/page.tsx`
+  (fuera del alcance de las 5 páginas, pero mismo patrón repetido en el sitio).
+
+### Escrito directamente en mayúsculas en el JSX
+- `app/page.tsx:143,149,155` — "GUERREROS" / "TORNEOS" / "COMBATES", las tres etiquetas
+  del bloque de stats del hero.
+- `RankingContent.tsx:375` — "MMR MÁS ALTO".
+
+No se encontraron literales en mayúsculas en Torneos, Salón de la Fama, ni en los
+componentes de Comercio relevados (`FilterBar`, `ListingCard`, `HeroSection`) — en esos
+casos, si hay mayúsculas, probablemente vengan de `text-transform` en otro archivo
+compartido no incluido en este barrido.
+
+---
+
+## 4. Mismo dato mostrado dos veces en el mismo scroll
+
+- **Home, confirmado**: el hero (`app/page.tsx:138-157`, "Quick stats") muestra
+  jugadores/torneos/combates totales — y más abajo, `<StatsBar totalTorneos
+  totalJugadores .../>` (línea 176) muestra los mismos tres números de nuevo, a menos
+  de 20 líneas de scroll de distancia.
+- No se identificaron otros pares claros de duplicación exacta en Torneos, Comercio,
+  Jugadores o Salón de la Fama en este barrido — pero no se descarta que existan en
+  vistas con más estado (ej. filtros aplicados) no cubiertas acá.
+
+---
+
+## 5. Componentes duplicados (mismo tipo de bloque, implementación distinta)
+
+- **Card de torneo — NO está duplicado.** `components/TorneoCard.tsx` es un componente
+  compartido real, usado igual en `app/page.tsx`, `app/torneos/TorneosContent.tsx` y
+  `app/brackets/page.tsx`. Vale la pena señalarlo porque es la excepción, no la regla.
+
+- **Card de publicación de Comercio — duplicada 4 veces**, cada una con su propio JSX
+  en vez de un componente común:
+  - `components/market/ListingCard.tsx` (la "oficial", con tooltip, carrusel, todo el
+    detalle)
+  - `components/market/SimilaresGrid.tsx` (card chica propia, "ítems similares")
+  - `components/market/FeaturedCarousel.tsx` (card propia, carrusel destacado del home
+    de Comercio)
+  - `components/market/ItemDrawer.tsx` (card propia, panel lateral)
+
+  Las 4 repiten la misma lógica (imagen o ícono de respaldo, badge Vende/Busca, precio,
+  color por rareza) con valores hex ligeramente distintos entre sí (ver sección 1).
+
+- **Avatar circular con inicial — duplicado al menos 5 veces dentro de un solo archivo**
+  (`app/jugadores/RankingContent.tsx`): avatar del podio (línea 170), badge de medalla
+  en la fila top-3 (226), avatar de la fila de "Jugadores/Cuentas" con foto real +
+  fallback de inicial (322-325), avatar de la fila de "Rachas" (430) — cada uno con su
+  propio tamaño/borde/color hardcodeado, ninguno reutiliza un componente `Avatar`.
+
+- **Badge de rareza/tipo (Vende, Busca, Épico, etc.)** — se arma inline con el mismo
+  patrón (`padding`, `borderRadius`, `background` + `border` del mismo color con alfa)
+  repetido en `ListingCard.tsx`, `FilterBar.tsx` y `RankingContent.tsx` (badge de tier),
+  sin un componente `Badge` compartido en ninguna de las tres.
+
+---
+
+## Nota
+
+Esto es un inventario, no una lista de bugs — algunos de estos patrones (ej. la paleta
+propia de Comercio, los emoji de clase) fueron decisiones deliberadas de sesiones
+anteriores, no necesariamente errores. La Fase 1 (tokens) y las fases de layout deciden
+qué hacer con cada uno.
