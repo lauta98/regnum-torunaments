@@ -2496,6 +2496,7 @@ const aplicarDatos = (data: any, ctx?: { categoria?: string; rareza?: string }) 
                 <div style={{
                   background:'var(--dark-bg)', border:'1px solid var(--gold)',
                   borderRadius:14, padding:24, maxWidth:340, width:'100%', position:'relative',
+                  maxHeight:'calc(100vh - 40px)', overflowY:'auto',
                 }} onClick={e => e.stopPropagation()}>
                   <button onClick={() => setShowPreview(false)} style={{
                     position:'absolute', top:12, right:14,

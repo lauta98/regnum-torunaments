@@ -3,7 +3,11 @@
 // después de guardar en Supabase, en vez de postear a Discord directo.
 const GOLD = 0xd4af37
 
-type Embed = { title: string; description?: string; url?: string; color?: number; footer?: string }
+type Embed = {
+  title: string; description?: string; url?: string; color?: number; footer?: string
+  thumbnailUrl?: string | null   // ícono/foto chica, arriba a la derecha
+  author?: string | null         // "Publicado por X" arriba del título
+}
 
 export async function notifyDiscord(embed: Embed): Promise<void> {
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL
@@ -21,6 +25,8 @@ export async function notifyDiscord(embed: Embed): Promise<void> {
           color: embed.color ?? GOLD,
           footer: embed.footer ? { text: embed.footer } : undefined,
           timestamp: new Date().toISOString(),
+          thumbnail: embed.thumbnailUrl ? { url: embed.thumbnailUrl } : undefined,
+          author: embed.author ? { name: embed.author } : undefined,
         }],
       }),
     })
