@@ -81,7 +81,7 @@ export default async function SalonDeLaFamaPage() {
                     height: 176, position: 'relative', overflow: 'hidden',
                     background: torneo.imagen_url
                       ? `url(${torneo.imagen_url}) center/cover`
-                      : 'radial-gradient(120% 140% at 15% 0%, #241c08 0%, #120e04 45%, #0a0a0a 100%)',
+                      : 'var(--trophy-fallback-bg)',
                   }}>
                     {/* Marca de agua cuando todavía no hay foto propia: se ve
                         intencional, no como un espacio vacío/roto. */}
@@ -139,7 +139,7 @@ export default async function SalonDeLaFamaPage() {
                       // el color de clan.
                       const esEquipo = c.tipo === 'equipo'
                       const esClan = esEquipo && c.torneo.formato === '7v7'
-                      const rc = esClan ? '#5b8fd4' : (REINO_COLOR[p.reino as Reino] ?? 'var(--gold)')
+                      const rc = esClan ? 'var(--clan)' : (REINO_COLOR[p.reino as Reino] ?? 'var(--gold)')
                       return (
                         <Link
                           key={c.id}
@@ -147,9 +147,9 @@ export default async function SalonDeLaFamaPage() {
                           style={{
                             textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 12,
                             background: esClan
-                              ? 'linear-gradient(135deg, rgba(91,143,212,0.08), rgba(91,143,212,0.02))'
-                              : 'linear-gradient(135deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02))',
-                            border: `1px solid ${esClan ? 'rgba(91,143,212,0.28)' : 'rgba(212,175,55,0.22)'}`,
+                              ? 'linear-gradient(135deg, color-mix(in srgb, var(--clan) 8%, transparent), color-mix(in srgb, var(--clan) 2%, transparent))'
+                              : 'linear-gradient(135deg, color-mix(in srgb, var(--gold) 8%, transparent), color-mix(in srgb, var(--gold) 2%, transparent))',
+                            border: `1px solid ${esClan ? 'color-mix(in srgb, var(--clan) 28%, transparent)' : 'color-mix(in srgb, var(--gold) 22%, transparent)'}`,
                             borderRadius: 'var(--radius-md)',
                             padding: '10px 18px 10px 10px', minWidth: 190, flex: '1 1 190px',
                             transition: 'border-color 0.15s, background 0.15s',
@@ -158,7 +158,7 @@ export default async function SalonDeLaFamaPage() {
                           <div style={{ position: 'relative', flexShrink: 0 }}>
                             <div style={{
                               width: 56, height: 56, borderRadius: 14, overflow: 'hidden',
-                              background: `${rc}18`, border: `2px solid ${rc}88`,
+                              background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 53%, transparent)`,
                               display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
                             }}>
                               {c.foto_url
@@ -175,7 +175,7 @@ export default async function SalonDeLaFamaPage() {
                             )}
                           </div>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: esClan ? '#5b8fd4' : (c.torneo.trofeo?.color ?? 'var(--gold)'), fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.9 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 9, color: esClan ? 'var(--clan)' : (c.torneo.trofeo?.color ?? 'var(--gold)'), fontFamily: 'var(--font-display)', letterSpacing: 1.2, opacity: 0.9 }}>
                               <TrofeoBadge trofeo={c.torneo.trofeo} tipoClan={esClan} size="xs" />
                               {c.torneo.trofeo?.nombre ?? (esClan ? `CLAN CAMPEÓN — ${c.equipo_nombre}` : esEquipo ? `CAMPEÓN — ${c.equipo_nombre}` : 'CAMPEÓN')}
                               {c.torneo.trofeo && esEquipo && ` — ${c.equipo_nombre}`}

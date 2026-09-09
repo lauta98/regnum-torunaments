@@ -194,10 +194,10 @@ export default function Header() {
             <button onClick={() => setDropdownOpen(o => !o)} aria-haspopup="true" aria-expanded={dropdownOpen} style={{
               display: 'flex', alignItems: 'center', gap: 8, maxWidth: 160,
               background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${rc}33`, borderRadius: 8, padding: '5px 11px',
+              border: `1px solid color-mix(in srgb, ${rc} 20%, transparent)`, borderRadius: 8, padding: '5px 11px',
               cursor: 'pointer', color: 'var(--text-primary)',
             }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `${rc}22`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 13%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {avatarSrc(player)
                   ? <img src={avatarSrc(player)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Avatar de ${player.nickname_juego}`} />
                   : <span style={{ fontSize: 11, fontWeight: 700, color: rc }}>{player.nickname_juego?.[0]?.toUpperCase()}</span>}

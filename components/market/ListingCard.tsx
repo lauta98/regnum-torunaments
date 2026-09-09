@@ -41,34 +41,39 @@ const RARITY: Record<string, {
   cardBg     : string   // fondo sutil de la card completa
 }> = {
   normal    : {
+    // Gris propio del borde (200,200,200), distinto de --rarity-normal
+    // (#9CA3AF, más azulado) — no se fuerza el colapse, son grises distintos.
     border:'rgba(200,200,200,0.22)',    borderHover:'rgba(220,220,220,0.45)',
     glow:'none',
     imgGrad:'transparent',              nameColor:'#E8D9B8',
     cardBg:'var(--dark-card)',
   },
   especial  : {
-    border:'rgba(251,191,36,0.30)',     borderHover:'rgba(251,191,36,0.65)',
-    glow:'0 0 16px -4px rgba(251,191,36,0.35)',
-    imgGrad:'#FBBF24',                  nameColor:'#fbbf24',
-    cardBg:'rgba(251,191,36,0.05)',
+    border:'color-mix(in srgb, var(--rarity-special) 30%, transparent)',    borderHover:'color-mix(in srgb, var(--rarity-special) 65%, transparent)',
+    glow:'0 0 16px -4px color-mix(in srgb, var(--rarity-special) 35%, transparent)',
+    imgGrad:'var(--rarity-special)',    nameColor:'var(--rarity-special)',
+    cardBg:'color-mix(in srgb, var(--rarity-special) 5%, transparent)',
   },
   magico    : {
-    border:'rgba(74,222,128,0.35)',     borderHover:'rgba(74,222,128,0.7)',
-    glow:'0 0 16px -4px rgba(74,222,128,0.5)',
-    imgGrad:'#4ade80',                  nameColor:'#4ade80',
-    cardBg:'rgba(74,222,128,0.07)',
+    border:'color-mix(in srgb, var(--rarity-magic) 35%, transparent)',      borderHover:'color-mix(in srgb, var(--rarity-magic) 70%, transparent)',
+    glow:'0 0 16px -4px color-mix(in srgb, var(--rarity-magic) 50%, transparent)',
+    imgGrad:'var(--rarity-magic)',      nameColor:'var(--rarity-magic)',
+    cardBg:'color-mix(in srgb, var(--rarity-magic) 7%, transparent)',
   },
   epico     : {
-    border:'rgba(167,139,250,0.45)',    borderHover:'rgba(167,139,250,0.85)',
-    glow:'0 0 20px -4px rgba(167,139,250,0.6)',
-    imgGrad:'#8B5CF2',                  nameColor:'#a78bfa',
-    cardBg:'rgba(139,92,246,0.09)',
+    border:'color-mix(in srgb, var(--rarity-epic) 45%, transparent)',       borderHover:'color-mix(in srgb, var(--rarity-epic) 85%, transparent)',
+    glow:'0 0 20px -4px color-mix(in srgb, var(--rarity-epic) 60%, transparent)',
+    // nameColor es un tinte más claro del base, no la misma opacidad —
+    // queda como valor propio (#a78bfa), no se deriva con color-mix.
+    imgGrad:'var(--rarity-epic)',       nameColor:'#a78bfa',
+    cardBg:'color-mix(in srgb, var(--rarity-epic) 9%, transparent)',
   },
   legendario: {
-    border:'rgba(239,68,68,0.45)',      borderHover:'rgba(239,68,68,0.85)',
-    glow:'0 0 20px -4px rgba(239,68,68,0.6)',
-    imgGrad:'#EF4444',                  nameColor:'#f87171',
-    cardBg:'rgba(239,68,68,0.08)',
+    border:'color-mix(in srgb, var(--rarity-legendary) 45%, transparent)',  borderHover:'color-mix(in srgb, var(--rarity-legendary) 85%, transparent)',
+    glow:'0 0 20px -4px color-mix(in srgb, var(--rarity-legendary) 60%, transparent)',
+    // ídem epico: nameColor es un tinte más claro (#f87171), no colapsa.
+    imgGrad:'var(--rarity-legendary)',  nameColor:'#f87171',
+    cardBg:'color-mix(in srgb, var(--rarity-legendary) 8%, transparent)',
   },
 }
 
@@ -119,9 +124,9 @@ function TypeBadge({ type, small=false }:{ type:string; small?:boolean }) {
         fontWeight: 700,
         padding: small ? '2px 7px' : '3px 9px',
         borderRadius: 4,
-        background: sell ? '#1a5c2e' : '#0f3460',
-        color:       sell ? '#6EE89A' : '#7DC4FF',
-        border:      `1px solid ${sell ? '#2d9b4e' : '#1e6db5'}`,
+        background: sell ? 'var(--type-sell-bg)' : 'var(--type-busca-bg)',
+        color:       sell ? 'var(--success)' : 'var(--info)',
+        border:      `1px solid ${sell ? 'var(--type-sell-border)' : 'var(--type-busca-border)'}`,
       }}
     >
       {t(sell ? 'card.sells' : 'card.seeks')}
@@ -174,7 +179,7 @@ function PrecioDisplay({ priceGold, priceMoney, currencyLabel, size='md' }:{
 // ─── Tooltip panel ──────────────────────────────────────────────
 function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:string }) {
   const { t } = useLanguage()
-  const col = rc || '#C9A84C'
+  const col = rc || 'var(--gold)'
   const mods:string[] = []
   for (let i=1;i<=5;i++) { if (listing[`slot_${i}`]) mods.push(listing[`slot_${i}`]) }
   const lsd   = getLastSeen(listing.profiles?.last_sign_in_at||null)
@@ -231,7 +236,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
             {listing.dano_min_1 && (
               <div style={{ display:'flex', justifyContent:'space-between' }}>
                 <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>{t('card.damage')}</span>
-                <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'#fca5a5' }}>
+                <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'var(--stat-damage)' }}>
                   {listing.dano_min_1}–{listing.dano_max_1}{listing.bonus_xx?` +${listing.bonus_xx}`:''}
                 </span>
               </div>
@@ -239,7 +244,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
             {listing.armadura_base && (
               <div style={{ display:'flex', justifyContent:'space-between' }}>
                 <span style={{ fontSize:11, color:'rgba(255,255,255,0.38)' }}>{t('card.armor')}</span>
-                <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'#7dd3fc' }}>
+                <span style={{ fontSize:11, fontFamily:'monospace', fontWeight:700, color:'var(--stat-armor)' }}>
                   {listing.armadura_base}{listing.armadura_bonus?` +${listing.armadura_bonus}`:''}
                 </span>
               </div>
@@ -255,8 +260,8 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
         {mods.length>0 && (
           <div style={{ display:'flex', flexDirection:'column', gap:3, padding:'8px 0 0', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
             {mods.map((m,i)=>(
-              <div key={i} style={{ fontSize:11, color:'#5BC98B', fontFamily:'monospace', paddingLeft:10, position:'relative' }}>
-                <span style={{ position:'absolute', left:0, color:'#5BC98B66' }}>+</span>{formatSlot(m)}
+              <div key={i} style={{ fontSize:11, color:'var(--success)', fontFamily:'monospace', paddingLeft:10, position:'relative' }}>
+                <span style={{ position:'absolute', left:0, color:'color-mix(in srgb, var(--success) 40%, transparent)' }}>+</span>{formatSlot(m)}
               </div>
             ))}
           </div>
@@ -287,7 +292,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
               {listing.profiles?.username}
               {listing.profiles?.avg_rating>0 && <span style={{ color:'var(--gold)', fontSize:10, marginLeft:5 }}>⭐{listing.profiles.avg_rating.toFixed(1)}</span>}
             </div>
-            {ls && <div style={{ fontSize:10, color: isNow?'#5BC98B':'rgba(255,255,255,0.3)' }}>{ls}</div>}
+            {ls && <div style={{ fontSize:10, color: isNow?'var(--success)':'rgba(255,255,255,0.3)' }}>{ls}</div>}
           </div>
         </div>
       </div>
@@ -327,7 +332,7 @@ export default function ListingCard({
   const isCarousel = allImages.length > 1
 
 
-  const ac = GREY_CATS.has(listing.item_category) ? '#7A8A9A' : (rc || '#B8A157')
+  const ac = GREY_CATS.has(listing.item_category) ? 'var(--category-grey)' : (rc || 'var(--category-grey-alt)')
 
   const mods:string[] = []
   for (let i=1;i<=5;i++) { if (listing[`slot_${i}`]) mods.push(listing[`slot_${i}`]) }
@@ -459,12 +464,12 @@ export default function ListingCard({
             {listing.is_set ? (
               <span className="cinzel" style={{
                 fontSize:9, padding:'2px 8px', borderRadius:4, fontWeight:700, letterSpacing:'0.1em',
-                background:'rgba(109,40,217,0.4)', color:'#c4b5fd', border:'1px solid rgba(139,92,246,0.5)',
+                background:'var(--set-purple-bg)', color:'var(--set-purple)', border:'1px solid var(--set-purple-border)',
               }}>📦 SET</span>
             ) : rareza && rareza!=='normal' ? (
               <span className="cinzel" style={{
                 fontSize:9, padding:'2px 8px', borderRadius:4, fontWeight:700, letterSpacing:'0.1em',
-                background:`${rc}25`, color:rc!, border:`1px solid ${rc}55`,
+                background:`color-mix(in srgb, ${rc} 15%, transparent)`, color:rc!, border:`1px solid color-mix(in srgb, ${rc} 33%, transparent)`,
               }}>{RAREZA_LABEL[rareza]}</span>
             ) : null}
           </div>
@@ -478,7 +483,7 @@ export default function ListingCard({
               width:28, height:28, borderRadius:'50%', cursor:'pointer',
               background:'rgba(13,11,9,0.65)',
               border:'1px solid rgba(255,255,255,0.12)',
-              color: fav ? '#fb7185' : 'rgba(255,255,255,0.4)',
+              color: fav ? 'var(--favorite)' : 'rgba(255,255,255,0.4)',
               fontSize:14, display:'flex', alignItems:'center', justifyContent:'center',
               transition:'transform 0.15s, color 0.15s',
               transform: favLoad ? 'scale(0.8)' : 'scale(1)',
@@ -594,7 +599,7 @@ export default function ListingCard({
                 {setItems.slice(0,3).map((it:string,i:number) => (
                   <span key={i} style={{
                     fontSize:9, padding:'2px 8px', borderRadius:99,
-                    background:'rgba(109,40,217,0.28)', color:'#c4b5fd',
+                    background:'color-mix(in srgb, var(--set-purple-bg) 70%, transparent)', color:'var(--set-purple)',
                     border:'1px solid rgba(139,92,246,0.3)',
                     maxWidth:115, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
                   }}>{it}</span>
@@ -683,13 +688,13 @@ export default function ListingCard({
           {hasStats && (
             <div style={{ display:'flex', gap:14, flexShrink:0, flexWrap:'wrap' }}>
               {listing.dano_min_1 && (
-                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'#fca5a5', lineHeight:1.3 }}>
+                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'var(--stat-damage)', lineHeight:1.3 }}>
                   ⚔ {listing.dano_min_1}–{listing.dano_max_1}
                   {listing.bonus_xx && <span style={{ color:'var(--gold)', fontSize:10 }}> +{listing.bonus_xx}</span>}
                 </span>
               )}
               {listing.armadura_base && (
-                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'#7dd3fc', lineHeight:1.3 }}>
+                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'var(--stat-armor)', lineHeight:1.3 }}>
                   🛡 {listing.armadura_base}
                   {listing.armadura_bonus && <span style={{ color:'var(--gold)', fontSize:10 }}> +{listing.armadura_bonus}</span>}
                 </span>
@@ -705,7 +710,7 @@ export default function ListingCard({
                   fontSize:9.5, fontFamily:'monospace',
                   padding:'2px 7px', borderRadius:99,
                   background:'rgba(91,201,139,0.10)',
-                  color:'#5BC98B',
+                  color:'var(--success)',
                   border:'1px solid rgba(91,201,139,0.22)',
                   overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:170,
                 }}>+ {formatSlot(mod)}</span>
@@ -739,7 +744,7 @@ export default function ListingCard({
                 )}
               </div>
               {ls && (
-                <div style={{ fontSize:9, color: isNow?'#5BC98B':'var(--text-muted)', marginTop:1, lineHeight:1.2 }}>
+                <div style={{ fontSize:9, color: isNow?'var(--success)':'var(--text-muted)', marginTop:1, lineHeight:1.2 }}>
                   {isNow?'● ':''}{ls}
                 </div>
               )}

@@ -1,9 +1,9 @@
 import type { Reino, Clase, TournamentFormat, TournamentStatus, MatchStatus, BracketType } from './types'
 
 export const REINO_COLOR: Record<Reino, string> = {
-  Syrtis: '#4CAF50',
-  Ignis: '#F44336',
-  Alsius: '#2196F3',
+  Syrtis: 'var(--syrtis)',
+  Ignis: 'var(--ignis)',
+  Alsius: 'var(--alsius)',
 }
 
 export const REINO_EMOJI: Record<Reino, string> = {
@@ -28,24 +28,27 @@ export const FORMAT_LABEL: Record<TournamentFormat, string> = {
   '7v7': '7VS7',
 }
 
+// '1v1'/'3v3'/'7v7' no son reino/rareza/dorado/neutro — es una escala propia
+// (color por formato de torneo) que docs/design.md no contempla. '2v2'
+// coincide con dorado, se tokeniza; el resto queda literal a propósito.
 export const FORMAT_COLOR: Record<TournamentFormat, string> = {
   '1v1': '#8a2be2',
-  '2v2': '#d4af37',
+  '2v2': 'var(--gold)',
   '3v3': '#2196F3',
   '7v7': '#F44336',
 }
 
 export const STATUS_STYLE: Record<TournamentStatus, { label: string; color: string; bg: string }> = {
   draft:        { label: 'Borrador',      color: '#8A8A8A', bg: 'rgba(138,138,138,0.15)' },
-  inscripciones:{ label: 'Inscripciones', color: '#4CAF50', bg: 'rgba(76,175,80,0.15)' },
-  live:         { label: 'En Vivo',       color: '#F44336', bg: 'rgba(244,67,54,0.15)' },
+  inscripciones:{ label: 'Inscripciones', color: 'var(--syrtis)', bg: 'color-mix(in srgb, var(--syrtis) 15%, transparent)' },
+  live:         { label: 'En Vivo',       color: 'var(--ignis)', bg: 'color-mix(in srgb, var(--ignis) 15%, transparent)' },
   finalizado:   { label: 'Finalizado',    color: '#8A8A8A', bg: 'rgba(138,138,138,0.1)' },
 }
 
 export const MATCH_STATUS_STYLE: Record<MatchStatus, { label: string; color: string }> = {
-  pendiente: { label: 'Pendiente', color: '#d4af37' },
-  jugado:    { label: 'Jugado',    color: '#4CAF50' },
-  disputa:   { label: 'Disputa',   color: '#F44336' },
+  pendiente: { label: 'Pendiente', color: 'var(--gold)' },
+  jugado:    { label: 'Jugado',    color: 'var(--syrtis)' },
+  disputa:   { label: 'Disputa',   color: 'var(--ignis)' },
 }
 
 export const CLASES: Clase[] = [

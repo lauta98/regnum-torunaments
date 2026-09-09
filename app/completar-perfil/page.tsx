@@ -170,7 +170,7 @@ function CompletarPerfilPage() {
                 <button type="button" key={r} onClick={() => setReino(r)} style={{
                   flex: 1, padding: '10px 0', borderRadius: 8, cursor: 'pointer',
                   border: `2px solid ${reino === r ? REINO_COLOR[r] : 'var(--border)'}`,
-                  background: reino === r ? `${REINO_COLOR[r]}18` : 'transparent',
+                  background: reino === r ? `color-mix(in srgb, ${REINO_COLOR[r]} 9%, transparent)` : 'transparent',
                   color: reino === r ? REINO_COLOR[r] : 'var(--text-secondary)',
                   fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, transition: 'all 0.15s',
                 }}>{r}</button>

@@ -18,6 +18,22 @@
   --gold-light:     #f0d060;
   --gold-dark:      #8b6914;
   --gold-muted:     rgba(212, 175, 55, 0.12);
+  /* Fondo "vitrina de trofeos" — repetido igual en Home (Actividad reciente)
+     y en el podio de Ranking (puesto 1) */
+  --gold-glow-bg:   linear-gradient(160deg, #120f00, #1c1700);
+
+  /* Medallas — mismo trío (oro/plata/bronce) en el podio de Ranking y en
+     Salón de la Fama. Oro reusa --gold/--gold-glow-bg, plata y bronce son
+     valores propios que no existían como token todavía. */
+  --medal-silver:     #c0c0c0;
+  --medal-silver-bg:  linear-gradient(160deg, #0d0d0d, #141414);
+  --medal-bronze:     #cd7f32;
+  --medal-bronze-bg:  linear-gradient(160deg, #0e0a00, #141008);
+
+  /* Fondo de card de torneo en Salón de la Fama cuando no tiene foto propia
+     — mismo propósito que --gold-glow-bg, gradiente distinto, no se
+     fuerzan al mismo valor. */
+  --trophy-fallback-bg: radial-gradient(120% 140% at 15% 0%, #241c08 0%, #120e04 45%, #0a0a0a 100%);
 
   /* Superficies interactivas (inputs, selects, textareas) */
   --bg-input:            #161310;
@@ -46,10 +62,42 @@
   --purple-light:   #b060ff;
   --purple-muted:   rgba(138, 43, 226, 0.2);
 
-  /* Reinos */
+  /* Reinos — mismo valor de antes, sin cambios */
   --syrtis: #4CAF50;
   --ignis:  #F44336;
   --alsius: #2196F3;
+
+  /* Rareza (Comercio) — un token por tier. Los usos con opacidad ya
+     calculada a mano (bordes/fondos/glow por rareza) se recomponen con
+     color-mix() sobre estos, en vez de duplicar un token por variante. */
+  --rarity-normal:    #9CA3AF;
+  --rarity-special:   #FB923C;  /* antes también #FBBF24 en ListingCard.tsx — colapsado a #FB923C, el más repetido */
+  --rarity-magic:     #4ade80;  /* antes también #22C55E suelto — colapsado a #4ade80, el que usa ListingCard.tsx (la card "oficial") */
+  --rarity-epic:      #8B5CF6;  /* antes #8B5CF6 en 5 archivos y #8B5CF2 en ListingCard — colapsado a #8B5CF6 */
+  --rarity-legendary: #EF4444;
+
+  /* Estado — no es reino ni rareza, pero se repite igual en todo el sitio */
+  --success: #5BC98B;   /* antes también #6EE89A (texto del badge "Vende") y #4ade80/#22C55E sueltos — colapsados acá */
+  --error:   #E24B4A;   /* "rechazado"/error de Comercio y paneles de admin */
+  --info:    #7DC4FF;   /* badge "Busca" — antes también #5B9BDF suelto en FilterBar, colapsado acá */
+  --clan:    #5b8fd4;   /* campeón de clan (7v7) en Salón de la Fama, distinto de Alsius */
+
+  /* Fondo/borde oscuro del badge Vende/Busca (chip sólido, no el texto) */
+  --type-sell-bg:      #1a5c2e;
+  --type-sell-border:  #2d9b4e;
+  --type-busca-bg:     #0f3460;
+  --type-busca-border: #1e6db5;
+
+  /* Comercio — semánticos que se repiten en varias cards sin ser
+     reino/rareza/dorado */
+  --stat-damage: #fca5a5;   /* daño físico/mágico */
+  --stat-armor:  #7dd3fc;   /* armadura */
+  --category-grey:        #7A8A9A;  /* joyería/crafting/minerales sin rareza marcada */
+  --category-grey-alt:    #B8A157;  /* variante dorada-apagada, mismo rol en otro archivo */
+  --set-purple:      #c4b5fd;
+  --set-purple-bg:   rgba(109,40,217,0.4);
+  --set-purple-border: rgba(139,92,246,0.5);
+  --favorite: #fb7185;
 
   /* Text */
   --text-primary:   #e8e8e8;
@@ -69,6 +117,33 @@
   --tier-silver:    #9e9e9e;
   --tier-bronze:    #8d6e63;
   --tier-iron:      #606060;
+}
+
+/* ── Tema de Comercio ──────────────────────────────────────────────
+   Paleta cálida propia, deliberada (ver componentes de components/market/:
+   "el frío moderno no encaja con un MMORPG medieval"). Sobrescribe acá los
+   MISMOS nombres de token que usa el resto del sitio — los componentes de
+   Comercio siguen escribiendo var(--bg-card)/var(--gold)/etc. como
+   cualquier otro, la diferencia la da este scope. Si en la Fase 5 se
+   decide unificar, borrar este bloque alcanza: Comercio hereda la escala
+   general sin tocar un solo componente.
+   Se aplica envolviendo las rutas de /market en app/market/layout.tsx con
+   className="theme-market". */
+.theme-market {
+  --bg-surface:    #1A1510;
+  --bg-card:       #211B14;
+  --bg-card-hover: #2a2118;
+  --border:        rgba(255, 255, 255, 0.08);  /* antes var(--dark-border) sin definir en ningún lado — no tenía valor propio, caía a currentColor por accidente */
+  --gold:          #C9A84C;
+  --gold-light:    #f0d060;
+
+  /* Alias para lo que las cards de Comercio ya llamaban var(--dark-card) /
+     var(--dark-surface) / var(--dark-border) — mismo valor que arriba,
+     dos nombres por compatibilidad hasta terminar de unificar el naming
+     en las fases de layout. */
+  --dark-card:    var(--bg-card);
+  --dark-surface: var(--bg-surface);
+  --dark-border:  var(--border);
 }
 
 * {

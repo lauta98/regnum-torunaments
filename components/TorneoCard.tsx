@@ -10,7 +10,7 @@ import TrofeoBadge from './TrofeoBadge'
  *  color/ícono principal sale de las subclases permitidas (ver
  *  lib/constants.ts:temaTorneo) y el formato queda como dato secundario. */
 export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: any; showCreator?: boolean }) {
-  const fc = FORMAT_COLOR[t.formato as TournamentFormat] ?? '#d4af37'
+  const fc = FORMAT_COLOR[t.formato as TournamentFormat] ?? 'var(--gold)'
   const st = STATUS_STYLE[t.estado as TournamentStatus]
   const tema = temaTorneo(t.subclases_permitidas as Clase[] | null)
   const mainColor = tema?.color ?? fc
@@ -75,7 +75,7 @@ export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: 
               flexShrink: 0, background: st.bg, color: st.color, padding: '3px 9px', borderRadius: 6,
               fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 5,
             }}>
-              {t.estado === 'live' && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#F44336' }} />}
+              {t.estado === 'live' && <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--ignis)' }} />}
               {st.label}
             </span>
           </div>
@@ -111,7 +111,7 @@ export default function TorneoCard({ torneo: t, showCreator = true }: { torneo: 
               </div>
               <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>por <span style={{ color: 'var(--text-secondary)' }}>{t.creator.nickname_juego}</span></span>
               {t.organizador_verificado && (
-                <span title="Organizador verificado" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#4CAF50' }}>
+                <span title="Organizador verificado" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: 'var(--syrtis)' }}>
                   ✓ Verificado
                 </span>
               )}

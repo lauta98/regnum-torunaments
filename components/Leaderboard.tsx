@@ -101,7 +101,7 @@ export default function Leaderboard({ personajes: initialPersonajes }: { persona
 
         return (
           <Link key={p.id} href={`/jugadores/${playerId}`} style={{ textDecoration: 'none' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 54px 38px', padding: '9px 14px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', gap: 8, transition: 'background 0.15s', cursor: 'pointer', borderLeft: `3px solid ${rc}44` }}
+            <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 54px 38px', padding: '9px 14px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', gap: 8, transition: 'background 0.15s', cursor: 'pointer', borderLeft: `3px solid color-mix(in srgb, ${rc} 27%, transparent)` }}
               onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.03)')}
               onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}>
 

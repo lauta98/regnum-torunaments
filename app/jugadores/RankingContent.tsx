@@ -30,7 +30,7 @@ const CLASE_SVG: Record<string, React.ReactNode> = {
 }
 
 function WinrateBar({ value }: { value: number }) {
-  const color = value >= 70 ? '#4CAF50' : value >= 55 ? '#d4af37' : value >= 45 ? '#909090' : '#F44336'
+  const color = value >= 70 ? 'var(--syrtis)' : value >= 55 ? 'var(--gold)' : value >= 45 ? 'var(--text-secondary)' : 'var(--ignis)'
   return (
     <div>
       <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color, fontWeight: 600 }}>{value}%</span>
@@ -40,9 +40,9 @@ function WinrateBar({ value }: { value: number }) {
 }
 
 const MEDAL_COLORS: Record<number, { main: string; bg: string; glow: string; label: string }> = {
-  1: { main: '#d4af37', bg: 'linear-gradient(160deg, #120f00, #1c1700)', glow: 'rgba(212,175,55,0.20)', label: '🥇' },
-  2: { main: '#c0c0c0', bg: 'linear-gradient(160deg, #0d0d0d, #141414)', glow: 'rgba(192,192,192,0.12)', label: '🥈' },
-  3: { main: '#cd7f32', bg: 'linear-gradient(160deg, #0e0a00, #141008)', glow: 'rgba(205,127,50,0.12)', label: '🥉' },
+  1: { main: 'var(--gold)', bg: 'var(--gold-glow-bg)', glow: 'rgba(212,175,55,0.20)', label: '🥇' },
+  2: { main: 'var(--medal-silver)', bg: 'var(--medal-silver-bg)', glow: 'rgba(192,192,192,0.12)', label: '🥈' },
+  3: { main: 'var(--medal-bronze)', bg: 'var(--medal-bronze-bg)', glow: 'rgba(205,127,50,0.12)', label: '🥉' },
 }
 
 function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos').TrofeoGrupo[]; size?: 'xs' | 'sm' }) {
@@ -167,7 +167,7 @@ export default function RankingContent() {
                         fontSize: rank === 1 ? 22 : 17,
                       }}>{m.label}</div>
                       <div style={{ position: 'relative' }}>
-                        <div style={{ width: rank === 1 ? 50 : 42, height: rank === 1 ? 50 : 42, borderRadius: '50%', background: `${rc}20`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 17 : 14, fontWeight: 700, color: rc }}>
+                        <div style={{ width: rank === 1 ? 50 : 42, height: rank === 1 ? 50 : 42, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 12.5%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 17 : 14, fontWeight: 700, color: rc }}>
                           {p.nickname_juego?.[0]?.toUpperCase()}
                         </div>
                         <div style={{ position: 'absolute', bottom: -4, right: -6 }}><KingdomShield reino={p.reino} size={14} /></div>
@@ -233,13 +233,13 @@ export default function RankingContent() {
                       </div>
                       {/* Nombre */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}${isTop ? 'bb' : '44'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: rc, flexShrink: 0 }}>
+                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} ${isTop ? '73%' : '27%'}, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: rc, flexShrink: 0 }}>
                           {p.nickname_juego?.[0]?.toUpperCase()}
                         </div>
                         <div>
                           <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: p.player?.es_premium ? estiloPremium(p.player.premium_color, p.player.premium_bg).color : 'var(--text-primary)', letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 4 }}>
                             {p.nickname_juego}
-                            {p.verificado && <span style={{ fontSize: 10, color: '#2196F3' }} title="Personaje verificado">✓</span>}
+                            {p.verificado && <span style={{ fontSize: 10, color: 'var(--alsius)' }} title="Personaje verificado">✓</span>}
                             <PremiumBadge esPremium={p.player?.es_premium} color={p.player?.premium_color} size={11} />
                             <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
                           </div>
@@ -361,8 +361,8 @@ export default function RankingContent() {
             const rc = REINO_COLOR[reino as Reino]
             const totalTiers = tiers.reduce((s: number, x: any) => s + x.n, 0) || 1
             return (
-              <div key={reino} style={{ background: 'var(--bg-card)', border: `1px solid ${rc}33`, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: `1px solid ${rc}22`, background: `linear-gradient(135deg, ${rc}14, transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div key={reino} style={{ background: 'var(--bg-card)', border: `1px solid color-mix(in srgb, ${rc} 20%, transparent)`, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+                <div style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${rc} 13%, transparent)`, background: `linear-gradient(135deg, color-mix(in srgb, ${rc} 8%, transparent), transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <KingdomShield reino={reino} size={28} />
                   <div>
                     <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: rc, letterSpacing: 0.5 }}>{reino}</div>
@@ -427,7 +427,7 @@ export default function RankingContent() {
                 <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 100px 90px', padding: '12px 20px', borderBottom: i < rachas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
                   <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: rc, flexShrink: 0 }}>
+                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: rc, flexShrink: 0 }}>
                       {p.nickname_juego?.[0]?.toUpperCase()}
                     </div>
                     <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
@@ -436,7 +436,7 @@ export default function RankingContent() {
                     <KingdomShield reino={p.reino} size={16} />
                     <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino}</span>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: '#4CAF50' }}>🔥 {p.winstreak}</span>
+                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--syrtis)' }}>🔥 {p.winstreak}</span>
                   <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {p.mmr}</span>
                 </div>
               </Link>

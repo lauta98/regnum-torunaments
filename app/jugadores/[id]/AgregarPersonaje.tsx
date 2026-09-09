@@ -104,7 +104,7 @@ export default function AgregarPersonaje({ playerId }: { playerId: string }) {
                 <label className="field-label">REINO</label>
                 <div style={{ display: 'flex', gap: 6 }}>
                   {REINOS.map(r => (
-                    <button type="button" key={r} onClick={() => setReino(r)} style={{ flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: `2px solid ${reino === r ? REINO_COLOR[r] : 'var(--border)'}`, background: reino === r ? `${REINO_COLOR[r]}18` : 'transparent', color: reino === r ? REINO_COLOR[r] : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700 }}>{r}</button>
+                    <button type="button" key={r} onClick={() => setReino(r)} style={{ flex: 1, padding: '8px 0', borderRadius: 'var(--radius-sm)', cursor: 'pointer', border: `2px solid ${reino === r ? REINO_COLOR[r] : 'var(--border)'}`, background: reino === r ? `color-mix(in srgb, ${REINO_COLOR[r]} 9%, transparent)` : 'transparent', color: reino === r ? REINO_COLOR[r] : 'var(--text-secondary)', fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700 }}>{r}</button>
                   ))}
                 </div>
               </div>

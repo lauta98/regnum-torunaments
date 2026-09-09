@@ -108,7 +108,7 @@ export default function PersonajesYHistorial({
               {/* Personaje info */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ position: 'relative', flexShrink: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: `${rc}18`, border: `2px solid ${rc}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>
                     {CLASE_ICON[p.clase]}
                   </div>
                   {SHIELD_SRC[p.reino] && (

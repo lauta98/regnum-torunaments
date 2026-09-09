@@ -36,9 +36,9 @@ interface StatsBarProps {
 
 export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }: StatsBarProps) {
   const stats = [
-    { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: '#d4af37', bg: '/hero-torneos.jpg',   bgSize: '160%', bgPos: '53% 30%' },
-    { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: '#4CAF50', bg: '/hero-jugadores.jpg', bgSize: '150%', bgPos: '58% 26%' },
-    { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: '#F44336', bg: '/hero-combates.jpg',  bgSize: '160%', bgPos: '50% 62%' },
+    { icon: <IconTrophy />,   label: 'Torneos Jugados',       value: totalTorneos.toLocaleString('es-AR'),   delta: 'históricos', color: 'var(--gold)', bg: '/hero-torneos.jpg',   bgSize: '160%', bgPos: '53% 30%' },
+    { icon: <IconPeople />,   label: 'Jugadores Registrados', value: totalJugadores.toLocaleString('es-AR'), delta: 'en rankings',  color: 'var(--syrtis)', bg: '/hero-jugadores.jpg', bgSize: '150%', bgPos: '58% 26%' },
+    { icon: <IconSwords />,   label: 'Combates Registrados',  value: totalMatches.toLocaleString('es-AR'),   delta: 'disputados',  color: 'var(--ignis)', bg: '/hero-combates.jpg',  bgSize: '160%', bgPos: '50% 62%' },
   ]
 
   return (
@@ -70,7 +70,7 @@ export default function StatsBar({ totalTorneos, totalJugadores, totalMatches }:
           </div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1, marginBottom: 4 }}>{value}</div>
           <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>
-          <div style={{ fontSize: 11, color: '#4CAF50' }}>{delta}</div>
+          <div style={{ fontSize: 11, color: 'var(--syrtis)' }}>{delta}</div>
         </div>
       ))}
     </div>

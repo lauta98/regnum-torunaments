@@ -199,7 +199,7 @@ export default async function HomePage() {
                     position: 'relative', overflow: 'hidden', height: '100%',
                     backgroundImage: c.foto_url
                       ? `linear-gradient(180deg, rgba(8,6,2,0.55) 0%, rgba(8,6,2,0.82) 55%, rgba(8,6,2,0.96) 100%), url('${c.foto_url}')`
-                      : 'linear-gradient(160deg, #120f00, #1c1700)',
+                      : 'var(--gold-glow-bg)',
                     backgroundSize: 'cover',
                     backgroundPosition: 'center 30%',
                     border: '1px solid rgba(212,175,55,0.45)',
