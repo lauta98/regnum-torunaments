@@ -229,3 +229,43 @@ tokens van a cubrir el repo entero aunque el rediseño visual sea solo de las 5 
  (resto: 26 valores usados 1 sola vez — sombras/gradientes puntuales, se listan al
  tokenizar cada componente si hace falta un token nuevo)
 ```
+
+## 7. Bug preexistente — auth colgada sin feedback (no relacionado a colores)
+
+Causa: el patrón de auth-check client-side no tiene `.catch()` ni manejo de
+rechazo. Si `supabase.auth.getUser()` no resuelve (falla de red, timeout del
+lado de Supabase, lo que sea), el `.then()`/`await` que decide `router.push('/login')`
+nunca se ejecuta, y el componente queda para siempre en su estado inicial de
+loading:
+
+```ts
+supabase.auth.getUser().then(({ data }) => {
+  if (!data.user) { router.push('/login'); return }
+  // ...
+})
+```
+o la variante `await` equivalente, sin `try/catch` alrededor.
+
+### Reproducido directamente (visto fallar en el navegador)
+Sin sesión iniciada, ambas páginas se quedan en "Cargando..." indefinidamente
+al abrirlas — no hay error, no hay redirect a `/login`, no hay timeout
+(esperado 8s+ sin cambio de estado):
+- `app/market/nuevo/page.tsx`
+- `app/market/watchlist/page.tsx`
+
+### Inferido por lectura de código — NO reproducido en navegador
+Mismo patrón exacto (`getUser()` sin `.catch()` gateando un estado de
+loading), encontrado por grep, no abierto ni probado en el navegador. Puede
+compartir la misma falla o no:
+- `app/market/mis-listings/page.tsx`
+- `app/market/mis-listings/[id]/editar/page.tsx`
+- `app/market/configuracion/page.tsx`
+- `app/market/elegir-nombre/page.tsx`
+- `app/market/calificar/[txId]/page.tsx`
+- `app/market/admin/page.tsx`
+- `app/market/transacciones/page.tsx`
+
+`app/market/favoritos/page.tsx` usa `getUser()` del lado del servidor con
+`redirect()` — mecanismo distinto, no comparte este riesgo.
+
+No es parte de la Fase 1 (tokens de color) — queda anotado para atender aparte.
