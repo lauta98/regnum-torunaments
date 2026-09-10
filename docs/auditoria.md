@@ -230,42 +230,64 @@ tokens van a cubrir el repo entero aunque el rediseño visual sea solo de las 5 
  tokenizar cada componente si hace falta un token nuevo)
 ```
 
-## 7. Bug preexistente — auth colgada sin feedback (no relacionado a colores)
+## 7. Retractado — no era un bug de la app (era la pestaña de pruebas)
 
-Causa: el patrón de auth-check client-side no tiene `.catch()` ni manejo de
-rechazo. Si `supabase.auth.getUser()` no resuelve (falla de red, timeout del
-lado de Supabase, lo que sea), el `.then()`/`await` que decide `router.push('/login')`
-nunca se ejecuta, y el componente queda para siempre en su estado inicial de
-loading:
+**Esta sección decía originalmente que `market/nuevo` y `market/watchlist`
+se quedaban colgadas en "Cargando..." para un usuario sin sesión. Se
+reinvestigó a fondo (rama `fix/auth-gate`) y no es un bug de la aplicación**
+— es un artefacto de la pestaña de navegador usada para las pruebas
+anteriores, que llevaba horas de navegación y JS inyectado en la misma
+sesión.
 
-```ts
-supabase.auth.getUser().then(({ data }) => {
-  if (!data.user) { router.push('/login'); return }
-  // ...
-})
-```
-o la variante `await` equivalente, sin `try/catch` alrededor.
+Evidencia del descarte:
+- `getUser()` aislado (SDK puro, sin la app) resuelve en ~1.3s con la
+  respuesta correcta (`Auth session missing!`).
+- `createBrowserClient` de `@supabase/ssr` aislado, incluso con dos
+  instancias concurrentes contra el mismo storage (como hace la app real:
+  `Header.tsx` + la página crean cada uno su propio cliente), también
+  resuelve al instante.
+- Con el dev server reiniciado en limpio (`.next` borrado, proceso nuevo) y
+  navegación confirmada como real (variable global en `window` no sobrevive
+  al `navigate()`), **una pestaña nueva del navegador abre `/market/nuevo`
+  y redirige correctamente a `/login`**. La pestaña vieja, con la misma URL,
+  seguía colgada.
+- `navigator.locks.query()`, `localStorage`, `sessionStorage`, Service
+  Workers e IndexedDB no mostraron ninguna diferencia entre la pestaña que
+  fallaba y las que no. Se confirmó además que las pestañas SÍ comparten
+  cookies entre sí (una cookie seteada en una pestaña aparece en la otra),
+  así que la diferencia tampoco es "una pestaña nueva arranca sin cookies".
+- Las 7 páginas que habían quedado "por confirmar" (`mis-listings`,
+  `mis-listings/[id]/editar`, `configuracion`, `elegir-nombre`,
+  `calificar/[txId]`, `admin`, `transacciones`) se probaron todas en
+  pestaña limpia: las 9 en total redirigen a `/login` sin problema.
+- Investigación más profunda con logging temporal en el código real
+  (revertido después) reveló el mecanismo exacto en la pestaña que sí
+  fallaba: **`getUser()` resuelve correctamente** (`{user: null}`, sin
+  colgarse) y el código sí llama a `router.push('/login')` sin tirar
+  excepción — pero la navegación **no ocurre**: `window.location.href`
+  se queda en `/market/nuevo`. `history.pushState()` nativo del navegador
+  sí funciona en esa misma pestaña. O sea que no es un problema de
+  Supabase ni de red en absoluto — es el router de cliente de Next.js
+  (App Router) que deja de aplicar navegaciones soft después de una
+  sesión de navegador extremadamente larga (horas, decenas de
+  `navigate()` + Fast Refresh de Turbopack en la misma pestaña). No se
+  logró identificar la causa exacta dentro del router de Next, y no
+  reproduce en una pestaña nueva ni parece un patrón de uso real de un
+  usuario normal.
 
-### Reproducido directamente (visto fallar en el navegador)
-Sin sesión iniciada, ambas páginas se quedan en "Cargando..." indefinidamente
-al abrirlas — no hay error, no hay redirect a `/login`, no hay timeout
-(esperado 8s+ sin cambio de estado):
-- `app/market/nuevo/page.tsx`
-- `app/market/watchlist/page.tsx`
+El patrón sin `.catch()` en el `getUser()` client-side (mencionado en la
+versión original de esta sección) sigue existiendo en el código y no es
+mala práctica arreglarlo, pero queda descartado como causa: `getUser()`
+resuelve bien, nunca se rechaza. La causa real identificada (router de
+Next.js dejando de navegar tras una sesión de pestaña muy larga) no
+tiene una solución de código razonable — no es un bug de este repo, y no
+reproduce para un usuario real. No se tocó código de la app a partir de
+este hallazgo.
 
-### Inferido por lectura de código — NO reproducido en navegador
-Mismo patrón exacto (`getUser()` sin `.catch()` gateando un estado de
-loading), encontrado por grep, no abierto ni probado en el navegador. Puede
-compartir la misma falla o no:
-- `app/market/mis-listings/page.tsx`
-- `app/market/mis-listings/[id]/editar/page.tsx`
-- `app/market/configuracion/page.tsx`
-- `app/market/elegir-nombre/page.tsx`
-- `app/market/calificar/[txId]/page.tsx`
-- `app/market/admin/page.tsx`
-- `app/market/transacciones/page.tsx`
-
-`app/market/favoritos/page.tsx` usa `getUser()` del lado del servidor con
-`redirect()` — mecanismo distinto, no comparte este riesgo.
-
-No es parte de la Fase 1 (tokens de color) — queda anotado para atender aparte.
+**Sin fallback si `router.push('/login')` no navega:** confirmado en las
+9 páginas (las 2 reproducidas + las 7 de la lista de sospecha) — ninguna
+tiene un camino alternativo. Es `router.push('/login')` o nada: sin
+`window.location.href` de respaldo, sin mensaje de error visible, sin
+timeout, sin reintento. Los pocos `catch` presentes en esos archivos son
+de lógica no relacionada (compresión de imagen, canvas). Anotado para
+que quede junto con el resto del patrón — no se toca en esta rama.
