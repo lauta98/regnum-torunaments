@@ -97,7 +97,11 @@ export default function CompartirContenido() {
 
   return (
     <>
-      <button type="button" onClick={abrir} className="btn btn-primary" style={{ padding: '10px 18px', fontSize: 12 }}>
+      <button type="button" onClick={abrir} style={{
+        padding: '10px 18px', cursor: 'pointer', background: 'var(--gold)', color: '#050505',
+        border: '1px solid var(--gold-light)', fontFamily: 'var(--font-mono)', fontSize: 11,
+        fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+      }}>
         + Compartir
       </button>
 

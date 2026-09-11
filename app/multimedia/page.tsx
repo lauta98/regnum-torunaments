@@ -8,6 +8,15 @@ import CanalesComunidad from './CanalesComunidad'
 
 export const metadata: Metadata = { title: 'Multimedia' }
 
+function IconEye({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  )
+}
+
 // Página pública, nada personalizado por usuario en el Server Component
 // (el botón "Compartir" resuelve su propia sesión aparte, en un client
 // component) — cachear 60s en vez de pegarle a Twitch + Supabase en
@@ -52,45 +61,48 @@ export default async function MultimediaPage() {
     <>
       <Header />
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 28, flexWrap: 'wrap', gap: 12, borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
           <div>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 900, color: 'var(--text-primary)', letterSpacing: 1.5 }}>
-              Multimedia
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <span style={{ width: 6, height: 6, background: 'var(--gold)', flexShrink: 0 }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, letterSpacing: '0.25em', color: 'var(--gold)', textTransform: 'uppercase' }}>Multimedia</span>
+            </div>
+            <h1 style={{ fontFamily: 'var(--font-display-v2)', fontSize: 30, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+              Streams y clips de la comunidad
             </h1>
-            <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
-              Videos, streams y canales de la comunidad
+            <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, color: 'var(--text-secondary)', marginTop: 6 }}>
+              Videos, streams en vivo y canales de la comunidad
             </p>
           </div>
           <CompartirContenido />
         </div>
 
         {streamersEnVivo.length > 0 && (
-          <div style={{ marginBottom: 32 }}>
+          <div style={{ marginBottom: 36 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F44336', boxShadow: '0 0 8px #F44336' }} />
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>EN VIVO AHORA</span>
+              <span style={{ width: 7, height: 7, background: '#F44336' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-primary)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>En vivo ahora</span>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
               {streamersEnVivo.map(s => (
                 <a key={s.username} href={`https://twitch.tv/${s.username}`} target="_blank" rel="noopener noreferrer" style={{
                   display: 'block', textDecoration: 'none', background: 'var(--bg-card)',
-                  border: '1px solid rgba(244,67,54,0.4)', borderRadius: 'var(--radius-md)',
-                  boxShadow: '0 0 20px rgba(244,67,54,0.12)', overflow: 'hidden',
+                  border: '1px solid rgba(244,67,54,0.4)', overflow: 'hidden',
                 }}>
                   <div style={{ position: 'relative', aspectRatio: '16/9', background: 'var(--bg-surface)' }}>
                     <img src={s.thumbnailUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span style={{ position: 'absolute', top: 8, left: 8, background: '#F44336', color: '#fff', fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, padding: '3px 8px', borderRadius: 4 }}>
-                      🔴 EN VIVO
+                    <span style={{ position: 'absolute', top: 8, left: 8, display: 'flex', alignItems: 'center', gap: 5, background: '#F44336', color: '#fff', fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 9, letterSpacing: '0.08em', padding: '3px 8px' }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} /> EN VIVO
                     </span>
-                    <span style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(10,10,10,0.75)', color: 'var(--text-primary)', fontSize: 10, padding: '2px 7px', borderRadius: 4 }}>
-                      👁 {s.espectadores}
+                    <span style={{ position: 'absolute', bottom: 8, right: 8, display: 'flex', alignItems: 'center', gap: 4, background: 'rgba(10,10,10,0.8)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 10, padding: '2px 7px' }}>
+                      <IconEye size={11} /> {s.espectadores}
                     </span>
                   </div>
                   <div style={{ padding: '12px 14px' }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>
+                    <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>
                       {s.jugador?.discord_username ?? s.jugador?.nickname_juego ?? s.username}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {s.titulo}
                     </div>
                   </div>
@@ -101,23 +113,23 @@ export default async function MultimediaPage() {
         )}
 
         {(streamers?.length ?? 0) > 0 && (
-          <div style={{ marginBottom: 32 }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
-              CANALES DE LA COMUNIDAD
+          <div style={{ marginBottom: 36 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>
+              Canales de la comunidad
             </div>
             <CanalesComunidad streamers={streamersOrdenados} enVivoUsernames={usernamesEnVivo} />
           </div>
         )}
 
         <div>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
-            ÚLTIMOS COMPARTIDOS
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>
+            Últimos compartidos
           </div>
           <HighlightsGrid inicial={highlights ?? []} total={count ?? 0} />
         </div>
       </main>
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginTop: 40 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 40 }}>
+        CoR Tournament Stats © 2026 — Champions of Regnum Community
       </footer>
     </>
   )

@@ -32,22 +32,21 @@ export default function CanalesComunidad({ streamers, enVivoUsernames }: { strea
           return (
             <div key={s.id} style={{
               display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px',
-              background: 'var(--bg-card)', border: `1px solid ${enVivo ? 'rgba(244,67,54,0.4)' : 'var(--border-gold)'}`,
-              borderRadius: 'var(--radius-md)', boxShadow: enVivo ? '0 0 16px rgba(244,67,54,0.12)' : 'var(--shadow-card)',
+              background: 'var(--bg-card)', border: `1px solid ${enVivo ? 'rgba(244,67,54,0.4)' : 'var(--border)'}`,
             }}>
-              <div style={{ position: 'relative', width: 36, height: 36, borderRadius: '50%', overflow: 'hidden', flexShrink: 0, background: 'rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ position: 'relative', width: 36, height: 36, overflow: 'hidden', flexShrink: 0, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {s.avatar_url
                   ? <img src={s.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 13, fontFamily: 'var(--font-display)', color: 'var(--gold)' }}>{(s.discord_username ?? s.nickname_juego ?? '?')[0]?.toUpperCase()}</span>}
+                  : <span style={{ fontSize: 13, fontFamily: 'var(--font-display-v2)', color: 'var(--gold)' }}>{(s.discord_username ?? s.nickname_juego ?? '?')[0]?.toUpperCase()}</span>}
                 {enVivo && (
-                  <span style={{ position: 'absolute', bottom: -1, right: -1, width: 10, height: 10, borderRadius: '50%', background: '#F44336', border: '2px solid var(--bg-card)' }} />
+                  <span style={{ position: 'absolute', bottom: -1, right: -1, width: 9, height: 9, background: '#F44336', border: '2px solid var(--bg-card)' }} />
                 )}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {s.discord_username ?? s.nickname_juego ?? 'Jugador'}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                   {s.twitch_username && (
                     <a href={`https://twitch.tv/${s.twitch_username}`} target="_blank" rel="noopener noreferrer" style={{ display: 'flex' }}><TwitchIcon size={14} /></a>
                   )}
@@ -64,7 +63,11 @@ export default function CanalesComunidad({ streamers, enVivoUsernames }: { strea
         })}
       </div>
       {visibles < streamers.length && (
-        <button onClick={() => setVisibles(v => v + PAGE_SIZE)} className="btn btn-ghost-gold" style={{ margin: '16px auto 0', display: 'block' }}>
+        <button onClick={() => setVisibles(v => v + PAGE_SIZE)} style={{
+          margin: '16px auto 0', display: 'block', padding: '10px 24px', cursor: 'pointer',
+          background: 'var(--bg-card)', border: '1px solid var(--dark-border-gold)', color: 'var(--gold)',
+          fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase',
+        }}>
           Cargar más ({streamers.length - visibles} restantes)
         </button>
       )}
