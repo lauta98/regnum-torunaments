@@ -3,7 +3,7 @@ function SkeletonCard() {
     <div style={{
       background: 'var(--dark-card)',
       border: '1px solid var(--dark-border)',
-      borderRadius: 10, overflow: 'hidden',
+      overflow: 'hidden',
     }}>
       {/* Image area */}
       <div style={{ height: 120, background: 'var(--dark-surface)', position: 'relative', overflow: 'hidden' }}>
@@ -42,7 +42,6 @@ export default function SkeletonGrid({ count = 12 }: { count?: number }) {
 
       <style>{`
         .sk-line {
-          border-radius: 6px;
           background: var(--dark-surface);
           position: relative;
           overflow: hidden;

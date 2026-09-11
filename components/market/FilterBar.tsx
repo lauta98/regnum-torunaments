@@ -1,6 +1,7 @@
 'use client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useState } from 'react'
+import { IconSearch, IconX } from './LineIcons'
 
 // ─── Datos ────────────────────────────────────────────────────────────────────
 
@@ -113,17 +114,14 @@ const REINOS = [
 
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 
-const ARROW_SVG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5' viewBox='0 0 9 5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%23C9A84C77'/%3E%3C/svg%3E")`
+const ARROW_SVG = `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='5' viewBox='0 0 9 5'%3E%3Cpath d='M0 0l4.5 5L9 0z' fill='%23d4af3777'/%3E%3C/svg%3E")`
 
 const glassSelect: React.CSSProperties = {
-  background: 'var(--glass-bg)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)',
-  borderRadius: 8,
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border-input)',
   padding: '7px 30px 7px 11px',
   color: 'var(--text-primary)',
-  fontFamily: 'inherit',
+  fontFamily: 'var(--font-mono)',
   fontSize: 12,
   cursor: 'pointer',
   outline: 'none',
@@ -138,14 +136,11 @@ const glassSelect: React.CSSProperties = {
 }
 
 const glassInput: React.CSSProperties = {
-  background: 'var(--glass-bg)',
-  backdropFilter: 'blur(12px)',
-  WebkitBackdropFilter: 'blur(12px)',
-  border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)',
-  borderRadius: 8,
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border-input)',
   padding: '7px 11px',
   color: 'var(--text-primary)',
-  fontFamily: 'inherit',
+  fontFamily: 'var(--font-mono)',
   fontSize: 12,
   outline: 'none',
   minWidth: 0,
@@ -236,11 +231,9 @@ export default function FilterBar() {
 
       {/* ── Barra de filtros jerárquica ──────────────────────────────── */}
       <div style={{
-        background: 'color-mix(in srgb, var(--glass-bg) 91%, transparent)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        border: '1px solid color-mix(in srgb, var(--gold) 14%, transparent)',
-        borderRadius: 12, padding: '10px 12px',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
+        padding: '10px 12px',
         marginBottom: 10,
       }}>
 
@@ -260,7 +253,7 @@ export default function FilterBar() {
           >
             {CATS.map(c => (
               <option key={c.val} value={c.val} style={{ background: 'var(--select-option-bg)' }}>
-                {c.icon} {c.label}
+                {c.label}
               </option>
             ))}
           </select>
@@ -329,11 +322,11 @@ export default function FilterBar() {
           {/* Moneda */}
           <div style={{
             display: 'flex', flexShrink: 0, alignItems: 'center',
-            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid var(--border-input)', overflow: 'hidden',
           }}>
             {[
               { val: 'mag', icon: '/magnanita.png', label: 'Mag' },
-              { val: 'usd', icon: null,             label: '💵' },
+              { val: 'usd', icon: null,             label: '$' },
             ].map((m, i) => (
               <button
                 key={m.val}
@@ -341,12 +334,12 @@ export default function FilterBar() {
                 title={m.label}
                 style={{
                   padding: '4px 9px', border: 'none',
-                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
+                  borderLeft: i > 0 ? '1px solid var(--border-input)' : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
                   background: moneda === m.val ? 'color-mix(in srgb, var(--gold) 14%, transparent)' : 'transparent',
                   color: moneda === m.val ? 'var(--gold)' : 'var(--text-muted)',
                   display: 'flex', alignItems: 'center', gap: 4,
-                  fontSize: 11, fontFamily: "'Cinzel',serif",
+                  fontSize: 12, fontFamily: 'var(--font-mono)', fontWeight: 600,
                 }}
               >
                 {m.icon
@@ -385,25 +378,27 @@ export default function FilterBar() {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
 
           {/* Búsqueda */}
-          <input
-            type="text"
-            placeholder="🔍  Buscar ítem..."
-            value={qInput}
-            onChange={e => setQInput(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSearch(qInput) }}
-            onBlur={() => handleSearch(qInput)}
-            style={{
-              ...glassInput,
-              flex: '2 1 160px',
-              fontSize: 13,
-              padding: '7px 12px',
-            }}
-          />
+          <div style={{ position: 'relative', flex: '2 1 160px' }}>
+            <IconSearch size={13} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+            <input
+              type="text"
+              placeholder="Buscar ítem..."
+              value={qInput}
+              onChange={e => setQInput(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSearch(qInput) }}
+              onBlur={() => handleSearch(qInput)}
+              style={{
+                ...glassInput,
+                fontSize: 13,
+                padding: '7px 12px 7px 30px',
+              }}
+            />
+          </div>
 
           {/* Tipo: Todos / Vende / Busca */}
           <div style={{
             display: 'flex', flexShrink: 0,
-            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid var(--border-input)', overflow: 'hidden',
           }}>
             {TIPO_TABS.map((tab, i) => (
               <button
@@ -411,9 +406,9 @@ export default function FilterBar() {
                 onClick={() => push({ tipo: tab.val })}
                 style={{
                   padding: '6px 11px',
-                  fontFamily: "'Cinzel',serif", fontSize: 10, letterSpacing: 0.8,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
                   border: 'none',
-                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
+                  borderLeft: i > 0 ? '1px solid var(--border-input)' : 'none',
                   cursor: 'pointer', transition: 'all 0.15s',
                   background: tipo === tab.val ? tab.bg : 'transparent',
                   color: tipo === tab.val ? tab.color : 'var(--text-muted)',
@@ -428,7 +423,7 @@ export default function FilterBar() {
           {/* Reino */}
           <div style={{
             display: 'flex', flexShrink: 0,
-            border: '1px solid color-mix(in srgb, var(--gold) 18%, transparent)', borderRadius: 8, overflow: 'hidden',
+            border: '1px solid var(--border-input)', overflow: 'hidden',
           }}>
             {REINOS.map((r, i) => (
               <button
@@ -438,11 +433,11 @@ export default function FilterBar() {
                 style={{
                   padding: '4px 8px',
                   border: 'none',
-                  borderLeft: i > 0 ? '1px solid color-mix(in srgb, var(--gold) 18%, transparent)' : 'none',
+                  borderLeft: i > 0 ? '1px solid var(--border-input)' : 'none',
+                  borderBottom: reino === r.val ? `2px solid ${r.color}` : '2px solid transparent',
                   cursor: 'pointer', transition: 'all 0.15s',
                   background: reino === r.val ? r.bg : 'transparent',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: reino === r.val ? `0 0 8px color-mix(in srgb, ${r.color} 33%, transparent)` : 'none',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -453,7 +448,6 @@ export default function FilterBar() {
                     width: 24, height: 24,
                     objectFit: 'contain',
                     opacity: reino === r.val ? 1 : 0.45,
-                    filter: reino === r.val ? `drop-shadow(0 0 4px ${r.color})` : 'none',
                     transition: 'all 0.15s',
                   }}
                 />
@@ -484,10 +478,10 @@ export default function FilterBar() {
                 color: 'var(--error)', borderColor: 'color-mix(in srgb, var(--error) 35%, transparent)',
                 background: 'color-mix(in srgb, var(--error) 8%, transparent)',
                 display: 'flex', alignItems: 'center', gap: 5,
-                fontSize: 11, fontFamily: "'Cinzel',serif", letterSpacing: 0.5,
+                fontSize: 11, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', textTransform: 'uppercase',
               }}
             >
-              ✕ <span>Limpiar ({activeCount})</span>
+              <IconX size={10} /> <span>Limpiar ({activeCount})</span>
             </button>
           )}
         </div>
