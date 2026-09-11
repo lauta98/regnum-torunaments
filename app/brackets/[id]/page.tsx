@@ -3,7 +3,7 @@ import Header from '@/components/Header'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE, BRACKET_TYPE_LABEL, getTier } from '@/lib/constants'
+import { FORMAT_COLOR, STATUS_STYLE, MATCH_STATUS_STYLE, FORMAT_TEAM_SIZE, BRACKET_TYPE_LABEL, getTier, MMR_TIERS } from '@/lib/constants'
 import type { TournamentFormat, TournamentStatus, MatchStatus, BracketType } from '@/lib/types'
 import BracketActions from './BracketActions'
 import InscripcionActions from './InscripcionActions'
@@ -53,6 +53,97 @@ const IconPeople = () => (
     <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
   </svg>
 )
+const IconCalendar = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="0"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+)
+const IconUser = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+)
+const IconHandshake = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M11 17l-3-3 5-5 3 3M2 12l5-5 3 3M22 12l-5 5-3-3"/>
+  </svg>
+)
+const IconCheck = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+)
+const IconClock = () => (
+  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>
+  </svg>
+)
+const IconEye = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>
+  </svg>
+)
+const IconTrophySmall = ({ size = 10 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" strokeLinecap="round" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" strokeLinecap="round" />
+    <path d="M4 22h16" strokeLinecap="round" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2z" strokeLinejoin="round" />
+  </svg>
+)
+// Mismas 7 formas que TIER_ICON_BY_RANK en components/RankingIcons.tsx
+// (una por posición de rango) — copiadas acá en vez de importadas
+// porque este archivo es un Server Component y renderizar un componente
+// indexado desde un array exportado de un módulo 'use client' falla en
+// este setup de Next/Turbopack.
+const TIER_ICON_PATH_BY_RANK: string[] = [
+  'polygon:12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2',
+  'M12 2 3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5Z',
+  'line:18 2 6 22|line:6 2 18 22',
+  'rect:3 3 18 18|line:3 9 21 9',
+  'circle:12 12 8',
+  'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+  'line:5 12 19 12',
+]
+function TierRankIcon({ idx, size = 10, color }: { idx: number; size?: number; color: string }) {
+  const spec = TIER_ICON_PATH_BY_RANK[idx] ?? TIER_ICON_PATH_BY_RANK[TIER_ICON_PATH_BY_RANK.length - 1]
+  const base = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.6 }
+  if (spec.startsWith('polygon:')) return <svg {...base}><polygon points={spec.slice(8)} /></svg>
+  if (spec.includes('|')) {
+    const parts = spec.split('|').map(p => {
+      const [kind, coords] = p.split(':')
+      const n = coords.split(' ').map(Number)
+      if (kind === 'line') return <line key={p} x1={n[0]} y1={n[1]} x2={n[2]} y2={n[3]} strokeLinecap="round" />
+      return <rect key={p} x={n[0]} y={n[1]} width={n[2]} height={n[3]} />
+    })
+    return <svg {...base}>{parts}</svg>
+  }
+  if (spec.startsWith('line:')) {
+    const n = spec.slice(5).split(' ').map(Number)
+    return <svg {...base}><line x1={n[0]} y1={n[1]} x2={n[2]} y2={n[3]} strokeLinecap="round" /></svg>
+  }
+  if (spec.startsWith('circle:')) {
+    const n = spec.slice(7).split(' ').map(Number)
+    return <svg {...base}><circle cx={n[0]} cy={n[1]} r={n[2]} /></svg>
+  }
+  return <svg {...base}><path d={spec} strokeLinecap="round" strokeLinejoin="round" /></svg>
+}
+// Mismo criterio que TierPill en RankingContent.tsx — no usa tier.icon
+// (emoji de lib/constants.ts) ni la clase global .tier-pill.
+function TierPillMini({ mmr }: { mmr: number }) {
+  const tier = getTier(mmr)
+  const idx = MMR_TIERS.findIndex(t => t.name === tier.name)
+  return (
+    <span title={`MMR: ${mmr}`} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
+      padding: '2px 7px', color: tier.color,
+      background: `color-mix(in srgb, ${tier.color} 12%, transparent)`,
+      border: `1px solid color-mix(in srgb, ${tier.color} 35%, transparent)`,
+    }}>
+      <TierRankIcon idx={idx} size={10} color={tier.color} /> {mmr}
+    </span>
+  )
+}
 
 export default async function BracketPage({
   params,
@@ -258,7 +349,7 @@ export default async function BracketPage({
             </div>
           )}
           <div style={{ position: 'absolute', left: 24, right: 24, bottom: 14, zIndex: 1, maxWidth: 1600 - 48, margin: '0 auto' }}>
-            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 800, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.25 }}>
+            <h1 style={{ fontFamily: 'var(--font-display-v2)', fontSize: 26, fontWeight: 600, color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.6)', lineHeight: 1.25 }}>
               {torneo.nombre}
             </h1>
           </div>
@@ -268,22 +359,22 @@ export default async function BracketPage({
       <div style={{ maxWidth: 1600, width: '100%', margin: '0 auto', padding: '0 24px', flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top meta bar */}
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '12px 0', display: 'flex', alignItems: 'center', gap: 20, fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+        <div style={{ borderBottom: '1px solid var(--border)', padding: '12px 0', display: 'flex', alignItems: 'center', gap: 18, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', flexWrap: 'wrap' }}>
           <Link href="/brackets" style={{ color: 'var(--text-muted)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>
             ← Brackets
           </Link>
-          <span style={{ color: 'rgba(255,255,255,0.15)' }}>|</span>
-          <span>👥 {inscrCount} {torneo.formato === '7v7' ? 'clanes' : 'equipos'}</span>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)' }}>
+          <span style={{ color: 'var(--border)' }}>|</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><IconPeople /> {inscrCount} {torneo.formato === '7v7' ? 'clanes' : 'equipos'}</span>
+          <span style={{ fontWeight: 600, color: 'var(--text-secondary)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             {FMT_LABEL[torneo.formato] ?? torneo.formato}
           </span>
-          <span>📅 {new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><IconCalendar /> {new Date(torneo.fecha_inicio).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
           {torneo.creator && (
-            <span>👤 Organizado por <Link href={`/jugadores/${torneo.creator.id}`} style={{ color: 'var(--gold)', textDecoration: 'none' }}>{torneo.creator.nickname_juego}</Link></span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}><IconUser /> Organizado por <Link href={`/jugadores/${torneo.creator.id}`} style={{ color: 'var(--gold)', textDecoration: 'none' }}>{torneo.creator.nickname_juego}</Link></span>
           )}
           {coOrganizadores.length > 0 && (
-            <span>
-              🤝 Co-organizado por {coOrganizadores.map((o: any, i: number) => (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <IconHandshake /> Co-organizado por {coOrganizadores.map((o: any, i: number) => (
                 <span key={o.id}>
                   <Link href={`/jugadores/${o.id}`} style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>
                     {o.nickname_juego || o.discord_username}
@@ -294,8 +385,8 @@ export default async function BracketPage({
             </span>
           )}
           {torneo.organizador_verificado && (
-            <span title="Torneo verificado por la administración" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#4CAF50' }}>
-              ✓ Verificado
+            <span title="Torneo verificado por la administración" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--syrtis)' }}>
+              <IconCheck /> Verificado
             </span>
           )}
         </div>
@@ -303,58 +394,70 @@ export default async function BracketPage({
         <style>{`
           @media (max-width: 760px) {
             .cor-bracket-layout { flex-direction: column !important; }
-            .cor-bracket-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06); padding: 12px 0 !important; }
+            .cor-bracket-sidebar { width: 100% !important; border-right: none !important; border-bottom: 1px solid var(--border); padding: 12px 0 !important; }
             .cor-bracket-main { padding: 16px !important; }
           }
-          .cor-search-hl { background: rgba(0,212,255,0.14) !important; box-shadow: inset 0 0 0 2px var(--neon-cyan); border-radius: 6px; }
-          .cor-search-suggestion:hover { background: rgba(255,255,255,0.06) !important; }
+          .cor-search-hl { background: color-mix(in srgb, var(--gold) 16%, transparent) !important; box-shadow: inset 0 0 0 1px var(--gold); }
+          .cor-search-suggestion:hover { background: var(--bg-surface) !important; }
         `}</style>
 
         {/* Two-column layout: sidebar + content (se apila en mobile) */}
         <div className="cor-bracket-layout" style={{ display: 'flex', flex: 1, gap: 0, minWidth: 0 }}>
 
           {/* Sidebar */}
-          <aside className="cor-bracket-sidebar" style={{ width: 220, flexShrink: 0, borderRight: '1px solid rgba(255,255,255,0.06)', padding: '20px 0' }}>
+          <aside className="cor-bracket-sidebar" style={{ width: 220, flexShrink: 0, borderRight: '1px solid var(--border)', padding: '20px 0' }}>
             {/* Tournament title in sidebar */}
-            <div style={{ padding: '0 16px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 8 }}>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
-                <span style={{ background: `${fc}18`, color: fc, border: `1px solid ${fc}33`, padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5 }}>
+            <div style={{ padding: '0 16px 20px', borderBottom: '1px solid var(--border)', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                <span style={{ background: `color-mix(in srgb, ${fc} 12%, transparent)`, color: fc, border: `1px solid color-mix(in srgb, ${fc} 35%, transparent)`, padding: '3px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   {FMT_LABEL[torneo.formato] ?? torneo.formato}
                 </span>
-                <span style={{ background: st.bg, color: st.color, padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, display: 'flex', alignItems: 'center', gap: 4 }}>
-                  {torneo.estado === 'live' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#F44336', display: 'inline-block' }} />}
+                <span style={{ background: st.bg, color: st.color, padding: '3px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  {torneo.estado === 'live' && <span style={{ width: 5, height: 5, background: '#F44336', display: 'inline-block' }} />}
                   {st.label}
                 </span>
-                <span style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', border: '1px solid rgba(255,255,255,0.1)', padding: '3px 9px', borderRadius: 6, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5 }}>
+                <span style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '3px 8px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                   {BRACKET_TYPE_LABEL[torneo.bracket_type as BracketType] ?? torneo.bracket_type}
                 </span>
               </div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.3, display: 'flex', alignItems: 'center', gap: 6 }}>
                 {torneo.escudo && <TrofeoBadge trofeo={torneo.escudo} size="sm" title={`Escudo: ${torneo.escudo.nombre}`} />}
                 <span>
                   {torneo.nombre}
                   {torneo.organizador_verificado && (
-                    <span title="Torneo verificado por la administración" style={{ color: '#4CAF50', marginLeft: 6, fontSize: 12 }}>✓</span>
+                    <span title="Torneo verificado por la administración" style={{ color: 'var(--syrtis)', marginLeft: 6, display: 'inline-flex', verticalAlign: 'middle' }}><IconCheck /></span>
                   )}
                 </span>
               </div>
+              {torneo.descripcion && (
+                <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5, marginTop: 8, marginBottom: 0 }}>
+                  {torneo.descripcion}
+                </p>
+              )}
+              {torneo.premio && (
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <IconTrophySmall size={12} />
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--gold)', fontWeight: 700 }}>{torneo.premio}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', gap: 16, marginTop: 10 }}>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--gold)' }}>{inscrCount}</div>
-                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>EQUIPOS</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{inscrCount}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>EQUIPOS</div>
                 </div>
                 <div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--gold)' }}>{completedMatches}/{totalMatchCount}</div>
-                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', letterSpacing: 1 }}>PARTIDOS</div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700, color: 'var(--gold)' }}>{completedMatches}/{totalMatchCount}</div>
+                  <div style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em' }}>PARTIDOS</div>
                 </div>
               </div>
               {isOrganizer && (
                 <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <Link href={`/organizador/torneos/${torneo.id}`} className="btn btn-ghost-gold" style={{
+                  <Link href={`/organizador/torneos/${torneo.id}`} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                    padding: '7px 0', fontSize: 10.5, textDecoration: 'none',
+                    padding: '7px 0', fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: '0.05em', textTransform: 'uppercase',
+                    textDecoration: 'none', background: 'var(--bg-surface)', border: '1px solid var(--dark-border-gold)', color: 'var(--gold)',
                   }}>
-                    ✎ Editar torneo
+                    Editar torneo
                   </Link>
                   {torneo.estado === 'live' && <FinalizarTorneoButton torneoId={torneo.id} />}
                 </div>
@@ -365,12 +468,12 @@ export default async function BracketPage({
             {sidebarItems.map(({ id, label, icon }) => (
               <Link key={id} href={`/brackets/${torneo.id}?tab=${id}`} style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
-                textDecoration: 'none', borderRadius: 8, margin: '2px 8px',
-                background: tab === id ? 'rgba(212,175,55,0.1)' : 'transparent',
+                textDecoration: 'none', margin: '2px 8px',
+                background: tab === id ? 'color-mix(in srgb, var(--gold) 8%, transparent)' : 'transparent',
                 color: tab === id ? 'var(--gold)' : 'var(--text-muted)',
-                fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: tab === id ? 700 : 400,
+                fontFamily: 'var(--font-mono)', fontSize: 11.5, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
                 transition: 'all 0.15s',
-                borderLeft: tab === id ? '3px solid var(--gold)' : '3px solid transparent',
+                borderLeft: tab === id ? '2px solid var(--gold)' : '2px solid transparent',
               }}>
                 <span style={{ color: tab === id ? 'var(--gold)' : 'var(--text-muted)', display: 'flex' }}>{icon}</span>
                 {label}
@@ -398,8 +501,8 @@ export default async function BracketPage({
               />
             )}
             {torneo.estado === 'inscripciones' && !user && (
-              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 12, padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
-                <a href="/login" style={{ color: 'var(--gold)', fontFamily: 'var(--font-display)', fontSize: 13, textDecoration: 'none' }}>
+              <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '16px 20px', marginBottom: 20, textAlign: 'center' }}>
+                <a href="/login" style={{ color: 'var(--gold)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase', textDecoration: 'none' }}>
                   Iniciá sesión con Discord para inscribirte →
                 </a>
               </div>
@@ -419,11 +522,11 @@ export default async function BracketPage({
                     <div>
                       <div style={{
                         display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16,
-                        fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--neon-cyan)', letterSpacing: 0.5,
-                        background: 'var(--neon-cyan-muted)', border: '1px solid rgba(0,212,255,0.3)', borderRadius: 'var(--radius-sm)',
+                        fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--neon-cyan)', letterSpacing: '0.05em', textTransform: 'uppercase',
+                        background: 'var(--neon-cyan-muted)', border: '1px solid rgba(0,212,255,0.3)',
                         padding: '9px 14px',
                       }}>
-                        👁 VISTA PREVIA — según el orden de semillas actual. El cuadro real se genera cuando {isOrganizer ? 'lo confirmes arriba' : 'el organizador lo confirme'}.
+                        <IconEye /> Vista previa — según el orden de semillas actual. El cuadro real se genera cuando {isOrganizer ? 'lo confirmes arriba' : 'el organizador lo confirme'}.
                       </div>
                       {(torneo.bracket_type === 'round_robin' || torneo.bracket_type === 'league_cup') ? (
                         <LigaFechas entries={previewEntries} isOrganizer={false} fc={fc} />
@@ -432,9 +535,9 @@ export default async function BracketPage({
                       )}
                     </div>
                   ) : !(isOrganizer && torneo.estado !== 'draft') && (
-                    <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                      <div style={{ fontSize: 40, marginBottom: 12 }}>🕐</div>
-                      <p style={{ fontFamily: 'var(--font-display)', fontSize: 14 }}>El bracket aún no está disponible.</p>
+                    <div style={{ textAlign: 'center', padding: '80px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                      <IconClock />
+                      <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 16, marginTop: 12 }}>El bracket aún no está disponible.</p>
                     </div>
                   )}
                 </div>
@@ -443,13 +546,13 @@ export default async function BracketPage({
               ) : torneo.bracket_type === 'league_cup' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 36 }}>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', letterSpacing: '0.15em', marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
                       Fase de Liga
                     </div>
                     <LigaFechas entries={ligaEntries} isOrganizer={isOrganizer} fc={fc} equiposDisponibles={equiposParaCambio} />
                   </div>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', letterSpacing: '0.15em', marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
                       Copa
                     </div>
                     {copaEntries.length > 0 ? (
@@ -458,13 +561,13 @@ export default async function BracketPage({
                       isOrganizer ? (
                         <GenerarCopaButton torneoId={torneo.id} cupo={torneo.playoff_cupo ?? 0} />
                       ) : (
-                        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                          <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>La liga terminó — la copa se genera en cualquier momento.</p>
+                        <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                          <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15 }}>La liga terminó — la copa se genera en cualquier momento.</p>
                         </div>
                       )
                     ) : (
-                      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-                        <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Disponible cuando termine la fase de liga.</p>
+                      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                        <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15 }}>Disponible cuando termine la fase de liga.</p>
                       </div>
                     )}
                   </div>
@@ -477,7 +580,7 @@ export default async function BracketPage({
             {/* ── TAB: POSICIONES ─────────────────────────── */}
             {tab === 'posiciones' && (
               <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 16 }}>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 16 }}>
                   Tabla de Posiciones
                 </div>
                 {torneo.bracket_type !== 'round_robin' && torneo.bracket_type !== 'league_cup' ? (
@@ -513,20 +616,20 @@ export default async function BracketPage({
                   })
                   const rows = Object.values(standings).sort((a, b) => b.pts - a.pts || b.W - a.W)
                   return (
-                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)' }}>
+                    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '10px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                         {['#', 'EQUIPO', 'G', 'E', 'P', 'PTS'].map(c => (
-                          <div key={c} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{c}</div>
+                          <div key={c} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{c}</div>
                         ))}
                       </div>
                       {rows.map((r, i) => (
-                        <div key={r.nombre} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '12px 20px', borderBottom: i < rows.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: i < 3 ? 'var(--gold)' : 'var(--text-muted)', fontWeight: 700 }}>{i + 1}</div>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{r.nombre}</div>
-                          <div style={{ fontSize: 12, color: '#4CAF50', fontWeight: 600 }}>{r.W}</div>
-                          <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{r.D}</div>
-                          <div style={{ fontSize: 12, color: '#f87171' }}>{r.L}</div>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{r.pts}</div>
+                        <div key={r.nombre} style={{ display: 'grid', gridTemplateColumns: '36px 1fr 60px 60px 60px 70px', padding: '12px 20px', borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: i < 3 ? 'var(--gold)' : 'var(--text-muted)', fontWeight: 700 }}>{i + 1}</div>
+                          <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{r.nombre}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--syrtis)', fontWeight: 600 }}>{r.W}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{r.D}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--ignis)' }}>{r.L}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{r.pts}</div>
                         </div>
                       ))}
                     </div>
@@ -539,7 +642,7 @@ export default async function BracketPage({
             {tab === 'participantes' && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: 'var(--text-primary)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     {torneo.formato === '7v7' ? 'Clanes participantes' : 'Equipos participantes'} ({inscritos?.length ?? 0})
                   </div>
                   {isOrganizer && (
@@ -553,10 +656,10 @@ export default async function BracketPage({
                 {!inscritos?.length ? (
                   <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>No hay participantes inscritos.</div>
                 ) : (
-                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 90px 130px 90px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', borderRadius: 'var(--radius-md) var(--radius-md) 0 0' }}>
+                  <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '48px 1fr 90px 130px 90px', padding: '10px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
                       {['#', torneo.formato === '7v7' ? 'CLAN' : 'EQUIPO', 'MMR', 'INSCRIPTO', ''].map(c => (
-                        <div key={c} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1.5 }}>{c}</div>
+                        <div key={c} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{c}</div>
                       ))}
                     </div>
                     {inscritos.map((r: any, i: number) => {
@@ -569,16 +672,16 @@ export default async function BracketPage({
                         <div key={team.id} className="row-hover" style={{
                           display: 'grid', gridTemplateColumns: '48px 1fr 90px 130px 90px', alignItems: 'center',
                           padding: '10px 20px', gap: 8, opacity: expulsado ? 0.6 : 1,
-                          borderBottom: i < inscritos.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                          borderBottom: i < inscritos.length - 1 ? '1px solid var(--border)' : 'none',
                         }}>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)' }}>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
                             {r.seed ?? i + 1}
                           </div>
 
                           <div style={{ minWidth: 0 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                               <span style={{
-                                fontFamily: 'var(--font-display)', fontSize: 12.5, fontWeight: 700,
+                                fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600,
                                 color: expulsado ? 'var(--text-muted)' : 'var(--text-primary)',
                                 textDecoration: expulsado ? 'line-through' : 'none',
                                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 260,
@@ -591,7 +694,7 @@ export default async function BracketPage({
                                 </span>
                               )}
                               {expulsado && (
-                                <span style={{ fontSize: 8, fontFamily: 'var(--font-display)', color: '#f87171', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.25)', borderRadius: 4, padding: '1px 6px', letterSpacing: 0.5, flexShrink: 0 }}>
+                                <span style={{ fontSize: 8, fontFamily: 'var(--font-mono)', color: 'var(--ignis)', background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.25)', padding: '1px 6px', letterSpacing: '0.05em', flexShrink: 0 }}>
                                   EXPULSADO
                                 </span>
                               )}
@@ -618,19 +721,17 @@ export default async function BracketPage({
                               </div>
                             )}
                             {expulsado && puedeExpulsar && r.motivo_expulsion && (
-                              <div style={{ fontSize: 10.5, color: '#f87171', marginTop: 2 }}>{r.motivo_expulsion}</div>
+                              <div style={{ fontSize: 10.5, color: 'var(--ignis)', marginTop: 2 }}>{r.motivo_expulsion}</div>
                             )}
                           </div>
 
                           <div>
                             {esUnico && miembros[0] && (
-                              <span className={`tier-pill ${getTier(miembros[0].personaje.mmr).cssClass}`} title={`MMR: ${miembros[0].personaje.mmr}`}>
-                                {getTier(miembros[0].personaje.mmr).icon} {miembros[0].personaje.mmr}
-                              </span>
+                              <TierPillMini mmr={miembros[0].personaje.mmr} />
                             )}
                           </div>
 
-                          <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-muted)' }}>
                             {r.registered_at && new Date(r.registered_at).toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })}
                           </div>
 
@@ -650,8 +751,8 @@ export default async function BracketPage({
           </main>
         </div>
       </div>
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '16px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1.5 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '16px 24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        CoR Tournament Stats © 2026 — Champions of Regnum Community
       </footer>
     </>
   )
@@ -686,8 +787,8 @@ const SECTION_LABEL: Record<string, string> = {
 function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries: [string, any[]][]; isOrganizer: boolean; fc: string; equiposDisponibles?: { id: string; nombre: string }[] }) {
   if (entries.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)' }}>
-        <p style={{ fontFamily: 'var(--font-display)', fontSize: 13 }}>Sin partidos todavía.</p>
+      <div style={{ textAlign: 'center', padding: '40px 24px', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+        <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15 }}>Sin partidos todavía.</p>
       </div>
     )
   }
@@ -696,7 +797,7 @@ function LigaFechas({ entries, isOrganizer, fc, equiposDisponibles }: { entries:
       header={(
         <div style={{ display: 'flex', gap: 0, minWidth: entries.length * 240 }}>
           {entries.map(([roundNum, roundMatches]) => (
-            <div key={roundNum} style={{ flex: 1, padding: '10px 12px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: 1, textAlign: 'center', fontWeight: 600 }}>
+            <div key={roundNum} style={{ flex: 1, padding: '10px 12px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', textAlign: 'center', fontWeight: 600 }}>
               {roundMatches[0]?.ronda ?? `Ronda ${roundNum}`}
             </div>
           ))}
@@ -994,9 +1095,9 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
   // en espejo (rondas N..1) — mismo orden que ya usan `rightColX`/el resto
   // del layout.
   const headerCells = [
-    ...leftRounds.map(r => ({ key: `lh-${r.key}`, label: r.matches[0]?.ronda ?? `Ronda ${r.roundNum}` })),
-    { key: 'final-h', label: `🏆 ${finalMatch.ronda}` },
-    ...rightRounds.slice().reverse().map(r => ({ key: `rh-${r.key}`, label: r.matches[0]?.ronda ?? `Ronda ${r.roundNum}` })),
+    ...leftRounds.map(r => ({ key: `lh-${r.key}`, label: r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`, final: false })),
+    { key: 'final-h', label: finalMatch.ronda, final: true },
+    ...rightRounds.slice().reverse().map(r => ({ key: `rh-${r.key}`, label: r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`, final: false })),
   ]
 
   const headerRow = (
@@ -1004,9 +1105,11 @@ function MirroredBracketSection({ rounds, isOrganizer, fc, equiposDisponibles, n
       {headerCells.map(c => (
         <div key={c.key} style={{
           width: COL_W, flexShrink: 0, textAlign: 'center', padding: '6px 0',
-          fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600,
+          fontFamily: 'var(--font-mono)', fontSize: 11, color: c.final ? 'var(--gold)' : 'var(--text-secondary)',
+          letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
         }}>
-          {c.label}
+          {c.final && <IconTrophySmall size={11} />} {c.label}
         </div>
       ))}
     </div>
@@ -1068,14 +1171,14 @@ function CampeonBadge({ match, trofeo, x, top, height }: { match: any; trofeo?: 
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8,
     }}>
       {trofeo && <TrofeoBadge trofeo={trofeo} size="lg" title={trofeo.nombre} />}
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 1.5, textTransform: 'uppercase' }}>
-        🏆 Campeón
+      <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        <IconTrophySmall size={11} /> Campeón
       </div>
       <TeamNameLink
         nombre={ganador.nombre}
         miembros={(ganador.miembros ?? []).filter((m: any) => m.personaje).map((m: any) => m.personaje)}
         title={ganador.nombre}
-        style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', textAlign: 'center' }}
+        style={{ fontFamily: 'var(--font-display-v2)', fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', textAlign: 'center' }}
       />
     </div>
   )
@@ -1153,7 +1256,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
   return (
     <div>
       {SECTION_LABEL[section.bracket] && (
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--gold)', letterSpacing: 1.5, marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--gold)', letterSpacing: '0.15em', marginBottom: 14, textTransform: 'uppercase', fontWeight: 700 }}>
           {SECTION_LABEL[section.bracket]}
         </div>
       )}
@@ -1169,7 +1272,7 @@ function LinearBracketSection({ section, rounds, isOrganizer, fc, equiposDisponi
             {rounds.map(r => (
               <div key={r.key} style={{
                 width: COL_W, flexShrink: 0, textAlign: 'center', padding: '6px 0',
-                fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-secondary)', letterSpacing: 1, fontWeight: 600,
+                fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600,
               }}>
                 {r.matches[0]?.ronda ?? `Ronda ${r.roundNum}`}
               </div>
@@ -1235,14 +1338,11 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
   return (
     <div style={{
       background: 'var(--bg-card)',
-      border: `1px solid ${isPlayed ? fc + '44' : 'var(--border)'}`,
-      borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)',
+      border: `1px solid ${isPlayed ? `color-mix(in srgb, ${fc} 45%, transparent)` : 'var(--border)'}`,
       transition: 'border-color 0.2s',
     }}>
-      {/* Top accent — sin overflow:hidden en el padre (recortaría el
-          popover de BracketActions), así que redondea sus propias
-          esquinas de arriba para no sobresalir del borde de la tarjeta. */}
-      <div style={{ height: 2, borderRadius: 'var(--radius-md) var(--radius-md) 0 0', background: isPlayed ? `linear-gradient(90deg, ${fc}, ${fc}44)` : 'rgba(255,255,255,0.06)' }} />
+      {/* Top accent — barra plana del color de formato, sin gradiente. */}
+      <div style={{ height: 2, background: isPlayed ? fc : 'var(--border)' }} />
 
       {/* Team A */}
       <TeamRow
@@ -1261,13 +1361,12 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
         isWinner={!!ganadorId && ganadorId === teamB?.id}
         isLoser={!!ganadorId && ganadorId !== teamB?.id}
         placeholder={placeholderB}
-        roundBottom={!(isOrganizer || isPlayed)}
       />
 
       {/* Footer */}
       {(isOrganizer || isPlayed) && (
-        <div style={{ padding: '5px 12px', borderRadius: '0 0 var(--radius-md) var(--radius-md)', background: 'rgba(0,0,0,0.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: isPlayed ? '#4CAF50' : 'var(--text-muted)', letterSpacing: 1 }}>
+        <div style={{ padding: '5px 12px', borderTop: '1px solid var(--border)', background: 'var(--bg-surface)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: isPlayed ? 'var(--syrtis)' : 'var(--text-muted)', letterSpacing: '0.1em' }}>
             {isPlayed ? (isWalkover ? 'JUGADO · W.O.' : 'JUGADO') : 'PENDIENTE'}
           </span>
           {isOrganizer && teamA && teamB && (
@@ -1279,20 +1378,19 @@ function MatchCard({ match, isOrganizer, fc, equiposDisponibles, numero, placeho
   )
 }
 
-function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, roundBottom, placeholder }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean; roundBottom?: boolean; placeholder?: string }) {
+function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, placeholder }: { seed?: number; team: any; score: number | null; isWinner: boolean; isLoser: boolean; borderBottom?: boolean; placeholder?: string }) {
   const nameColor = isWinner ? 'var(--text-primary)' : isLoser ? 'var(--text-muted)' : 'var(--text-secondary)'
-  const scoreBg = isWinner ? 'rgba(212,175,55,0.2)' : isLoser ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.06)'
+  const scoreBg = isWinner ? 'color-mix(in srgb, var(--gold) 20%, transparent)' : 'var(--bg-input)'
   const scoreColor = isWinner ? 'var(--gold)' : 'var(--text-muted)'
 
   return (
     <div data-team-id={team?.id} style={{
       padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8,
-      background: isWinner ? 'rgba(212,175,55,0.04)' : 'transparent',
-      borderBottom: borderBottom ? '1px solid rgba(255,255,255,0.06)' : 'none',
-      borderRadius: roundBottom ? '0 0 var(--radius-md) var(--radius-md)' : undefined,
+      background: isWinner ? 'color-mix(in srgb, var(--gold) 4%, transparent)' : 'transparent',
+      borderBottom: borderBottom ? '1px solid var(--border)' : 'none',
     }}>
       {/* Seed */}
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', width: 16, textAlign: 'center', flexShrink: 0 }}>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', width: 16, textAlign: 'center', flexShrink: 0 }}>
         {seed ?? ''}
       </span>
       {/* Team name — title nativo del navegador como tooltip: si el
@@ -1305,16 +1403,16 @@ function TeamRow({ seed, team, score, isWinner, isLoser, borderBottom, roundBott
           nombre={team.nombre}
           miembros={(team.miembros ?? []).filter((m: any) => m.personaje).map((m: any) => m.personaje)}
           title={team.nombre}
-          style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+          style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: isWinner ? 700 : 400, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
         />
       ) : (
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 11 }}>{placeholder ?? 'TBD'}</span>
+        <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, color: nameColor, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span style={{ fontStyle: 'italic', color: 'var(--text-muted)', fontSize: 12 }}>{placeholder ?? 'TBD'}</span>
         </span>
       )}
       {/* Score */}
       {score !== null && score !== undefined && !isNaN(score) && (
-        <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg, width: 26, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 5, flexShrink: 0 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, color: scoreColor, background: scoreBg, width: 24, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {score}
         </span>
       )}
