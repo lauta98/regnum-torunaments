@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>Champions of Regnum - Community Tournament &amp; Leaderboard</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "tertiary-fixed-dim": "#b4c5ff", "on-secondary-container": "#b6b5b5", "on-secondary-fixed": "#1b1c1c", "on-tertiary": "#082b72", "primary-fixed-dim": "#e9c349", "surface-container-lowest": "#0e0e0e", "inverse-primary": "#735c00", "surface-container": "#201f1f", "surface-container-low": "#1c1b1b", "on-tertiary-container": "#254188", "on-primary": "#3c2f00", "tertiary": "#bfcdff", "surface-variant": "#353534", "secondary-fixed": "#e3e2e2", "inverse-on-surface": "#313030", "secondary-fixed-dim": "#c7c6c6", "surface-bright": "#3a3939", "surface-tint": "#e9c349", "inverse-surface": "#e5e2e1", "error-container": "#93000a", "secondary": "#c7c6c6", "surface": "#131313", "outline-variant": "#4d4635", "surface-container-high": "#2a2a2a", "outline": "#99907c", "on-error": "#690005", "on-background": "#e5e2e1", "error": "#ffb4ab", "primary-fixed": "#ffe088", "on-primary-fixed": "#241a00", "on-surface": "#e5e2e1", "primary": "#f2ca50", "on-secondary": "#303031", "on-primary-fixed-variant": "#574500", "on-tertiary-fixed-variant": "#27438a", "background": "#131313", "primary-container": "#d4af37", "on-tertiary-fixed": "#00174b", "tertiary-fixed": "#dbe1ff", "on-secondary-fixed-variant": "#464747", "on-surface-variant": "#d0c5af", "secondary-container": "#464747", "surface-container-highest": "#353534", "surface-dim": "#131313", "on-primary-container": "#554300", "on-error-container": "#ffdad6", "tertiary-container": "#97b0ff" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-lg": "1.5rem", "margin-tablet": "2rem", "space-xs": "0.25rem", "gutter-desktop": "1.5rem", "space-sm": "0.5rem", "margin-desktop": "3rem", "margin": "1rem", "gutter": "1rem", "space-xl": "2.5rem", "space-md": "1rem" }, "fontFamily": { "body-sm": [ "EB Garamond" ], "body-lg": [ "EB Garamond" ], "headline-lg-mobile": [ "EB Garamond" ], "data-mono-lg": [ "JetBrains Mono" ], "display-hero-mobile": [ "EB Garamond" ], "data-mono-sm": [ "JetBrains Mono" ], "headline-sm": [ "EB Garamond" ], "display-hero": [ "EB Garamond" ], "body-md": [ "EB Garamond" ], "headline-md": [ "EB Garamond" ], "headline-lg": [ "EB Garamond" ], "label-caps": [ "JetBrains Mono" ], "title-md": [ "JetBrains Mono" ], "data-mono-md": [ "JetBrains Mono" ] }, "fontSize": { "body-sm": [ "14px", { "lineHeight": "20px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "body-lg": [ "19px", { "lineHeight": "28px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-lg-mobile": [ "26px", { "lineHeight": "32px", "letterSpacing": "0.04em", "fontWeight": "600" } ], "data-mono-lg": [ "22px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "display-hero-mobile": [ "36px", { "lineHeight": "44px", "letterSpacing": "0.05em", "fontWeight": "600" } ], "data-mono-sm": [ "12px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "headline-sm": [ "20px", { "lineHeight": "26px", "letterSpacing": "0.02em", "fontWeight": "500" } ], "display-hero": [ "56px", { "lineHeight": "64px", "letterSpacing": "0.08em", "fontWeight": "600" } ], "body-md": [ "16px", { "lineHeight": "24px", "letterSpacing": "0.01em", "fontWeight": "400" } ], "headline-md": [ "24px", { "lineHeight": "30px", "letterSpacing": "0.04em", "fontWeight": "600" } ], "headline-lg": [ "32px", { "lineHeight": "40px", "letterSpacing": "0.06em", "fontWeight": "600" } ], "label-caps": [ "11px", { "lineHeight": "14px", "letterSpacing": "0.12em", "fontWeight": "600" } ], "title-md": [ "16px", { "lineHeight": "22px", "letterSpacing": "0.04em", "fontWeight": "600" } ], "data-mono-md": [ "15px", { "lineHeight": "20px", "letterSpacing": "-0.01em", "fontWeight": "500" } ] } } } };</script></head><body class="bg-surface-container-lowest text-on-surface antialiased font-body-md text-body-md selection:bg-primary-container selection:text-on-primary"><header class="fixed top-0 left-0 w-full z-50 bg-surface-container-lowest/95 backdrop-blur-md border-b border-surface-container"><div class="h-16 max-w-[1360px] mx-auto px-margin md:px-margin-tablet lg:px-margin-desktop flex items-center justify-between"><div class="flex items-center gap-space-lg"><a class="flex flex-col leading-none group" data-path="portal" href="#"><span class="font-headline-lg text-headline-lg font-bold tracking-tight text-primary uppercase group-hover:text-primary-fixed transition-colors">CoR</span><span class="font-label-caps text-label-caps text-outline tracking-[0.25em] uppercase font-semibold mt-[-2px]">COMMUNITY</span></a><nav class="hidden md:flex items-center gap-space-lg ml-space-lg" data-active-classes="text-primary border-b-2 border-primary"><a aria-current="page" class="font-title-md uppercase tracking-wider transition-colors pb-1 text-primary border-b-2 border-primary" data-path="portal" href="#">Torneo &amp; Rankings</a><a class="text-on-surface-variant hover:text-on-surface font-title-md text-title-md uppercase tracking-wider transition-colors pb-1" data-path="realm-war" href="#">Guerra de Reinos</a><a class="text-on-surface-variant hover:text-on-surface font-title-md text-title-md uppercase tracking-wider transition-colors pb-1" data-path="rules" href="#">Reglamento</a></nav></div><div class="flex items-center gap-space-md"><a class="inline-flex items-center gap-space-sm px-space-md py-space-xs bg-surface-container border border-surface-variant hover:border-outline text-secondary hover:text-on-surface font-label-caps text-label-caps tracking-widest uppercase transition-all" href="https://discord.gg" rel="noopener noreferrer" target="_blank"><svg class="w-4 h-4 fill-current" viewbox="0 0 24 24"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.893.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"></path></svg><span>Discord</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 bg-surface-container-lowest min-h-[calc(100vh-64px)]"><div class="max-w-[1360px] mx-auto px-margin md:px-margin-tablet lg:px-margin-desktop py-space-lg"><div class="flex flex-col w-full text-on-surface">
+<!-- 1. HERO SECTION (~420px height) -->
+<section class="relative w-full min-h-[440px] md:h-[440px] overflow-hidden bg-surface-container-lowest flex items-center">
+<!-- Right background battle artwork with dense left gradient mask -->
+<div class="absolute inset-0 z-0">
+<div class="absolute right-0 top-0 w-full md:w-3/5 h-full bg-cover bg-center opacity-40 mix-blend-luminosity" data-alt="Epic medieval war battle at twilight outside a fortified stone citadel. Heavy armored knights clash with iron swords, halberds and tower shields under a storm-swept dark sky. Embers drift through cold mist. Cinematic, grimdark chiseled realism in desaturated slate and muted antique bronze tones." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAAXmN6zzD0r4Ao_gR5ql1yJICgPb-RK2BoYhSSl6nkXuPfKw91gaGmmAocHlETJGWpIWPHRiQGblDDjIzrNe-y7LfdYaB-UQ2dDUutuZDNLykaDCz7Km_l9nDbIPxh7gVHDt0XEw2rt6e3CjvhzW3Ku6hDD0QLol77Vu8MRIMCBEvZmUPfzUzL2vnjagFeABQZvhOLBRyxtRYtUuaxE3GvOVqfFXb8QakCjNMEalLM-WBiiTfTJMOzUA');"></div>
+<div class="absolute inset-0 bg-gradient-to-r from-surface-container-lowest via-surface-container-lowest/95 to-transparent md:w-[68%]"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent"></div>
+</div>
+<!-- Hero Content -->
+<div class="relative z-10 w-full py-space-lg flex flex-col justify-center">
+<div class="max-w-2xl">
+<div class="flex items-baseline gap-space-sm mb-space-xs">
+<span class="font-display-hero text-display-hero text-primary tracking-wider uppercase font-bold leading-none select-none">CoR</span>
+<span class="font-headline-lg text-headline-lg text-on-surface tracking-wide uppercase font-light">Community</span>
+</div>
+<p class="font-body-lg text-body-lg text-secondary max-w-xl mb-space-lg leading-relaxed">
+          Centro competitivo y registro oficial de torneos, rankings y crónicas de combate.
+        </p>
+<!-- CTA Action Buttons (Strictly angular, heraldic styling) -->
+<div class="flex flex-wrap items-center gap-space-md mb-space-xl">
+<a class="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-low text-primary border border-primary/60 hover:bg-primary/10 hover:border-primary font-title-md text-title-md transition-colors rounded-none" href="#fama">
+<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.004-9.75V3.75m0 2.25a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3V3.75m7.5 2.25h1.5a3 3 0 0 1 3 3v.75a3 3 0 0 1-3 3h-1.5m-7.5-6.75H6a3 3 0 0 0-3 3v.75a3 3 0 0 0 3 3h1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Salón de la Fama</span>
+</a>
+<a class="inline-flex items-center gap-space-xs px-space-md py-space-sm bg-surface-container-low text-primary border border-primary/60 hover:bg-primary/10 hover:border-primary font-title-md text-title-md transition-colors rounded-none" href="#crear-torneo">
+<svg class="w-4 h-4 stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M12 4.5v15m7.5-7.5h-15" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span>Crear Torneo</span>
+</a>
+</div>
+<!-- Strict Global Metric Row (Exclusive placement) -->
+<div class="grid grid-cols-3 gap-space-md pt-space-md max-w-lg border-t border-surface-container">
+<div class="flex flex-col">
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight tabular-nums">4,820</span>
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase mt-1">JUGADORES TOTALES</span>
+</div>
+<div class="flex flex-col pl-space-md border-l border-surface-container">
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight tabular-nums">342</span>
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase mt-1">TORNEOS DISPUTADOS</span>
+</div>
+<div class="flex flex-col pl-space-md border-l border-surface-container">
+<span class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight tabular-nums">18,950</span>
+<span class="font-label-caps text-label-caps text-outline tracking-wider uppercase mt-1">COMBATES REGISTRADOS</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. TORNEOS ACTIVOS -->
+<section class="w-full mt-space-xl">
+<div class="flex items-center justify-between pb-space-sm mb-space-md border-b border-surface-container">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-2 bg-primary"></span>
+<h2 class="font-headline-md text-headline-md uppercase tracking-wider text-on-surface">Torneos Activos</h2>
+</div>
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-outline hover:text-primary transition-colors flex items-center gap-1" href="#todos-torneos">
+<span>Ver todos</span>
+<svg class="w-3 h-3 stroke-current" fill="none" stroke-width="2" viewbox="0 0 24 24">
+<path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</a>
+</div>
+<!-- 4-Card Tournament Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Card 1: Alsius -->
+<div class="bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between hover:border-surface-variant transition-colors group relative">
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-tertiary-fixed-dim/40 group-hover:bg-tertiary-fixed-dim transition-colors"></div>
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 bg-surface-container text-on-surface-variant border border-surface-variant">3v3</span>
+<span class="font-label-caps text-label-caps text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-none bg-emerald-400"></span>
+              Inscripción Abierta
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-space-md">
+            Torneo Relámpago Alsius
+          </h3>
+<div class="space-y-space-xs pt-space-xs border-t border-surface-container font-data-mono-sm text-data-mono-sm text-secondary">
+<div class="flex justify-between items-center">
+<span class="text-outline">Inscriptos</span>
+<span class="text-on-surface font-semibold tabular-nums">14/16 Equipos</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">Horario</span>
+<span class="text-on-surface tabular-nums">Hoy, 21:00 UTC</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full py-space-xs px-space-sm bg-surface-container border border-surface-variant hover:border-primary/70 hover:text-primary text-secondary font-label-caps text-label-caps uppercase tracking-widest transition-all">
+            Inscribir Escuadra
+          </button>
+</div>
+</div>
+<!-- Card 2: Ignis -->
+<div class="bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between hover:border-surface-variant transition-colors group relative">
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-error/40 group-hover:bg-error transition-colors"></div>
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 bg-surface-container text-on-surface-variant border border-surface-variant">1v1</span>
+<span class="font-label-caps text-label-caps text-primary uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-none bg-primary animate-pulse"></span>
+              En Curso
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-space-md">
+            Copa de Campeones de Ignis
+          </h3>
+<div class="space-y-space-xs pt-space-xs border-t border-surface-container font-data-mono-sm text-data-mono-sm text-secondary">
+<div class="flex justify-between items-center">
+<span class="text-outline">Inscriptos</span>
+<span class="text-on-surface font-semibold tabular-nums">32/32 Jugadores</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">Estado</span>
+<span class="text-primary tabular-nums font-semibold">Ronda 3 en juego</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full py-space-xs px-space-sm bg-surface-container border border-surface-variant hover:border-primary/70 hover:text-primary text-secondary font-label-caps text-label-caps uppercase tracking-widest transition-all">
+            Ver Bracket
+          </button>
+</div>
+</div>
+<!-- Card 3: Syrtis -->
+<div class="bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between hover:border-surface-variant transition-colors group relative">
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-emerald-600/40 group-hover:bg-emerald-500 transition-colors"></div>
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 bg-surface-container text-on-surface-variant border border-surface-variant">7v7</span>
+<span class="font-label-caps text-label-caps text-emerald-400 uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-none bg-emerald-400"></span>
+              Inscripción Abierta
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-space-md">
+            Guerra de Clanes de Syrtis
+          </h3>
+<div class="space-y-space-xs pt-space-xs border-t border-surface-container font-data-mono-sm text-data-mono-sm text-secondary">
+<div class="flex justify-between items-center">
+<span class="text-outline">Inscriptos</span>
+<span class="text-on-surface font-semibold tabular-nums">8/12 Clanes</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">Fecha</span>
+<span class="text-on-surface tabular-nums">Sáb 29 Mar, 19:00 UTC</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full py-space-xs px-space-sm bg-surface-container border border-surface-variant hover:border-primary/70 hover:text-primary text-secondary font-label-caps text-label-caps uppercase tracking-widest transition-all">
+            Inscribir Escuadra
+          </button>
+</div>
+</div>
+<!-- Card 4: Abierto Frontera -->
+<div class="bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between hover:border-surface-variant transition-colors group relative">
+<div class="absolute top-0 left-0 right-0 h-[2px] bg-outline-variant group-hover:bg-outline transition-colors"></div>
+<div>
+<div class="flex items-center justify-between gap-space-xs mb-space-sm">
+<span class="font-data-mono-sm text-data-mono-sm px-1.5 py-0.5 bg-surface-container text-on-surface-variant border border-surface-variant">2v2</span>
+<span class="font-label-caps text-label-caps text-sky-400 uppercase tracking-widest flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-none bg-sky-400"></span>
+              Inicia en 2h
+            </span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors mb-space-md">
+            Duelo Abierto de Frontera
+          </h3>
+<div class="space-y-space-xs pt-space-xs border-t border-surface-container font-data-mono-sm text-data-mono-sm text-secondary">
+<div class="flex justify-between items-center">
+<span class="text-outline">Inscriptos</span>
+<span class="text-on-surface font-semibold tabular-nums">24/24 Parejas</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-outline">Horario</span>
+<span class="text-on-surface tabular-nums">Hoy, 23:30 UTC</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm">
+<button class="w-full py-space-xs px-space-sm bg-surface-container border border-surface-variant hover:border-primary/70 hover:text-primary text-secondary font-label-caps text-label-caps uppercase tracking-widest transition-all">
+            Ver Lista
+          </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. ACTIVIDAD RECIENTE (Últimos Campeones Coronados) -->
+<section class="w-full mt-space-xl">
+<div class="pb-space-xs mb-space-md border-b border-surface-container">
+<h2 class="font-headline-md text-headline-md uppercase tracking-wider text-on-surface">Actividad Reciente</h2>
+<p class="font-body-sm text-body-sm text-outline tracking-wide">Últimos campeones coronados en torneos de la comunidad</p>
+</div>
+<!-- 4 Side-by-Side Champion Cards with Dark Backdrop -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Champion 1: Valkyria_Als -->
+<div class="relative overflow-hidden bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between group">
+<div class="absolute inset-0 bg-cover bg-center opacity-15 group-hover:opacity-25 transition-opacity" data-alt="Dark fantasy victory stone obelisk engraved with Nordic ruins in snow covered pine mountains under deep twilight slate atmosphere." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDzyJb12fSMlyJxXNuHor7KBKxtBn1tAKD6FvGhNs5mzRRaVftwWGK94zIwd3wlkApuwT9h-LzZwwx5tInsTDu4Bpva0BHQiObkzrkS5Nd8zr7DteDb6ER9djp6t7xliDADvkOW-4tgywojMcgTU9AfNpfKNQcdTFTz4bHooFgrW6J8_T8xbBBJGdSV9sEYplMamWweuBX3EvYqM_gPY5gD1OSvJ683aDNPRe1PODM3gRZjRaPu5ql26g');"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-space-sm">
+<svg class="w-5 h-5 text-primary stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.004-9.75V3.75m0 2.25a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3V3.75m7.5 2.25h1.5a3 3 0 0 1 3 3v.75a3 3 0 0 1-3 3h-1.5m-7.5-6.75H6a3 3 0 0 0-3 3v.75a3 3 0 0 0 3 3h1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="font-data-mono-sm text-data-mono-sm text-outline tabular-nums">Hace 3 horas</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary tracking-wide mb-space-xs">
+            Valkyria_Als
+          </h3>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#0b1b36] border border-[#2563eb] text-blue-200 font-data-mono-sm text-data-mono-sm mb-space-sm">
+            Bárbaro • Alsius
+          </div>
+<div class="text-outline font-body-sm text-body-sm pt-space-xs border-t border-surface-container">
+            Torneo: <span class="text-on-surface font-medium">Torneo Maestro 1v1</span>
+</div>
+</div>
+</div>
+<!-- Champion 2: Ignis_Warlord -->
+<div class="relative overflow-hidden bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between group">
+<div class="absolute inset-0 bg-cover bg-center opacity-15 group-hover:opacity-25 transition-opacity" data-alt="Volcanic molten fortress gates guarded by dark obsidian pillars and iron braziers burning in twilight." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBrykCY13lUNEAWjkxGgFTU5Y8DvYp2DFyvIHx3ie2GbFNQWEmgSGCxlttc4powAFdghYkMtxvrFAO2CNA-BSNav9KrVJt0eiLMF4xgWR7g1nzOzZuD8DPcELnd_nxRd29WsQmKorwdvR8NQu129phz8_jQyeCIss-63EdMZczzH_mbbw3nMJkiwP8ShKVUiecQ5xGq27HF1dMpdHAp-_KVzObf8AvYhQP-VfifgFOXToxvk6weHQsAuQ');"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-space-sm">
+<svg class="w-5 h-5 text-primary stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.004-9.75V3.75m0 2.25a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3V3.75m7.5 2.25h1.5a3 3 0 0 1 3 3v.75a3 3 0 0 1-3 3h-1.5m-7.5-6.75H6a3 3 0 0 0-3 3v.75a3 3 0 0 0 3 3h1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="font-data-mono-sm text-data-mono-sm text-outline tabular-nums">Hace 1 día</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary tracking-wide mb-space-xs">
+            Ignis_Warlord
+          </h3>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#2d0909] border border-[#dc2626] text-red-200 font-data-mono-sm text-data-mono-sm mb-space-sm">
+            Caballero • Ignis
+          </div>
+<div class="text-outline font-body-sm text-body-sm pt-space-xs border-t border-surface-container">
+            Torneo: <span class="text-on-surface font-medium">Choque de Titanes 3v3</span>
+</div>
+</div>
+</div>
+<!-- Champion 3: Sylph_Elven -->
+<div class="relative overflow-hidden bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between group">
+<div class="absolute inset-0 bg-cover bg-center opacity-15 group-hover:opacity-25 transition-opacity" data-alt="Ancient deep green enchanted forest altar surrounded by towering stone monoliths and moss covered battlements." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBeSD8meyNu1H3oxIY1SY2TMprInuhNVgTms2F8D3G2vfTL1LQliptIXr9wKJt-mwzLw0xRgmFbWhPpg4PSRTNpi_vS3gEvcapxt_xKmVVWldUl4Ou-3_oAvhKOAIEHy1wOApk4SIGbseF5y3dN3Sah8I7ENdmj-O2Zz_7mX-wQmGZpQDKvbaKggHHrptNGMg1l-3K2FLCdHtd8t48N1F3tgqPWiMZ0ChCvA5Bvyv2NOd4lapqW717lFg');"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-space-sm">
+<svg class="w-5 h-5 text-primary stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.004-9.75V3.75m0 2.25a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3V3.75m7.5 2.25h1.5a3 3 0 0 1 3 3v.75a3 3 0 0 1-3 3h-1.5m-7.5-6.75H6a3 3 0 0 0-3 3v.75a3 3 0 0 0 3 3h1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="font-data-mono-sm text-data-mono-sm text-outline tabular-nums">Hace 2 días</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary tracking-wide mb-space-xs">
+            Sylph_Elven
+          </h3>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#032418] border border-[#059669] text-emerald-200 font-data-mono-sm text-data-mono-sm mb-space-sm">
+            Tirador • Syrtis
+          </div>
+<div class="text-outline font-body-sm text-body-sm pt-space-xs border-t border-surface-container">
+            Torneo: <span class="text-on-surface font-medium">Duelo de Arqueros</span>
+</div>
+</div>
+</div>
+<!-- Champion 4: Kragthor -->
+<div class="relative overflow-hidden bg-surface-container-low border border-surface-container p-space-md flex flex-col justify-between group">
+<div class="absolute inset-0 bg-cover bg-center opacity-15 group-hover:opacity-25 transition-opacity" data-alt="Glacial stone war tower on an icy precipice shrouded in howling blizzard and dark arctic shadows." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDLsnCiFEjIA6oSLDOoT0ulzHUFiZUhvhcWSAEEvSQCVEbDJIx29XvdfOqH4SNOayj6ciSaRmfrscrBbhSOXPVXjlPVbGiyWY9kQgA_cFYVlCSYTNelhyWyBv2SA-SyZ8VFkyz1W7jjGKZuHaPkvj_CZ_KELernUPPTaXMHT7PZd9YPmdaOlSxxZvIbbivhqLZm1vU3k0YeROtUL85BT5jEcT1GcllWZAX_N-pp7ZDBImKt-tvXxfMThg');"></div>
+<div class="relative z-10">
+<div class="flex items-center justify-between mb-space-sm">
+<svg class="w-5 h-5 text-primary stroke-current" fill="none" stroke-width="1.8" viewbox="0 0 24 24">
+<path d="M16.5 18.75h-9m9 0a3 3 0 0 1 3 3h-15a3 3 0 0 1 3-3m9 0v-3.375c0-.621-.504-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.004-9.75V3.75m0 2.25a3 3 0 0 1-3 3h-1.5a3 3 0 0 1-3-3V3.75m7.5 2.25h1.5a3 3 0 0 1 3 3v.75a3 3 0 0 1-3 3h-1.5m-7.5-6.75H6a3 3 0 0 0-3 3v.75a3 3 0 0 0 3 3h1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+<span class="font-data-mono-sm text-data-mono-sm text-outline tabular-nums">Hace 3 días</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-primary tracking-wide mb-space-xs">
+            Kragthor
+          </h3>
+<div class="inline-flex items-center gap-1 px-1.5 py-0.5 bg-[#0b1b36] border border-[#2563eb] text-blue-200 font-data-mono-sm text-data-mono-sm mb-space-sm">
+            Brujo • Alsius
+          </div>
+<div class="text-outline font-body-sm text-body-sm pt-space-xs border-t border-surface-container">
+            Torneo: <span class="text-on-surface font-medium">Copa de Invierno 2v2</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. RANKING (LEADERBOARD PVP) -->
+<section class="w-full mt-space-xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-xs mb-space-md border-b border-surface-container gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-2 bg-primary"></span>
+<h2 class="font-headline-md text-headline-md uppercase tracking-wider text-on-surface">Tabla de Clasificación</h2>
+</div>
+<!-- Quick Filter Tabs -->
+<div class="flex items-center bg-surface-container border border-surface-variant p-0.5 font-label-caps text-label-caps tracking-widest uppercase">
+<button class="px-space-md py-1 bg-surface-container-high text-primary border border-primary/30">General</button>
+<button class="px-space-md py-1 text-secondary hover:text-on-surface transition-colors">1v1</button>
+<button class="px-space-md py-1 text-secondary hover:text-on-surface transition-colors">Grupal (2v2 - 7v7)</button>
+</div>
+</div>
+<!-- Leaderboard Table Container -->
+<div class="w-full overflow-x-auto border border-surface-container bg-surface-container-low">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-container bg-surface-container-lowest font-label-caps text-label-caps text-outline tracking-wider uppercase">
+<th class="py-space-sm px-space-md text-center w-16">#</th>
+<th class="py-space-sm px-space-md">Jugador</th>
+<th class="py-space-sm px-space-md">Reino / Clase</th>
+<th class="py-space-sm px-space-md text-right">MMR</th>
+<th class="py-space-sm px-space-md">Racha Actual</th>
+<th class="py-space-sm px-space-md text-right">Winrate</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container font-data-mono-sm text-data-mono-sm">
+<!-- #1 Row: Top Rank Highlight -->
+<tr class="bg-surface-container/60 hover:bg-surface-container transition-colors group relative border-l-2 border-l-primary">
+<td class="py-space-sm px-space-md text-center">
+<span class="font-headline-sm text-headline-sm font-bold text-primary leading-none">I</span>
+</td>
+<td class="py-space-sm px-space-md font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors flex items-center gap-space-xs">
+<span>Gorthaur</span>
+<svg class="w-4 h-4 text-primary shrink-0" fill="currentColor" viewbox="0 0 24 24">
+<path d="M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5m14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"></path>
+</svg>
+</td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-red-600 shrink-0"></span>
+<span class="text-secondary">Caballero <span class="text-outline">/ Ignis</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-primary font-bold tabular-nums text-data-mono-md">
+              2,410
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400 font-medium">
+              14 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              74.2% <span class="text-outline">(182-63)</span>
+</td>
+</tr>
+<!-- #2 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group relative border-l-2 border-l-primary/70">
+<td class="py-space-sm px-space-md text-center">
+<span class="font-headline-sm text-headline-sm font-bold text-primary/90 leading-none">II</span>
+</td>
+<td class="py-space-sm px-space-md font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">
+              Aethelgard
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-emerald-600 shrink-0"></span>
+<span class="text-secondary">Tirador <span class="text-outline">/ Syrtis</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-primary/90 font-bold tabular-nums text-data-mono-md">
+              2,385
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400 font-medium">
+              8 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              71.0% <span class="text-outline">(164-67)</span>
+</td>
+</tr>
+<!-- #3 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group relative border-l-2 border-l-primary/50">
+<td class="py-space-sm px-space-md text-center">
+<span class="font-headline-sm text-headline-sm font-bold text-primary/80 leading-none">III</span>
+</td>
+<td class="py-space-sm px-space-md font-headline-sm text-headline-sm text-on-surface font-semibold group-hover:text-primary transition-colors">
+              Frostbite
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-blue-600 shrink-0"></span>
+<span class="text-secondary">Brujo <span class="text-outline">/ Alsius</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-primary/80 font-bold tabular-nums text-data-mono-md">
+              2,350
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400 font-medium">
+              5 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              69.5% <span class="text-outline">(151-66)</span>
+</td>
+</tr>
+<!-- #4 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group">
+<td class="py-space-sm px-space-md text-center font-bold text-outline tabular-nums">
+              4
+            </td>
+<td class="py-space-sm px-space-md font-body-md text-body-md text-on-surface font-medium group-hover:text-primary transition-colors">
+              Vanguard_X
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-red-600 shrink-0"></span>
+<span class="text-secondary">Bárbaro <span class="text-outline">/ Ignis</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-on-surface font-semibold tabular-nums">
+              2,290
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400">
+              2 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              66.8% <span class="text-outline">(143-71)</span>
+</td>
+</tr>
+<!-- #5 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group">
+<td class="py-space-sm px-space-md text-center font-bold text-outline tabular-nums">
+              5
+            </td>
+<td class="py-space-sm px-space-md font-body-md text-body-md text-on-surface font-medium group-hover:text-primary transition-colors">
+              Elendir
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-emerald-600 shrink-0"></span>
+<span class="text-secondary">Conjurador <span class="text-outline">/ Syrtis</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-on-surface font-semibold tabular-nums">
+              2,265
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400">
+              4 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              65.1% <span class="text-outline">(138-74)</span>
+</td>
+</tr>
+<!-- #6 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group">
+<td class="py-space-sm px-space-md text-center font-bold text-outline tabular-nums">
+              6
+            </td>
+<td class="py-space-sm px-space-md font-body-md text-body-md text-on-surface font-medium group-hover:text-primary transition-colors">
+              Skadi_Arrow
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-blue-600 shrink-0"></span>
+<span class="text-secondary">Cazador <span class="text-outline">/ Alsius</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-on-surface font-semibold tabular-nums">
+              2,240
+            </td>
+<td class="py-space-sm px-space-md text-error">
+              1 Derrota
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              63.9% <span class="text-outline">(129-73)</span>
+</td>
+</tr>
+<!-- #7 Row -->
+<tr class="bg-surface-container-low hover:bg-surface-container transition-colors group">
+<td class="py-space-sm px-space-md text-center font-bold text-outline tabular-nums">
+              7
+            </td>
+<td class="py-space-sm px-space-md font-body-md text-body-md text-on-surface font-medium group-hover:text-primary transition-colors">
+              Brimstone
+            </td>
+<td class="py-space-sm px-space-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 bg-red-600 shrink-0"></span>
+<span class="text-secondary">Nigromante <span class="text-outline">/ Ignis</span></span>
+</div>
+</td>
+<td class="py-space-sm px-space-md text-right text-on-surface font-semibold tabular-nums">
+              2,215
+            </td>
+<td class="py-space-sm px-space-md text-emerald-400">
+              3 Victorias
+            </td>
+<td class="py-space-sm px-space-md text-right text-secondary tabular-nums">
+              62.5% <span class="text-outline">(120-72)</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Ranking Footer Link -->
+<div class="mt-space-sm text-right">
+<a class="font-label-caps text-label-caps uppercase tracking-widest text-outline hover:text-primary transition-colors inline-flex items-center gap-1" href="#ranking-completo">
+<span>Consultar ranking completo (Top 500)</span>
+<svg class="w-3 h-3 stroke-current" fill="none" stroke-width="2" viewbox="0 0 24 24">
+<path d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</a>
+</div>
+</section>
+<!-- 5. FOOTER (Discreet single centered line) -->
+<footer class="w-full mt-space-xl pt-space-md border-t border-surface-container text-center">
+<p class="font-label-caps text-label-caps text-outline tracking-wider">
+      Champions of Regnum Community © 2025 • Registro no oficial competitivo creado por la comunidad.
+    </p>
+</footer>
+</div></div></main><footer class="w-full bg-surface-container-lowest border-t border-surface-container py-space-md"><div class="max-w-[1360px] mx-auto px-margin md:px-margin-tablet lg:px-margin-desktop text-center"><p class="font-label-caps text-label-caps text-outline tracking-wider">Champions of Regnum Community © 2025. Todos los derechos reservados. Desarrollado por y para la comunidad competitiva.</p></div></footer></body></html>

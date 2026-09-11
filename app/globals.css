@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600;700&display=swap');
+/* Dirección "Warbound Obsidian & Gold" (v2, 2026-09-11) — ver docs/design.md.
+   Cinzel/Crimson Pro/Inter quedan importadas todavía porque el resto del sitio
+   (fuera de Home) sigue usándolas con fontFamily literal en cada componente —
+   se retiran cuando se migre esa parte, no antes. */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cinzel+Decorative:wght@400;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -131,10 +135,18 @@
   --text-secondary: #909090;
   --text-muted:     #505050;
 
-  /* Fonts */
+  /* Fonts — Cinzel/Crimson Pro/Inter: dirección v1, todavía en uso fuera de Home
+     (fontFamily literal en cada componente, no vía estos tokens). Quedan hasta
+     que se migre esa parte del sitio, no se tocan acá. */
   --font-display: 'Cinzel', serif;
   --font-body:    'Crimson Pro', Georgia, serif;
   --font-sans:    'Inter', system-ui, -apple-system, sans-serif;
+
+  /* Fonts — dirección v2 "Warbound Obsidian & Gold" (docs/design.md). En uso en
+     Home; se promueven a --font-display/--font-sans (retirando las de arriba)
+     cuando el resto del sitio migre. */
+  --font-display-v2: 'EB Garamond', Georgia, serif;
+  --font-mono:        'JetBrains Mono', 'Courier New', monospace;
 
   /* Tier colors */
   --tier-legendary: #ff6b35;
