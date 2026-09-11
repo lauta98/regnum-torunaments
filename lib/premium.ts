@@ -42,7 +42,7 @@ export function estiloPremium(color: string | null | undefined, bg: string | nul
  * el mismo criterio. */
 export function cardEstiloPremium(tema: EstiloPremium | null) {
   return {
-    border: `1px solid ${tema ? tema.border : 'var(--border-gold)'}`,
-    boxShadow: tema?.glow ? `var(--shadow-card), ${tema.glow}` : 'var(--shadow-card)',
+    border: `1px solid ${tema ? tema.border : 'var(--border)'}`,
+    boxShadow: tema?.glow ?? undefined,
   }
 }
