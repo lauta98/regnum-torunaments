@@ -156,56 +156,30 @@
   --tier-silver:    #9e9e9e;
   --tier-bronze:    #8d6e63;
   --tier-iron:      #606060;
-}
 
-/* ── Tema de Comercio ──────────────────────────────────────────────
-   Paleta cálida propia, deliberada (ver componentes de components/market/:
-   "el frío moderno no encaja con un MMORPG medieval"). Sobrescribe acá los
-   MISMOS nombres de token que usa el resto del sitio — los componentes de
-   Comercio siguen escribiendo var(--bg-card)/var(--gold)/etc. como
-   cualquier otro, la diferencia la da este scope. Si en la Fase 5 se
-   decide unificar, borrar este bloque alcanza: Comercio hereda la escala
-   general sin tocar un solo componente.
-   Se aplica envolviendo las rutas de /market en app/market/layout.tsx con
-   className="theme-market". */
-.theme-market {
-  --bg-surface:    #1A1510;
-  --bg-card:       #211B14;
-  --bg-card-hover: #2a2118;
-  --border:        rgba(255, 255, 255, 0.08);  /* antes var(--dark-border) sin definir en ningún lado — no tenía valor propio, caía a currentColor por accidente */
-  --gold:          #C9A84C;
-  --gold-light:    #f0d060;
-
-  /* Alias para lo que las cards de Comercio ya llamaban var(--dark-card) /
-     var(--dark-surface) / var(--dark-border) — mismo valor que arriba,
-     dos nombres por compatibilidad hasta terminar de unificar el naming
-     en las fases de layout. */
+  /* Comercio — tokens propios, promovidos acá al unificar con la escala
+     general (Fase 2: antes vivían solo en .theme-market, que le daba a
+     Comercio una paleta cálida separada). Los alias mantienen el mismo
+     nombre que ya usan ~29 archivos de components/market y app/market/ —
+     ahora resuelven contra la escala general en vez de valores propios. */
   --dark-card:    var(--bg-card);
   --dark-surface: var(--bg-surface);
   --dark-border:  var(--border);
 
-  /* Huérfanos: se usaban en 6-14 archivos de Comercio (ItemDrawer, SellerCard,
-     BotonComprar, market/nuevo, etc.) pero nunca tuvieron valor — venían del
-     port original ("feat: portar Comercio al repo unificado") sin su CSS. */
-  --burgundy: #6b1e2e;  /* mismo valor que el "maroon glow" rgba(107,30,46) de HeroSection.tsx */
-
-  /* --dark-bg estaba cumpliendo dos roles distintos bajo un solo nombre
-     (mismo problema que #f87171 en rareza legendario). Se separó en dos:
-     --on-gold es SOLO texto/ícono sobre fondo dorado (botones y spinners
-     dentro de un botón con gradient var(--gold-dark)→var(--gold)) — nunca
-     se usa como fondo.
-     --market-surface-deep es el lado "fondo de superficie oscura" (y el
-     anillo neutro del avatar no-premium, mismo rol: que no se note) —
-     distinto de --select-option-bg (#0d0a07, otro valor, otro rol). */
-  --on-gold: #1a1208;
+  /* Huérfanos sin equivalente en la escala general — mismo valor que tenían
+     en .theme-market, no dependen de paleta cálida vs. fría. */
+  --burgundy:           #6b1e2e;
+  --on-gold:            #1a1208;
   --market-surface-deep: #0f0d0a;
-  /* mismo rol y mismo valor que el borde dorado atenuado que ya usa el
-     duplicado de este panel en market/nuevo/page.tsx línea ~1029
-     (`borderLeft: color-mix(var(--gold) 18%)`, antes rgba(201,168,76,0.18)) —
-     este bloque en línea ~1144 ya llamaba a var(--dark-border-gold) esperando
-     que existiera. */
-  --dark-border-gold: color-mix(in srgb, var(--gold) 18%, transparent);
+  --dark-border-gold:   color-mix(in srgb, var(--gold) 18%, transparent);
 }
+
+/* Comercio unificado con la escala general (Fase 2, 2026-09-11) — antes
+   tenía una paleta cálida propia vía .theme-market (ver historial de este
+   archivo). Los tokens que solo existían ahí (--dark-card/--dark-surface/
+   --dark-border/--burgundy/--on-gold/--market-surface-deep/
+   --dark-border-gold) se promovieron a :root arriba; Comercio ahora hereda
+   --bg-card/--bg-surface/--border/--gold/--gold-light sin overrides. */
 
 * {
   box-sizing: border-box;
