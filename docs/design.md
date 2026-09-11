@@ -6,20 +6,44 @@ mercado de ítems y salón de la fama. El público son jugadores del juego, no v
 casuales. Entran a buscar un dato concreto (mi MMR, quién ganó, cuánto vale un ítem),
 no a leer una landing.
 
-## Identidad visual — no cambiar
-La estética actual es correcta y se mantiene: fondo marrón muy oscuro, acento dorado,
-serif para títulos, arte real del juego. No proponer paletas nuevas, fondos claros,
-ni reemplazar el serif. El trabajo es de disciplina y jerarquía, no de reinvención.
+## Identidad visual — "Warbound Obsidian & Gold" (v2, 2026-09-11)
+La dirección visual cambió deliberadamente a partir de esta fecha — no es una limpieza
+de la estética anterior, es una identidad nueva, co-diseñada con Stitch
+(stitch.withgoogle.com) sobre este mismo brief y adoptada entera después de comparar
+resultado contra la regla vieja. Ver `docs/stitch-prompt-home.md` para el prompt
+original y el razonamiento del contraste punto por punto. Si en algún momento se
+revisa esta decisión, ese archivo tiene la comparación completa — no hace falta
+rehacerla de memoria.
+
+Sigue siendo cierto lo de antes: fondo casi negro, acento dorado escaso, arte real del
+juego con prioridad. Lo que cambia es el lenguaje formal — tipografía, uso deliberado de
+mayúsculas espaciadas como rol tipográfico controlado (antes prohibido, ver más abajo
+por qué ahora no), y geometría sin redondear. Sigue sin ser una landing de marketing:
+el público entra a buscar un dato concreto, la jerarquía visual tiene que resolver eso
+de un vistazo.
+
+Tono: severo, competitivo, con peso — un ledger de guerra grabado en piedra, no una app
+de consumo. Referencia: "grim, austere gravity of high-stakes realm-versus-realm
+medieval warfare" (texto original de Stitch, queda como ancla del tono).
 
 ## Sistema de color — el color es dato, no decoración
 
 Cuatro escalas, cada una con un trabajo:
 
-- **Neutros (marrones)**: fondo, superficies, bordes, texto. Es el 90% de la página.
-- **Dorado**: reservado. Solo para (a) la acción primaria de cada vista — una sola por
-  pantalla — y (b) estado de campeón/ganador. Nada más lleva dorado.
+- **Neutros (casi negro)**: fondo, superficies, bordes, texto. Es el 90% de la página.
+  Base `#050505`, tarjetas `#0C0C0C`/`#121212`. Sin sombras difusas ni glow — la
+  profundidad se comunica con bordes de 1px (`border_subtle #1F1F1F`,
+  `border_structural #282828`, `border_highlight #3E3E3E` para hover/foco).
+- **Dorado**: reservado, sigue siendo la regla más importante del documento. Solo para
+  (a) la acción primaria de cada vista — **una sola por pantalla**, nunca dos CTA
+  dorados con el mismo peso compitiendo — y (b) estado de campeón/ganador. Valor sin
+  cambios: `#d4af37`. Nada más lleva dorado.
 - **Reinos**: Syrtis verde, Ignis rojo, Alsius azul. Identifican pertenencia y se usan
-  en TODAS las páginas donde aparece un personaje, no solo en Ranking.
+  en TODAS las páginas donde aparece un personaje, no solo en Ranking. Valores exactos
+  sin cambios: `--syrtis #4CAF50`, `--ignis #F44336`, `--alsius #2196F3` — no los
+  aproximados de una paleta genérica (Tailwind emerald/red/blue u otra), son estos
+  valores puntuales. Se usan como acento chico y puntual (barra de 2px al borde de una
+  fila, línea de 2px sobre una card, punto de estado) — no como fondo ni wash grande.
 - **Rareza**: la escala que ya existe en Comercio (común/mágico/épico/legendario).
   Es el mejor uso de color del sitio actual. Mantenerla tal cual.
 
@@ -57,23 +81,49 @@ otro en el selector de tipo de daño, dentro del mismo formulario. Unificar valo
 Fase 5 antes de tokenizar cualquiera de las dos.
 
 ## Tipografía
-Una serif para display (títulos de sección, nombres de personaje, cifras de MMR) y una
-sans con `font-variant-numeric: tabular-nums` para datos y UI. Dos familias, no más.
-Escala con contraste real entre niveles. Longitud de línea por debajo de 80 caracteres.
+Dos familias, no más:
+- **EB Garamond** — display (títulos, cifras hero) y texto largo (lore, bios,
+  reglamento). Reemplaza a Cinzel/Crimson Pro. Misma razón que antes: un serif con
+  peso, no una serif genérica de sistema.
+- **JetBrains Mono** — toda cifra/dato (MMR, K/D, winrate, timestamps, ID de torneo) y
+  las etiquetas en mayúsculas del rol `label-caps` (ver abajo). Reemplaza el rol que
+  cumplía Inter con `tabular-nums` — un monoespaciado da alineación tabular real sin
+  depender de que la fuente la soporte bien, y refuerza el tono "ledger grabado".
+
+Jerarquía con contraste real entre niveles (ver escala completa en
+`docs/stitch-prompt-home.md` → `warbound_obsidian_gold/DESIGN.md`: `display-hero` 56px
+hasta `label-caps` 11px). Longitud de línea por debajo de 80 caracteres en texto largo.
+
+### Mayúsculas espaciadas — ahora es un rol tipográfico controlado, no un anti-patrón
+Antes esto estaba prohibido (ver historial de este archivo). Se revirtió esa regla
+deliberadamente al adoptar la dirección de Stitch: `label-caps` (JetBrains Mono, 11px,
+mayúsculas, tracking 0.12em) es un rol tipográfico real con un trabajo específico —
+encabezados de sección, labels de stat, badges de estado, headers de tabla, nav. Úsalo
+ahí y en ningún otro lado. Específicamente NO en: texto de botón/CTA (van en sentence
+case — "Salón de la Fama", no "SALÓN DE LA FAMA"), párrafos, descripciones, nombres de
+jugador/ítem/torneo. El criterio viejo ("Sentence case, tamaño chico, color secundario")
+sigue aplicando a todo lo que no sea explícitamente una de esas cinco cosas.
 
 ## Prohibido
-Estos patrones ya están en el sitio y hay que eliminarlos. No reintroducirlos:
+Estos patrones no van, se reintrodujeron o no en versiones anteriores del sitio:
 
 - **Emojis como íconos de interfaz** (🏆 ⚔️ 🥇 🔥 en botones, encabezados, badges).
-  Usar un set de íconos coherente. El arte real del juego sí se usa, y con prioridad.
-- **Mayúsculas espaciadas como etiqueta** (COMMUNITY, GUERREROS, PERSONAJE, ORDENAR).
-  Sentence case, tamaño chico, color secundario.
+  Usar un set de íconos de línea coherente (trazo ~1.8px, sin relleno). El arte real
+  del juego sí se usa, y con prioridad.
 - **La misma información dos veces en el mismo scroll.** Antes de agregar un bloque,
   verificar que ese dato no esté ya en la vista.
 - **Badges que nunca cambian de valor.** Si todas las tarjetas dicen "Finalizado",
   el badge no informa: sacarlo o mostrarlo solo cuando difiere.
-- **Gradientes decorativos**, sombras genéricas iguales en todo, `border-radius` único
-  para toda la jerarquía, todo centrado, flechas "→" pegadas al texto de los links.
+- **Gradientes decorativos** sin función (fondos degradé porque sí). Sombras difusas,
+  blur o glow para dar profundidad — la profundidad ahora se comunica con bordes de
+  1px (ver escalas de neutros arriba), no con `box-shadow` difuso.
+- **`border-radius` redondeado, en cualquier magnitud.** La geometría de esta dirección
+  es angular: `0px` en todo, sin excepción salvo el detalle heráldico de abajo. Esto
+  invierte la regla vieja (que prohibía un radio "único para toda la jerarquía") —
+  ahora el radio único *es* la regla, y es `0`. Excepción puntual: esquinas achaflanadas
+  de 4px (`clip-path`) en banners de campeón/logros, como detalle heráldico deliberado,
+  no como radio de card genérico.
+- **Todo centrado**, flechas "→" pegadas al texto de los links sin espaciado.
 - **Animaciones de entrada por sección** al hacer scroll. El movimiento responde a una
   acción del usuario (abrir, filtrar, confirmar) o no existe.
 - **Copy que habla del sistema y no del usuario.** Nada de "cargado retroactivamente"
