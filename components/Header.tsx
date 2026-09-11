@@ -12,20 +12,20 @@ import EditarPerfil from './EditarPerfil'
 
 /* ── Icons ─────────────────────────────────────────────────────── */
 const IconHome = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
   </svg>
 )
 const IconTrophy = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
     <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
     <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
     <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>
   </svg>
 )
-const IconSwords = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconSwords = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/>
     <line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/>
     <polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="11" x2="11" y2="5"/>
@@ -33,15 +33,9 @@ const IconSwords = () => (
   </svg>
 )
 const IconChart = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/>
     <line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/>
-  </svg>
-)
-const IconPerson = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
   </svg>
 )
 const IconDiscord = () => (
@@ -50,13 +44,13 @@ const IconDiscord = () => (
   </svg>
 )
 const IconMedal = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="15" r="6"/><path d="M12 10v2l1.5 1.5"/>
     <path d="M8.5 9L6 3M15.5 9L18 3M6 3h3M18 3h-3"/>
   </svg>
 )
 const IconVideo = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
 )
@@ -114,8 +108,8 @@ export default function Header() {
 
   return (
     <header style={{
-      background: 'rgba(6,6,6,0.98)',
-      borderBottom: 'none',
+      background: 'color-mix(in srgb, var(--bg-base) 98%, transparent)',
+      borderBottom: '1px solid var(--border)',
       backdropFilter: 'blur(20px)',
       position: 'sticky', top: 0, zIndex: 100,
     }}>
@@ -127,7 +121,7 @@ export default function Header() {
         }
       `}</style>
       <div style={{
-        maxWidth: 1400, margin: '0 auto', padding: '0 16px',
+        maxWidth: 1360, margin: '0 auto', padding: '0 16px',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 60,
         gap: 12,
       }}>
@@ -135,37 +129,34 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flexShrink: 0, minWidth: 0 }}>
           <div style={{
-            width: 36, height: 36, flexShrink: 0,
-            background: 'linear-gradient(135deg, rgba(212,175,55,0.2) 0%, rgba(212,175,55,0.05) 100%)',
-            border: '1px solid rgba(212,175,55,0.4)',
-            borderRadius: 8,
+            width: 34, height: 34, flexShrink: 0,
+            border: '1px solid color-mix(in srgb, var(--gold) 40%, transparent)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: 'var(--gold)', fontSize: 16,
-          }}>⚔️</div>
+            color: 'var(--gold)',
+          }}><IconSwords size={16} /></div>
           <div style={{ minWidth: 0, overflow: 'hidden' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, color: 'var(--text-primary)', lineHeight: 1.1, letterSpacing: 0.5 }}>CoR</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 2, textTransform: 'uppercase' }}>COMMUNITY</div>
+            <div style={{ fontFamily: 'var(--font-display-v2)', fontWeight: 600, fontSize: 15, color: 'var(--gold)', lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase' }}>CoR</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: '0.2em', textTransform: 'uppercase' }}>Community</div>
           </div>
         </Link>
 
         {/* Nav (desktop) */}
-        <nav className="cor-nav-links" style={{ display: 'flex', gap: 2, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
+        <nav className="cor-nav-links" style={{ display: 'flex', gap: 4, alignItems: 'center', flex: 1, justifyContent: 'center' }}>
           {NAV.map(({ label, href, icon }) => {
             const active = isActive(href)
             return (
               <Link key={href} href={href} style={{
                 display: 'flex', alignItems: 'center', gap: 6,
-                padding: '6px 11px', borderRadius: 7,
-                background: active ? 'rgba(255,255,255,0.07)' : 'transparent',
-                fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600,
-                color: active ? 'var(--text-primary)' : 'var(--text-muted)',
+                padding: '6px 10px', borderBottom: active ? '2px solid var(--gold)' : '2px solid transparent',
+                fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase',
+                color: active ? 'var(--gold)' : 'var(--text-muted)',
                 textDecoration: 'none', whiteSpace: 'nowrap',
-                transition: 'all 0.15s',
+                transition: 'color 0.15s, border-color 0.15s',
               }}
-                onMouseEnter={e => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = 'var(--text-secondary)' } }}
-                onMouseLeave={e => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)' } }}
+                onMouseEnter={e => { if (!active) e.currentTarget.style.color = 'var(--text-secondary)' }}
+                onMouseLeave={e => { if (!active) e.currentTarget.style.color = 'var(--text-muted)' }}
               >
-                <span style={{ color: active ? 'var(--gold)' : 'inherit', display: 'flex' }}>{icon}</span>
+                <span style={{ display: 'flex' }}>{icon}</span>
                 {label}
               </Link>
             )
@@ -180,8 +171,8 @@ export default function Header() {
           aria-expanded={mobileNavOpen}
           style={{
             alignItems: 'center', justifyContent: 'center',
-            width: 36, height: 36, flexShrink: 0,
-            background: 'transparent', border: '1px solid rgba(255,255,255,0.14)', borderRadius: 8,
+            width: 34, height: 34, flexShrink: 0,
+            background: 'transparent', border: '1px solid var(--border)',
             color: 'var(--text-primary)', cursor: 'pointer',
           }}
         >
@@ -193,30 +184,30 @@ export default function Header() {
           <div style={{ position: 'relative', flexShrink: 0, minWidth: 0 }}>
             <button onClick={() => setDropdownOpen(o => !o)} aria-haspopup="true" aria-expanded={dropdownOpen} style={{
               display: 'flex', alignItems: 'center', gap: 8, maxWidth: 160,
-              background: 'rgba(255,255,255,0.05)',
-              border: `1px solid color-mix(in srgb, ${rc} 20%, transparent)`, borderRadius: 8, padding: '5px 11px',
+              background: 'var(--bg-card)',
+              border: `1px solid color-mix(in srgb, ${rc} 30%, transparent)`, padding: '5px 10px',
               cursor: 'pointer', color: 'var(--text-primary)',
             }}>
-              <div style={{ width: 26, height: 26, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 13%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+              <div style={{ width: 24, height: 24, background: `color-mix(in srgb, ${rc} 13%, transparent)`, border: `1px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                 {avatarSrc(player)
                   ? <img src={avatarSrc(player)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={`Avatar de ${player.nickname_juego}`} />
-                  : <span style={{ fontSize: 11, fontWeight: 700, color: rc }}>{player.nickname_juego?.[0]?.toUpperCase()}</span>}
+                  : <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 11, fontWeight: 700, color: rc }}>{player.nickname_juego?.[0]?.toUpperCase()}</span>}
               </div>
-              <span style={{ fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{player.nickname_juego}</span>
-              <span style={{ fontSize: 10, color: 'var(--text-muted)', flexShrink: 0 }}>▾</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{player.nickname_juego}</span>
+              <span style={{ fontSize: 9, color: 'var(--text-muted)', flexShrink: 0 }}>▾</span>
             </button>
             {dropdownOpen && (
-              <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: '#141414', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, minWidth: 200, zIndex: 200, overflow: 'hidden', boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}
+              <div style={{ position: 'absolute', right: 0, top: 'calc(100% + 6px)', background: 'var(--bg-card)', border: '1px solid var(--border)', minWidth: 200, zIndex: 200, overflow: 'hidden' }}
                 onMouseLeave={() => setDropdownOpen(false)}>
 
                 {/* Rol badge */}
-                <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{
-                    background: ROLE_BG[player.role as UserRole] ?? 'rgba(255,255,255,0.05)',
+                    background: ROLE_BG[player.role as UserRole] ?? 'var(--bg-surface)',
                     color: ROLE_COLOR[player.role as UserRole] ?? 'var(--text-muted)',
-                    border: `1px solid ${ROLE_COLOR[player.role as UserRole] ?? 'transparent'}55`,
-                    padding: '2px 8px', borderRadius: 4,
-                    fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5,
+                    border: `1px solid color-mix(in srgb, ${ROLE_COLOR[player.role as UserRole] ?? 'var(--text-muted)'} 35%, transparent)`,
+                    padding: '2px 8px',
+                    fontFamily: 'var(--font-mono)', fontSize: 9.5, letterSpacing: '0.08em', textTransform: 'uppercase', fontWeight: 600,
                   }}>
                     {ROLE_LABEL[player.role as UserRole] ?? player.role}
                   </span>
@@ -224,7 +215,7 @@ export default function Header() {
 
                 {/* Mi perfil */}
                 <Link href={`/jugadores/${player.id}`} onClick={() => setDropdownOpen(false)}
-                  style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid var(--border)' }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
                   onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}>
                   Mi perfil
@@ -234,18 +225,18 @@ export default function Header() {
                     (ver más abajo), porque se desmonta apenas se cierra */}
                 <button
                   onClick={() => { setEditarPerfilOpen(true); setDropdownOpen(false) }}
-                  style={{ display: 'block', width: '100%', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                  style={{ display: 'block', width: '100%', padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer', borderBottom: '1px solid var(--border)' }}
                   onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
                   onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}
                 >
-                  ⚙ Editar perfil
+                  Editar perfil
                 </button>
 
                 {/* Panel Organizador (organizer + admin) */}
                 {canOrganize(player.role) && (
                   <Link href="/organizador" onClick={() => setDropdownOpen(false)}
-                    style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = '#2196F3')}
+                    style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid var(--border)' }}
+                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--alsius)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}>
                     Panel Organizador
                   </Link>
@@ -254,15 +245,15 @@ export default function Header() {
                 {/* Panel Administrador (solo admin) */}
                 {canAdmin(player.role) && (
                   <Link href="/admin" onClick={() => setDropdownOpen(false)}
-                    style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+                    style={{ display: 'block', padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-secondary)', textDecoration: 'none', borderBottom: '1px solid var(--border)' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--gold)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-secondary)')}>
-                    ⚙ Panel Administrador
+                    Panel Administrador
                   </Link>
                 )}
 
                 <button onClick={() => { signOut(); setDropdownOpen(false) }}
-                  style={{ width: '100%', padding: '10px 16px', fontFamily: 'var(--font-display)', fontSize: 11, color: '#f87171', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
+                  style={{ width: '100%', padding: '10px 16px', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--error)', background: 'transparent', border: 'none', textAlign: 'left', cursor: 'pointer' }}>
                   Cerrar sesión
                 </button>
               </div>
@@ -273,15 +264,15 @@ export default function Header() {
           <button onClick={signInWithDiscord} style={{
             display: 'flex', alignItems: 'center', gap: 7,
             background: 'transparent',
-            color: '#fff', padding: '7px 14px', borderRadius: 8,
-            fontFamily: 'var(--font-display)', fontWeight: 700,
-            fontSize: 11, letterSpacing: 0.5,
-            border: '1px solid rgba(88,101,242,0.6)',
+            color: 'var(--text-primary)', padding: '7px 14px',
+            fontFamily: 'var(--font-mono)', fontWeight: 600,
+            fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase',
+            border: '1px solid color-mix(in srgb, #5865F2 60%, transparent)',
             cursor: 'pointer', flexShrink: 0,
             transition: 'all 0.15s',
           }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(88,101,242,0.15)'; e.currentTarget.style.borderColor = '#5865F2' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(88,101,242,0.6)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'color-mix(in srgb, #5865F2 15%, transparent)'; e.currentTarget.style.borderColor = '#5865F2' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'color-mix(in srgb, #5865F2 60%, transparent)' }}
           >
             <IconDiscord />
             Discord
@@ -291,28 +282,25 @@ export default function Header() {
 
       {/* Nav (mobile panel) */}
       {mobileNavOpen && (
-        <nav style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '4px 8px' }}>
+        <nav style={{ borderTop: '1px solid var(--border)', padding: '4px 8px' }}>
           {NAV.map(({ label, href, icon }) => {
             const active = isActive(href)
             return (
               <Link key={href} href={href} onClick={() => setMobileNavOpen(false)} style={{
                 display: 'flex', alignItems: 'center', gap: 12,
-                padding: '13px 12px', borderRadius: 8,
-                background: active ? 'rgba(255,255,255,0.07)' : 'transparent',
-                fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 600,
-                color: active ? 'var(--text-primary)' : 'var(--text-secondary)',
+                padding: '13px 12px',
+                background: active ? 'var(--bg-card)' : 'transparent',
+                fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
+                color: active ? 'var(--gold)' : 'var(--text-secondary)',
                 textDecoration: 'none',
               }}>
-                <span style={{ color: active ? 'var(--gold)' : 'inherit', display: 'flex' }}>{icon}</span>
+                <span style={{ display: 'flex' }}>{icon}</span>
                 {label}
               </Link>
             )
           })}
         </nav>
       )}
-
-      {/* Ornamental golden divider */}
-      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.15) 15%, rgba(212,175,55,0.45) 40%, rgba(212,175,55,0.45) 60%, rgba(212,175,55,0.15) 85%, transparent 100%)' }} />
     </header>
   )
 }
