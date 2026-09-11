@@ -23,12 +23,28 @@ import {
 import { getItemIconColored } from '@/lib/market/icons'
 import { useLanguage } from '@/lib/market/i18n'
 import { useCurrency } from '@/lib/market/CurrencyContext'
+import { IconHeart, IconStar, IconSword, IconShield as IconShieldLine } from './LineIcons'
 
 // ─── Constantes ─────────────────────────────────────────────────
 const GREY_CATS  = new Set(['joyeria', 'crafting', 'minerales'])
 const REINO_IMG  : Record<string,string> = { alsius:'/alsius.png', syrtis:'/syrtis.png', ignis:'/ignis.png' }
 const REINO_NAME : Record<string,string> = { alsius:'Alsius', syrtis:'Syrtis', ignis:'Ignis' }
-const CLASE_ICON : Record<string,string> = { guerrero:'⚔', mago:'🔮', arquero:'🏹' }
+// Mismos paths que ARQUETIPO_ICON en TorneoCard.tsx (Guerreros/Magos/Arqueros) —
+// clase_requerida acá es el mismo concepto de arquetipo, reusa el ícono.
+const CLASE_ICON_PATH: Record<string, string> = {
+  guerrero: 'M3.75 13.5 14.25 2.25 12 10.5h8.25L9.75 21.75 12 13.5H3.75Z',
+  mago:     'm3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z',
+  arquero:  'M15.59 14.37a5 5 0 0 1-.77 6.13l-.72.71a.75.75 0 0 1-1.06 0l-.71-.72a5 5 0 0 1 6.13-.77m-8.98-8.98a5 5 0 0 1 .77-6.13l.72-.71a.75.75 0 0 1 1.06 0l.71.72a5 5 0 0 1-6.13.77m2.12 7.07 4.24-4.24',
+}
+function ClaseIcon({ clase, size = 13 }: { clase: string; size?: number }) {
+  const d = CLASE_ICON_PATH[clase]
+  if (!d) return null
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8}>
+      <path d={d} strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 // ─── Sistema de rareza ──────────────────────────────────────────
 // Cada rareza tiene 4 señales visuales: borde, glow, gradiente BG imagen, fondo de card.
@@ -95,12 +111,12 @@ function getLastSeen(d:string|null): LSD {
 function SvgIcon({ sub, cat, color, material, itemText, px=52 }:{ sub?:string; cat:string; color:string; material?:string|null; itemText?:string|null; px?:number }) {
   let svg = ''
   try { svg = getItemIconColored(sub||'', cat, color, material, itemText) }
-  catch { svg = `<svg width="${px}" height="${px}" viewBox="0 0 52 52"><text x="26" y="34" text-anchor="middle" font-size="26">📦</text></svg>` }
+  catch { svg = `<svg width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.5"><path d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" stroke-linecap="round" stroke-linejoin="round"/></svg>` }
   return (
     <div
       suppressHydrationWarning
       style={{
-        width: px*1.55, height: px*1.55, borderRadius: 16, flexShrink:0,
+        width: px*1.55, height: px*1.55, flexShrink:0,
         background: `radial-gradient(circle, ${color}28 0%, ${color}08 65%, transparent 85%)`,
         display:'flex', alignItems:'center', justifyContent:'center',
         border:`1px solid ${color}22`,
@@ -117,13 +133,12 @@ function TypeBadge({ type, small=false }:{ type:string; small?:boolean }) {
   const sell = type === 'sell'
   return (
     <span
-      className="cinzel"
       style={{
+        fontFamily: 'var(--font-mono)', textTransform: 'uppercase',
         fontSize: small ? 9 : 10,
         letterSpacing: small ? '0.08em' : '0.12em',
         fontWeight: 700,
         padding: small ? '2px 7px' : '3px 9px',
-        borderRadius: 4,
         background: sell ? 'var(--type-sell-bg)' : 'var(--type-busca-bg)',
         color:       sell ? 'var(--success)' : 'var(--info)',
         border:      `1px solid ${sell ? 'var(--type-sell-border)' : 'var(--type-busca-border)'}`,
@@ -189,11 +204,9 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
   return (
     <div style={{
       width:245,
-      background:'linear-gradient(160deg,#1a1410,#0f0d0a)',
+      background:'#0f0d0a',
       border:`1px solid ${col}55`,
-      borderRadius:10,
       overflow:'hidden',
-      boxShadow:`0 16px 48px rgba(0,0,0,.88), 0 0 0 1px ${col}18`,
       pointerEvents:'none',
     }}>
       {/* Header */}
@@ -206,24 +219,24 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
       }}>
         <div style={{ position:'absolute', top:8, left:8 }}><TypeBadge type={listing.type} small /></div>
         {listing.rareza && listing.rareza!=='normal' && (
-          <span className="cinzel" style={{
+          <span style={{
+            fontFamily:'var(--font-mono)', textTransform:'uppercase',
             position:'absolute', top:8, right:8,
-            fontSize:9, padding:'2px 7px', borderRadius:3, letterSpacing:1, fontWeight:700,
+            fontSize:9, padding:'2px 7px', letterSpacing:1, fontWeight:700,
             background:`${col}25`, color:col, border:`1px solid ${col}44`,
           }}>
             {RAREZA_LABEL[listing.rareza]}
           </span>
         )}
         {listing.item_image_url ? (
-          <img src={listing.item_image_url} alt={listing.item_name} style={{ maxHeight: 72, maxWidth: '80%', objectFit: 'contain', borderRadius: 6, position: 'relative' }} />
+          <img src={listing.item_image_url} alt={listing.item_name} style={{ maxHeight: 72, maxWidth: '80%', objectFit: 'contain', position: 'relative' }} />
         ) : (
           <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={36} />
         )}
       </div>
       {/* Body */}
       <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:8 }}>
-        <p className="cinzel" style={{ margin:0, fontSize:14, textAlign:'center', color:col, lineHeight:1.3,
-          textShadow:`0 0 14px ${col}55` }}>
+        <p style={{ fontFamily:'var(--font-display-v2)', margin:0, fontSize:16, textAlign:'center', color:col, lineHeight:1.3 }}>
           {listing.item_name}
         </p>
         {listing.item_category && (
@@ -279,7 +292,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
         {/* Seller */}
         <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 0 0', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
           <div style={{
-            width:26, height:26, borderRadius:'50%', flexShrink:0,
+            width:26, height:26, flexShrink:0,
             background:`linear-gradient(135deg,${col}99,${col}44)`,
             display:'flex', alignItems:'center', justifyContent:'center',
             fontSize:11, fontWeight:700, color:'#fff',
@@ -290,7 +303,11 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
             <div style={{ fontSize:12, color:'var(--text-primary)', fontWeight:600,
               overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
               {listing.profiles?.username}
-              {listing.profiles?.avg_rating>0 && <span style={{ color:'var(--gold)', fontSize:10, marginLeft:5 }}>⭐{listing.profiles.avg_rating.toFixed(1)}</span>}
+              {listing.profiles?.avg_rating>0 && (
+                <span style={{ display:'inline-flex', alignItems:'center', gap:2, color:'var(--gold)', fontSize:10, marginLeft:5 }}>
+                  <IconStar size={9} /> {listing.profiles.avg_rating.toFixed(1)}
+                </span>
+              )}
             </div>
             {ls && <div style={{ fontSize:10, color: isNow?'var(--success)':'rgba(255,255,255,0.3)' }}>{ls}</div>}
           </div>
@@ -399,20 +416,14 @@ export default function ListingCard({
         onMouseLeave={()=>{ setHovered(false); onLeave(); setCarouselIdx(0) }}
         style={{
           textDecoration: 'none', color: 'inherit',
-          // Paleta cálida RPG — fondo con tinte sutil por rareza
           background: tier.cardBg,
           border: `1px solid ${hovered ? tier.borderHover : tier.border}`,
-          borderRadius: 12,
           overflow: 'hidden',
           cursor: 'pointer',
           display: 'flex',
           flexDirection: 'column',
           height: 420,                             // portrait fijo
-          // Hover: solo shadow + border, sin scale/translate en la card
-          boxShadow: hovered
-            ? `${tier.glow ? tier.glow + ', ' : ''}0 8px 32px rgba(0,0,0,.55)`
-            : featured ? `0 0 14px rgba(201,168,76,0.14)` : '0 2px 8px rgba(0,0,0,.3)',
-          transition: 'border-color 0.22s ease, box-shadow 0.22s ease',
+          transition: 'border-color 0.22s ease',
         }}
       >
         {/* ══════════════════════════════════════════
@@ -444,9 +455,10 @@ export default function ListingCard({
 
           {/* Featured banner */}
           {featured && (
-            <div className="cinzel" style={{
+            <div style={{
               position:'absolute', top:0, left:0, right:0, zIndex:20,
               textAlign:'center', padding:'4px 0', fontSize:8, letterSpacing:'4px', fontWeight:700,
+              fontFamily:'var(--font-mono)',
               background:'rgba(201,168,76,0.12)', borderBottom:'1px solid rgba(201,168,76,0.2)',
               color:'var(--gold)',
             }}>
@@ -462,13 +474,15 @@ export default function ListingCard({
           {/* Badge RAREZA/SET — top-right */}
           <div style={{ position:'absolute', top: featured?26:9, right:9, zIndex:10 }}>
             {listing.is_set ? (
-              <span className="cinzel" style={{
-                fontSize:9, padding:'2px 8px', borderRadius:4, fontWeight:700, letterSpacing:'0.1em',
+              <span style={{
+                fontFamily:'var(--font-mono)', textTransform:'uppercase',
+                fontSize:9, padding:'2px 8px', fontWeight:700, letterSpacing:'0.1em',
                 background:'var(--set-purple-bg)', color:'var(--set-purple)', border:'1px solid var(--set-purple-border)',
-              }}>📦 SET</span>
+              }}>SET</span>
             ) : rareza && rareza!=='normal' ? (
-              <span className="cinzel" style={{
-                fontSize:9, padding:'2px 8px', borderRadius:4, fontWeight:700, letterSpacing:'0.1em',
+              <span style={{
+                fontFamily:'var(--font-mono)', textTransform:'uppercase',
+                fontSize:9, padding:'2px 8px', fontWeight:700, letterSpacing:'0.1em',
                 background:`color-mix(in srgb, ${rc} 15%, transparent)`, color:rc!, border:`1px solid color-mix(in srgb, ${rc} 33%, transparent)`,
               }}>{RAREZA_LABEL[rareza]}</span>
             ) : null}
@@ -480,16 +494,16 @@ export default function ListingCard({
             title={fav?'Quitar de favoritos':'Guardar en favoritos'}
             style={{
               position:'absolute', bottom:9, right:9, zIndex:10,
-              width:28, height:28, borderRadius:'50%', cursor:'pointer',
+              width:26, height:26, cursor:'pointer',
               background:'rgba(13,11,9,0.65)',
               border:'1px solid rgba(255,255,255,0.12)',
-              color: fav ? 'var(--favorite)' : 'rgba(255,255,255,0.4)',
-              fontSize:14, display:'flex', alignItems:'center', justifyContent:'center',
+              color: fav ? 'var(--favorite)' : 'rgba(255,255,255,0.5)',
+              display:'flex', alignItems:'center', justifyContent:'center',
               transition:'transform 0.15s, color 0.15s',
               transform: favLoad ? 'scale(0.8)' : 'scale(1)',
             }}
           >
-            {fav ? '♥' : '♡'}
+            <IconHeart size={13} filled={fav} />
           </button>
 
           {/* ── IMAGEN o ICONO CENTRAL ── */}
@@ -579,11 +593,11 @@ export default function ListingCard({
           {hasPhoto && listing.clase_requerida && listing.clase_requerida!=='todas' && (
             <div style={{ position:'absolute', bottom:9, left:9, zIndex:10 }}>
               <span style={{
-                width:26, height:26, borderRadius:'50%', fontSize:14,
+                width:26, height:26, color:'#fff',
                 background:'rgba(13,11,9,0.65)', border:'1px solid rgba(255,255,255,0.14)',
                 display:'flex', alignItems:'center', justifyContent:'center',
               }}>
-                {CLASE_ICON[listing.clase_requerida]||'👤'}
+                <ClaseIcon clase={listing.clase_requerida} size={13} />
               </span>
             </div>
           )}
@@ -598,14 +612,14 @@ export default function ListingCard({
               <div style={{ display:'flex', flexWrap:'wrap', gap:4 }}>
                 {setItems.slice(0,3).map((it:string,i:number) => (
                   <span key={i} style={{
-                    fontSize:9, padding:'2px 8px', borderRadius:99,
+                    fontSize:9, fontFamily:'var(--font-mono)', padding:'2px 8px',
                     background:'color-mix(in srgb, var(--set-purple-bg) 70%, transparent)', color:'var(--set-purple)',
                     border:'1px solid rgba(139,92,246,0.3)',
                     maxWidth:115, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
                   }}>{it}</span>
                 ))}
                 {setItems.length>3 && (
-                  <span style={{ fontSize:9, padding:'2px 6px', borderRadius:99,
+                  <span style={{ fontSize:9, fontFamily:'var(--font-mono)', padding:'2px 6px',
                     background:'rgba(255,255,255,0.06)', color:'rgba(255,255,255,0.35)' }}>
                     +{setItems.length-3}
                   </span>
@@ -624,7 +638,8 @@ export default function ListingCard({
             display:'flex', alignItems:'flex-end', justifyContent:'center',
             paddingBottom:10,
           }}>
-            <span className="cinzel" style={{
+            <span style={{
+              fontFamily:'var(--font-mono)', textTransform:'uppercase',
               fontSize:10, letterSpacing:'3px', fontWeight:700,
               color:'rgba(255,255,255,0.9)',
               transform: hovered ? 'translateY(0)' : 'translateY(5px)',
@@ -653,9 +668,9 @@ export default function ListingCard({
 
           {/* 1. Nombre */}
           <h3
-            className="cinzel"
             style={{
-              margin:0, fontSize:14, fontWeight:700, lineHeight:1.25,
+              fontFamily:'var(--font-display-v2)',
+              margin:0, fontSize:16, fontWeight:600, lineHeight:1.25,
               overflow:'hidden', display:'-webkit-box', WebkitLineClamp:1, WebkitBoxOrient:'vertical',
               color: tier.nameColor,
               textShadow: tier.imgGrad!=='transparent' ? `0 0 14px ${tier.imgGrad}44` : 'none',
@@ -677,8 +692,8 @@ export default function ListingCard({
                 </span>
               )}
               {listing.clase_requerida && listing.clase_requerida!=='todas' && (
-                <span style={{ fontSize:11, color:'var(--text-muted)' }}>
-                  {CLASE_ICON[listing.clase_requerida]||'👤'} {CLASE_LABEL[listing.clase_requerida]}
+                <span style={{ display:'flex', alignItems:'center', gap:4, fontSize:11, color:'var(--text-muted)' }}>
+                  <ClaseIcon clase={listing.clase_requerida} size={11} /> {CLASE_LABEL[listing.clase_requerida]}
                 </span>
               )}
             </div>
@@ -688,14 +703,14 @@ export default function ListingCard({
           {hasStats && (
             <div style={{ display:'flex', gap:14, flexShrink:0, flexWrap:'wrap' }}>
               {listing.dano_min_1 && (
-                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'var(--stat-damage)', lineHeight:1.3 }}>
-                  ⚔ {listing.dano_min_1}–{listing.dano_max_1}
+                <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, fontWeight:700, fontFamily:'var(--font-mono)', color:'var(--stat-damage)', lineHeight:1.3 }}>
+                  <IconSword size={11} /> {listing.dano_min_1}–{listing.dano_max_1}
                   {listing.bonus_xx && <span style={{ color:'var(--gold)', fontSize:10 }}> +{listing.bonus_xx}</span>}
                 </span>
               )}
               {listing.armadura_base && (
-                <span style={{ fontSize:12, fontWeight:700, fontFamily:'monospace', color:'var(--stat-armor)', lineHeight:1.3 }}>
-                  🛡 {listing.armadura_base}
+                <span style={{ display:'flex', alignItems:'center', gap:3, fontSize:12, fontWeight:700, fontFamily:'var(--font-mono)', color:'var(--stat-armor)', lineHeight:1.3 }}>
+                  <IconShieldLine size={11} /> {listing.armadura_base}
                   {listing.armadura_bonus && <span style={{ color:'var(--gold)', fontSize:10 }}> +{listing.armadura_bonus}</span>}
                 </span>
               )}
@@ -707,8 +722,8 @@ export default function ListingCard({
             <div style={{ display:'flex', flexWrap:'wrap', gap:3, overflow:'hidden' }}>
               {mods.map((mod, i) => (
                 <span key={i} style={{
-                  fontSize:9.5, fontFamily:'monospace',
-                  padding:'2px 7px', borderRadius:99,
+                  fontSize:9.5, fontFamily:'var(--font-mono)',
+                  padding:'2px 7px',
                   background:'rgba(91,201,139,0.10)',
                   color:'var(--success)',
                   border:'1px solid rgba(91,201,139,0.22)',
@@ -738,8 +753,8 @@ export default function ListingCard({
               }}>
                 {listing.profiles?.username}
                 {listing.profiles?.avg_rating>0 && (
-                  <span style={{ color:'var(--gold)', fontSize:9, marginLeft:4 }}>
-                    ⭐{listing.profiles.avg_rating.toFixed(1)}
+                  <span style={{ display:'inline-flex', alignItems:'center', gap:2, color:'var(--gold)', fontSize:9, marginLeft:4 }}>
+                    <IconStar size={9} /> {listing.profiles.avg_rating.toFixed(1)}
                   </span>
                 )}
               </div>

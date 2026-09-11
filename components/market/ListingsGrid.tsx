@@ -4,6 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import ListingCard from './ListingCard'
 import Spinner from './Spinner'
+import { IconChest, IconPlus } from './LineIcons'
 
 const PAGE_SIZE = 24
 
@@ -43,8 +44,8 @@ export default function ListingsGrid({ initialListings, initialCount, initialFav
 
     return (
       <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-        <div style={{ fontSize: 56, marginBottom: 16 }}>🏰</div>
-        <p className="cinzel" style={{ fontSize: 17, color: 'var(--text-primary)', marginBottom: 8 }}>
+        <IconChest size={44} style={{ color: 'var(--text-muted)', marginBottom: 16 }} />
+        <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 20, color: 'var(--text-primary)', marginBottom: 8 }}>
           {termino ? `No encontramos "${termino}"` : 'No hay publicaciones'}
         </p>
         <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 24, maxWidth: 380, margin: '0 auto 24px' }}>
@@ -54,12 +55,11 @@ export default function ListingsGrid({ initialListings, initialCount, initialFav
         </p>
         <Link href={`/market/nuevo?type=sell${query ? `&q=${encodeURIComponent(query)}` : ''}`} style={{
           display: 'inline-flex', alignItems: 'center', gap: 8,
-          background: 'linear-gradient(135deg, #1a5c35, #2E7D52)',
-          color: '#fff', padding: '11px 24px', borderRadius: 8,
-          fontFamily: "'Cinzel',serif", fontSize: 12, letterSpacing: 1, fontWeight: 700,
-          textDecoration: 'none', boxShadow: '0 2px 12px rgba(46,125,82,0.3)',
+          background: 'var(--gold)', color: '#050505', padding: '11px 24px',
+          fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.08em', fontWeight: 700, textTransform: 'uppercase',
+          textDecoration: 'none', border: '1px solid var(--gold-light)',
         }}>
-          🗡 Publicar un artículo
+          <IconPlus size={13} /> Publicar un artículo
         </Link>
       </div>
     )
@@ -86,11 +86,11 @@ export default function ListingsGrid({ initialListings, initialCount, initialFav
             onClick={loadMore}
             disabled={loading}
             style={{
-              padding: '12px 36px', borderRadius: 8, cursor: loading ? 'default' : 'pointer',
-              background: loading ? 'var(--dark-surface)' : 'var(--dark-card)',
+              padding: '12px 36px', cursor: loading ? 'default' : 'pointer',
+              background: loading ? 'var(--bg-surface)' : 'var(--bg-card)',
               border: '1px solid var(--dark-border-gold)',
               color: loading ? 'var(--text-muted)' : 'var(--gold)',
-              fontFamily: "'Cinzel',serif", fontSize: 12, letterSpacing: 1,
+              fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.05em', textTransform: 'uppercase',
               fontWeight: 600, transition: 'all 0.2s',
               opacity: loading ? 0.6 : 1,
             }}
