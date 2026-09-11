@@ -118,13 +118,17 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
       historiasPorPersonaje[entry.personaje_id] = arr
     })
 
+  const totalPj = personajes?.reduce((s, p) => s + (p.partidas_jugadas ?? 0), 0) ?? 0
+  const totalGanadas = personajes?.reduce((s, p) => s + (p.partidas_ganadas ?? 0), 0) ?? 0
+  const wrGlobal = totalPj > 0 ? Math.round((totalGanadas / totalPj) * 1000) / 10 : null
+
   return (
     <>
       <Header />
       <main style={{ maxWidth: 1100, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Breadcrumb */}
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 24, fontSize: 13, color: 'var(--text-muted)' }}>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 24, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>
           <Link href="/jugadores" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Ranking</Link>
           <span>›</span>
           <span style={{ color: 'var(--text-primary)' }}>{nombreCuenta}</span>
@@ -136,35 +140,35 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* Tarjeta cuenta */}
-            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+            <div style={{ background: 'var(--bg-card)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
               <PremiumAccentLine color={tema?.color} />
               <div style={{ padding: 24, textAlign: 'center' }}>
               <div style={{ position: 'relative', width: 72, height: 72, margin: '0 auto 14px' }}>
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '2px solid rgba(212,175,55,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                <div style={{ width: 72, height: 72, background: 'var(--bg-input)', border: '2px solid color-mix(in srgb, var(--gold) 40%, transparent)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                   {avatarSrc(player)
                     ? <img src={avatarSrc(player)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                    : <span style={{ fontFamily: 'var(--font-display)', fontSize: 28, color: 'var(--gold)' }}>{nombreCuenta[0]?.toUpperCase()}</span>}
+                    : <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 28, color: 'var(--gold)' }}>{nombreCuenta[0]?.toUpperCase()}</span>}
                 </div>
                 {isOwner ? (
                   <div style={{ position: 'absolute', bottom: -2, right: -2 }}>
                     <SubirAvatar playerId={player.id} />
                   </div>
                 ) : player.avatar_url && (
-                  <div style={{ position: 'absolute', bottom: -2, right: -2, background: 'rgba(10,10,10,0.72)', borderRadius: '50%', border: '1px solid rgba(244,67,54,0.4)' }}>
+                  <div style={{ position: 'absolute', bottom: -2, right: -2, background: 'rgba(10,10,10,0.72)', border: '1px solid rgba(244,67,54,0.4)' }}>
                     <ReportarAvatar targetId={player.id} />
                   </div>
                 )}
               </div>
-              <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-display)', fontSize: 18, fontWeight: 900, color: tema ? tema.color : 'var(--text-primary)', marginBottom: 8 }}>
+              <h1 style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-display-v2)', fontSize: 20, fontWeight: 600, color: tema ? tema.color : 'var(--text-primary)', marginBottom: 8 }}>
                 {nombreCuenta}
                 <PremiumBadge esPremium={player.es_premium} color={player.premium_color} size={15} />
               </h1>
               {player.role && player.role !== 'player' && (
-                <span style={{ display: 'inline-block', background: ROLE_BG[player.role as UserRole], color: ROLE_COLOR[player.role as UserRole], border: `1px solid ${ROLE_COLOR[player.role as UserRole]}55`, padding: '3px 10px', borderRadius: 4, fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5, marginBottom: 8 }}>
+                <span style={{ display: 'inline-block', background: ROLE_BG[player.role as UserRole], color: ROLE_COLOR[player.role as UserRole], border: `1px solid ${ROLE_COLOR[player.role as UserRole]}55`, padding: '3px 9px', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
                   {ROLE_LABEL[player.role as UserRole]}
                 </span>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: 'rgba(88,101,242,0.8)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'rgba(88,101,242,0.8)' }}>
                 <svg width="14" height="11" viewBox="0 0 71 55" fill="currentColor"><path d="M60.1 4.9A58.5 58.5 0 0 0 45.6.7a.2.2 0 0 0-.2.1 40.7 40.7 0 0 0-1.8 3.7 54 54 0 0 0-16.2 0A37.6 37.6 0 0 0 25.5.8a.2.2 0 0 0-.2-.1A58.4 58.4 0 0 0 10.8 4.9a.2.2 0 0 0-.1.1C1.6 18.7-.9 32.1.3 45.3a.2.2 0 0 0 .1.2 58.8 58.8 0 0 0 17.7 9 .2.2 0 0 0 .2-.1c1.4-1.9 2.6-3.9 3.6-5.9a.2.2 0 0 0-.1-.3 38.7 38.7 0 0 1-5.5-2.6.2.2 0 0 1 0-.4 30 30 0 0 0 .6-.5.2.2 0 0 1 .2 0c11.5 5.2 23.9 5.2 35.3 0a.2.2 0 0 1 .2 0l.6.5a.2.2 0 0 1 0 .4 36.2 36.2 0 0 1-5.5 2.6.2.2 0 0 0-.1.3c1 2 2.3 4 3.6 5.9a.2.2 0 0 0 .2.1 58.6 58.6 0 0 0 17.8-9 .2.2 0 0 0 .1-.2C72.9 30 70 16.7 60.2 5a.2.2 0 0 0-.1-.1Z"/></svg>
                 {player.discord_username}
               </div>
@@ -190,7 +194,7 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
               )}
 
               {isOwner && !player.es_premium && (
-                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'center' }}>
+                <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'center' }}>
                   <HacersePremium playerId={player.id} />
                 </div>
               )}
@@ -198,29 +202,30 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
             </div>
 
             {/* Stats globales */}
-            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+            <div style={{ background: 'var(--bg-card)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
               <PremiumAccentLine color={tema?.color} />
-              <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
-                RESUMEN
+              <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                Resumen
               </div>
               {[
                 { label: 'Personajes', value: personajes?.length ?? 0, color: 'var(--text-primary)' },
                 { label: 'Mejor MMR',  value: bestPersonaje?.mmr ?? '—', color: 'var(--gold)' },
-                { label: 'Total PJ',   value: personajes?.reduce((s, p) => s + (p.partidas_jugadas ?? 0), 0) ?? 0, color: 'var(--text-primary)' },
-              ].map(({ label, value, color }, i) => (
-                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 16px', borderBottom: i < 2 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 0.5 }}>{label}</span>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 700, color }}>{value}</span>
+                { label: 'Total PJ',   value: totalPj, color: 'var(--text-primary)' },
+                ...(wrGlobal !== null ? [{ label: 'WR Global', value: `${wrGlobal}%`, color: wrGlobal >= 55 ? 'var(--syrtis)' : 'var(--text-primary)' }] : []),
+              ].map(({ label, value, color }, i, arr) => (
+                <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '11px 16px', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{label}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 15, fontWeight: 700, color }}>{value}</span>
                 </div>
               ))}
             </div>
 
             {/* Torneos organizados */}
             {torneosOrganizados.length > 0 && (
-              <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-md)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
+              <div style={{ background: 'var(--bg-card)', overflow: 'hidden', ...cardEstiloPremium(tema) }}>
                 <PremiumAccentLine color={tema?.color} />
-                <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 2 }}>
-                  TORNEOS ORGANIZADOS
+                <div style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+                  Torneos organizados
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {torneosOrganizados.map((t, i) => {
@@ -230,23 +235,23 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
                         key={t.id} href={`/brackets/${t.id}`}
                         style={{
                           display: 'flex', gap: 8, padding: '10px 16px', textDecoration: 'none',
-                          borderBottom: i < torneosOrganizados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+                          borderBottom: i < torneosOrganizados.length - 1 ? '1px solid var(--border)' : 'none',
                         }}
                       >
                         <span style={{
-                          width: 3, borderRadius: 2, flexShrink: 0, alignSelf: 'stretch',
+                          width: 3, flexShrink: 0, alignSelf: 'stretch',
                           background: FORMAT_COLOR[t.formato as TournamentFormat] ?? 'var(--gold)',
                         }} />
                         <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12.5, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {t.nombre}
                           </div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 4 }}>
-                            <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: 'var(--text-muted)', letterSpacing: 0.5 }}>
-                              {t.rol === 'creador' ? 'CREADOR' : 'CO-ORGANIZADOR'}
+                            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                              {t.rol === 'creador' ? 'Creador' : 'Co-organizador'}
                             </span>
                             {st && (
-                              <span style={{ fontFamily: 'var(--font-display)', fontSize: 8, color: st.color, background: st.bg, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.5 }}>
+                              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: st.color, background: st.bg, padding: '1px 6px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                                 {st.label}
                               </span>
                             )}
@@ -277,8 +282,8 @@ export default async function JugadorPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       </main>
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.06)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: 2, marginTop: 40 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 40 }}>
+        CoR Tournament Stats © 2026 — Champions of Regnum Community
       </footer>
     </>
   )
