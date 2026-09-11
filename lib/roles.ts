@@ -28,15 +28,19 @@ export const ROLE_LABEL: Record<UserRole, string> = {
   admin:     'Administrador',
 }
 
+// organizer usaba #2196F3 — el mismo azul exacto de Alsius. Los colores
+// de reino quedan exclusivos para identificar reino (docs/design.md v2);
+// se reemplaza por --purple, ya usado en el sitio para eventos/rangos
+// especiales y sin relación con ningún reino.
 export const ROLE_COLOR: Record<UserRole, string> = {
   player:    '#909090',
-  organizer: '#2196F3',
+  organizer: '#8a2be2',
   admin:     '#d4af37',
 }
 
 export const ROLE_BG: Record<UserRole, string> = {
   player:    'rgba(144,144,144,0.10)',
-  organizer: 'rgba(33,150,243,0.12)',
+  organizer: 'rgba(138,43,226,0.12)',
   admin:     'rgba(212,175,55,0.12)',
 }
 
