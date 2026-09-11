@@ -8,6 +8,7 @@ import TrofeoBadge from '@/components/TrofeoBadge'
 import { avatarSrc } from '@/lib/avatar'
 import PremiumBadge from '@/components/PremiumBadge'
 import { estiloPremium } from '@/lib/premium'
+import { TIER_ICON_BY_RANK, IconCheck, IconLayers, IconFire, IconChart, IconUsers, IconShield, RankNumeral } from '@/components/RankingIcons'
 
 /* ── Shields ─────────────────────────────────────────── */
 const SHIELD_SRC: Record<string, string> = {
@@ -29,21 +30,52 @@ const CLASE_SVG: Record<string, React.ReactNode> = {
   Cazador:    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M10 5.172C10 3.782 8.423 2.679 6.5 3c-2.823.47-4.113 6.006-4 7 .08.703 1.725 1.722 3.656 1 1.261-.472 1.96-1.45 2.344-2.5"/><path d="M14.267 5.172c0-1.39 1.577-2.493 3.5-2.172 2.823.47 4.113 6.006 4 7-.08.703-1.725 1.722-3.656 1-1.261-.472-1.96-1.45-2.344-2.5"/><path d="M8 14v.5A3.5 3.5 0 0 0 11.5 18h1a3.5 3.5 0 0 0 3.5-3.5V14"/><path d="M6.5 17.5c-.66.568-1 1.347-1 2.5h11c0-1.153-.34-1.932-1-2.5"/></svg>,
 }
 
-function WinrateBar({ value }: { value: number }) {
+const IconX = ({ size = 10 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}><path d="M6 18 18 6M6 6l12 12" strokeLinecap="round" /></svg>
+)
+
+function TierIcon({ tierName, size = 11, color }: { tierName: string; size?: number; color: string }) {
+  const idx = MMR_TIERS.findIndex(t => t.name === tierName)
+  const Icon = TIER_ICON_BY_RANK[idx] ?? TIER_ICON_BY_RANK[TIER_ICON_BY_RANK.length - 1]
+  return <Icon size={size} style={{ color }} />
+}
+
+function TierPill({ tier, size = 'sm' }: { tier: typeof MMR_TIERS[number]; size?: 'sm' | 'md' }) {
+  const fs = size === 'md' ? 11 : 10
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      fontFamily: 'var(--font-mono)', fontSize: fs, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase',
+      padding: '2px 7px', color: tier.color,
+      background: `color-mix(in srgb, ${tier.color} 12%, transparent)`,
+      border: `1px solid color-mix(in srgb, ${tier.color} 35%, transparent)`,
+    }}>
+      <TierIcon tierName={tier.name} size={fs} color={tier.color} /> {tier.name}
+    </span>
+  )
+}
+
+/** Winrate real + desglose V-D derivado de winrate% × partidas_jugadas
+ *  (no viene separado de la base — se calcula, no se inventa). */
+function WinrateBar({ value, partidas }: { value: number; partidas?: number }) {
   const color = value >= 70 ? 'var(--syrtis)' : value >= 55 ? 'var(--gold)' : value >= 45 ? 'var(--text-secondary)' : 'var(--ignis)'
+  const wins = partidas ? Math.round((partidas * value) / 100) : null
   return (
     <div>
-      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color, fontWeight: 600 }}>{value}%</span>
-      <div className="winrate-bar"><div className="winrate-fill" style={{ width: `${Math.min(value, 100)}%`, background: color }} /></div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color, fontWeight: 700 }}>{value}%</span>
+        {wins !== null && partidas !== undefined && (
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{wins}V · {partidas - wins}D</span>
+        )}
+      </div>
+      <div style={{ height: 4, background: 'var(--bg-input)', marginTop: 4, width: '100%', maxWidth: 120 }}>
+        <div style={{ height: '100%', width: `${Math.min(value, 100)}%`, background: color }} />
+      </div>
     </div>
   )
 }
 
-const MEDAL_COLORS: Record<number, { main: string; bg: string; glow: string; label: string }> = {
-  1: { main: 'var(--gold)', bg: 'var(--gold-glow-bg)', glow: 'rgba(212,175,55,0.20)', label: '🥇' },
-  2: { main: 'var(--medal-silver)', bg: 'var(--medal-silver-bg)', glow: 'rgba(192,192,192,0.12)', label: '🥈' },
-  3: { main: 'var(--medal-bronze)', bg: 'var(--medal-bronze-bg)', glow: 'rgba(205,127,50,0.12)', label: '🥉' },
-}
+const MEDAL_COLOR: Record<number, string> = { 1: 'var(--gold)', 2: 'var(--medal-silver)', 3: 'var(--medal-bronze)' }
 
 function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos').TrofeoGrupo[]; size?: 'xs' | 'sm' }) {
   if (!grupos || grupos.length === 0) return null
@@ -57,10 +89,17 @@ function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos'
           title={`${g.puesto === 2 ? 'Subcampeón' : 'Campeón'}${g.tipoClan ? ' de clan' : ''} — ${g.nombres.join(', ')}`}
         />
       ))}
-      {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>+{restantes}</span>}
+      {restantes > 0 && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>+{restantes}</span>}
     </span>
   )
 }
+
+const TABS = [
+  { id: 'personajes', label: 'Personajes',        Icon: IconChart },
+  { id: 'cuentas',    label: 'Jugadores (Cuentas)', Icon: IconUsers },
+  { id: 'reinos',     label: 'Reinos & Balance',    Icon: IconShield },
+  { id: 'rachas',     label: 'Rachas de Victoria',  Icon: IconFire },
+] as const
 
 export default function RankingContent() {
   const searchParams = useSearchParams()
@@ -95,51 +134,59 @@ export default function RankingContent() {
   }
 
   if (!data) {
-    return <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>Cargando...</div>
+    return <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display-v2)' }}>Cargando...</div>
   }
 
   const { personajes, count, trofeosPorPersonaje, cuentas, porReino, rachas } = data
   const totalPages = Math.ceil((count || 0) / PAGE)
+  const totalReinos = porReino.reduce((s, r) => s + r.count, 0) || 1
 
   return (
     <>
-      <div style={{ marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>
-          {count ?? 0} personajes registrados
-        </span>
-      </div>
-
-      {/* Vista toggle */}
-      <div className="segmented" style={{ marginBottom: 20 }}>
-        {[
-          { id: 'personajes', label: 'Personajes' },
-          { id: 'cuentas',    label: 'Jugadores'  },
-          { id: 'reinos',     label: 'Reinos'      },
-          { id: 'rachas',     label: '🔥 Rachas'   },
-        ].map(({ id, label }) => (
-          <Link key={id} href={buildUrl({ vista: id, page: '1' })} className={`segmented-btn${vista === id ? ' is-active' : ''}`} style={{ textDecoration: 'none' }}>
-            {label}
-          </Link>
-        ))}
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 20, overflowX: 'auto' }}>
+        {TABS.map(({ id, label, Icon }) => {
+          const active = vista === id
+          return (
+            <Link key={id} href={buildUrl({ vista: id, page: '1' })} style={{
+              display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0,
+              padding: '10px 14px', marginBottom: -1,
+              fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', textTransform: 'uppercase',
+              color: active ? 'var(--gold)' : 'var(--text-muted)',
+              borderBottom: active ? '2px solid var(--gold)' : '2px solid transparent',
+              textDecoration: 'none', whiteSpace: 'nowrap',
+            }}>
+              <Icon size={14} /> {label}
+            </Link>
+          )
+        })}
       </div>
 
       {/* Filtros — solo tienen sentido en las vistas paginadas/de lista */}
       {(vista === 'personajes' || vista === 'cuentas') && (
       <form method="GET" style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
         <input type="hidden" name="vista" value={vista} />
-        <input name="q" defaultValue={q} placeholder="Buscar personaje..."
-          className="field" style={{ width: 'auto', minWidth: 200, flex: 1 }} />
-        <select name="reino" defaultValue={reinoFiltro} className="field" style={{ width: 'auto' }}>
-          <option value="">Todos los reinos</option>
+        <input name="q" defaultValue={q} placeholder="Buscar personaje o jugador..."
+          style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '8px 12px', minWidth: 220, flex: 1 }} />
+        <select name="reino" defaultValue={reinoFiltro} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '8px 12px' }}>
+          <option value="">Reino: Todos</option>
           {REINOS.map(r => <option key={r} value={r}>{r}</option>)}
         </select>
-        <select name="clase" defaultValue={claseFiltro} className="field" style={{ width: 'auto' }}>
-          <option value="">Todas las clases</option>
+        <select name="clase" defaultValue={claseFiltro} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontSize: 12, padding: '8px 12px' }}>
+          <option value="">Clase: Todas</option>
           {CLASES.map(c => <option key={c} value={c}>{c}</option>)}
         </select>
-        <button type="submit" className="btn btn-ghost-gold">Filtrar</button>
+        <button type="submit" style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border)', color: 'var(--gold)',
+          fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+          padding: '8px 16px', cursor: 'pointer',
+        }}>Filtrar</button>
         {isFiltered && (
-          <Link href={buildUrl({ q: undefined, reino: undefined, clase: undefined, page: '1' })} className="btn btn-ghost" style={{ textDecoration: 'none' }}>✕ Limpiar</Link>
+          <Link href={buildUrl({ q: undefined, reino: undefined, clase: undefined, page: '1' })} style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+            color: 'var(--error)', textDecoration: 'none', padding: '8px 12px',
+          }}><IconX size={9} /> Limpiar</Link>
         )}
       </form>
       )}
@@ -149,37 +196,45 @@ export default function RankingContent() {
         <>
           {/* Podio top 3 */}
           {!isFiltered && page === 1 && personajes && personajes.length >= 3 && (
-            <div style={{ display: 'flex', gap: 10, marginBottom: 32, justifyContent: 'center', alignItems: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
               {[personajes[1], personajes[0], personajes[2]].map((p: any, idx) => {
                 const rank = idx === 0 ? 2 : idx === 1 ? 1 : 3
-                const paddingTop = [32, 16, 44]
                 const tier = getTier(p.mmr)
-                const m = MEDAL_COLORS[rank]
+                const mc = MEDAL_COLOR[rank]
                 const rc = REINO_COLOR[p.reino as Reino]
+                const isChampion = rank === 1
                 return (
-                  <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none', flex: 1, maxWidth: 230 }}>
-                    <div style={{ background: m.bg, border: `1px solid ${m.main}44`, borderRadius: '12px 12px 0 0', paddingTop: paddingTop[idx], paddingBottom: 16, paddingLeft: 16, paddingRight: 16, textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, boxShadow: `0 0 36px ${m.glow}, inset 0 0 60px rgba(0,0,0,0.4)`, position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${m.main}88, transparent)` }} />
-                      <div style={{
-                        width: rank === 1 ? 40 : 32, height: rank === 1 ? 40 : 32, borderRadius: '50%',
-                        background: `radial-gradient(circle, ${m.main}22, transparent 70%)`,
-                        border: `1px solid ${m.main}55`, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: rank === 1 ? 22 : 17,
-                      }}>{m.label}</div>
-                      <div style={{ position: 'relative' }}>
-                        <div style={{ width: rank === 1 ? 50 : 42, height: rank === 1 ? 50 : 42, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 12.5%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 17 : 14, fontWeight: 700, color: rc }}>
-                          {p.nickname_juego?.[0]?.toUpperCase()}
-                        </div>
-                        <div style={{ position: 'absolute', bottom: -4, right: -6 }}><KingdomShield reino={p.reino} size={14} /></div>
+                  <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none', flex: '1 1 220px', minWidth: 220, order: rank === 1 ? 0 : rank }}>
+                    <div style={{
+                      background: 'var(--bg-card)', border: `1px solid ${isChampion ? 'var(--gold)' : 'var(--border)'}`,
+                      borderTop: `2px solid ${rc}`, padding: '18px 16px', height: '100%',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                        <RankNumeral rank={rank} size={isChampion ? 26 : 20} color={mc} />
+                        <span style={{
+                          display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10,
+                          letterSpacing: '0.08em', textTransform: 'uppercase', color: rc, border: `1px solid ${rc}`, padding: '2px 7px',
+                        }}>
+                          <span style={{ width: 5, height: 5, background: rc }} /> {p.reino}
+                        </span>
                       </div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontSize: rank === 1 ? 12 : 11, fontWeight: 700, color: rank === 1 ? m.main : 'var(--text-primary)', letterSpacing: 0.3, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3, justifyContent: 'center' }}>
-                        {p.nickname_juego} {p.verificado && <span title="Verificado">✓</span>}
+
+                      <div style={{ width: isChampion ? 56 : 44, height: isChampion ? 56 : 44, background: `color-mix(in srgb, ${rc} 12%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 17, fontWeight: 600, color: rc, marginBottom: 10 }}>
+                        {p.nickname_juego?.[0]?.toUpperCase()}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <h3 style={{ fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{p.nickname_juego}</h3>
+                        {p.verificado && <IconCheck size={14} style={{ color: mc, flexShrink: 0 }} />}
                         <PremiumBadge esPremium={p.player?.es_premium} color={p.player?.premium_color} size={11} />
-                        <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
                       </div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: rank === 1 ? 16 : 13, fontWeight: 700, color: m.main }}>{p.mmr}</div>
-                      <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {tier.name}</span>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 9, color: rc, opacity: 0.9 }}>{p.reino} · {p.clase}</div>
+                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>{p.reino} · {p.clase}</p>
+                      <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
+
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: isChampion ? 24 : 19, fontWeight: 700, color: mc }}>{p.mmr}</span>
+                        <TierPill tier={tier} />
+                      </div>
                     </div>
                   </Link>
                 )
@@ -187,18 +242,16 @@ export default function RankingContent() {
             </div>
           )}
 
-          <div className="divider-gold" style={{ marginBottom: 16 }} />
-
           {/* Tabla */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 120px 120px 90px 56px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '52px 1.6fr 110px 120px 130px 150px 90px', padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
               {['#', 'PERSONAJE', 'REINO', 'CLASE', 'MMR / TIER', 'WINRATE', 'PJ'].map(col => (
-                <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
+                <div key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{col}</div>
               ))}
             </div>
 
             {!personajes?.length ? (
-              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>No se encontraron personajes.</div>
+              <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display-v2)' }}>No se encontraron personajes.</div>
             ) : personajes.map((p: any, i: number) => {
               const globalRank = from + i + 1
               const tier = getTier(p.mmr)
@@ -206,65 +259,56 @@ export default function RankingContent() {
               const showDivider = !prevTier || tier.name !== prevTier.name
               const rc = REINO_COLOR[p.reino as Reino]
               const isTop = globalRank <= 3
-              const rankRowClass = isTop ? `rank-row-${globalRank}` : ''
 
               return (
                 <Fragment key={p.id}>
                   {showDivider && (
-                    <div style={{ padding: '5px 20px', borderBottom: `1px solid ${tier.color}18`, borderLeft: `3px solid ${tier.color}66`, background: `linear-gradient(90deg, ${tier.color}08, transparent)`, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {tier.name.toUpperCase()}</span>
-                      <span style={{ fontSize: 9, color: tier.color, fontFamily: 'var(--font-display)', opacity: 0.5, letterSpacing: 1.2 }}>{tier.min > 0 ? `${tier.min}+ MMR` : '< 900 MMR'}</span>
+                    <div style={{ padding: '6px 16px', borderBottom: '1px solid var(--border)', borderLeft: `3px solid ${tier.color}`, background: `color-mix(in srgb, ${tier.color} 6%, transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <TierPill tier={tier} size="md" />
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: tier.color, letterSpacing: '0.08em' }}>{tier.min > 0 ? `${tier.min}+ MMR` : '< 900 MMR'}</span>
                     </div>
                   )}
                   <Link href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
-                    <div className={`row-hover ${rankRowClass}`} style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 120px 120px 90px 56px', padding: '12px 20px', borderBottom: i < personajes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', cursor: 'pointer', ...(!isTop ? { borderLeft: `3px solid ${tier.color}18` } : {}) }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '52px 1.6fr 110px 120px 130px 150px 90px', padding: '12px 16px', borderBottom: i < personajes.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center', cursor: 'pointer', borderLeft: isTop ? `3px solid ${MEDAL_COLOR[globalRank]}` : `3px solid color-mix(in srgb, ${tier.color} 18%, transparent)` }}>
                       {/* Rank */}
                       <div>
-                        {isTop ? (
-                          <span style={{
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            width: 28, height: 28, borderRadius: '50%', fontSize: 15,
-                            background: `radial-gradient(circle, ${MEDAL_COLORS[globalRank].main}22, transparent 70%)`,
-                            border: `1px solid ${MEDAL_COLORS[globalRank].main}55`,
-                          }}>{MEDAL_COLORS[globalRank].label}</span>
-                        ) : (
-                          <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{globalRank}</span>
-                        )}
+                        {isTop ? <RankNumeral rank={globalRank} size={16} color={MEDAL_COLOR[globalRank]} />
+                          : <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{globalRank}</span>}
                       </div>
                       {/* Nombre */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 34, height: 34, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} ${isTop ? '73%' : '27%'}, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 13, fontWeight: 700, color: rc, flexShrink: 0 }}>
+                        <div style={{ width: 32, height: 32, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} ${isTop ? '73%' : '27%'}, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: 13, fontWeight: 600, color: rc, flexShrink: 0 }}>
                           {p.nickname_juego?.[0]?.toUpperCase()}
                         </div>
-                        <div>
-                          <div style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: p.player?.es_premium ? estiloPremium(p.player.premium_color, p.player.premium_bg).color : 'var(--text-primary)', letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: p.player?.es_premium ? estiloPremium(p.player.premium_color, p.player.premium_bg).color : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 5 }}>
                             {p.nickname_juego}
-                            {p.verificado && <span style={{ fontSize: 10, color: 'var(--alsius)' }} title="Personaje verificado">✓</span>}
+                            {p.verificado && <IconCheck size={12} style={{ color: 'var(--alsius)', flexShrink: 0 }} />}
                             <PremiumBadge esPremium={p.player?.es_premium} color={p.player?.premium_color} size={11} />
                             <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
                           </div>
-                          <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{p.player?.discord_username ?? '—'}</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{p.player?.discord_username ?? '—'}</div>
                         </div>
                       </div>
                       {/* Reino */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <KingdomShield reino={p.reino} size={18} />
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: rc, fontWeight: 600 }}>{p.reino}</span>
+                        <KingdomShield reino={p.reino} size={16} />
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: rc, fontWeight: 600 }}>{p.reino}</span>
                       </div>
                       {/* Clase */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--text-muted)' }}>
                         <span style={{ display: 'flex', alignItems: 'center' }}>{CLASE_SVG[p.clase]}</span>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11 }}>{p.clase}</span>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>{p.clase}</span>
                       </div>
                       {/* MMR */}
                       <div>
-                        <div style={{ fontFamily: 'var(--font-sans)', fontSize: 15, color: isTop ? MEDAL_COLORS[globalRank]?.main ?? 'var(--gold)' : 'var(--gold)', fontWeight: 700 }}>{p.mmr}</div>
-                        <span className={`tier-pill ${tier.cssClass}`} style={{ marginTop: 3, display: 'inline-flex' }}>{tier.icon} {tier.name}</span>
+                        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 15, color: isTop ? MEDAL_COLOR[globalRank] : 'var(--gold)', fontWeight: 700 }}>{p.mmr}</div>
+                        <div style={{ marginTop: 3 }}><TierPill tier={tier} /></div>
                       </div>
                       {/* WR */}
-                      <WinrateBar value={p.winrate ?? 0} />
+                      <WinrateBar value={p.winrate ?? 0} partidas={p.partidas_jugadas} />
                       {/* PJ */}
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{p.partidas_jugadas}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{p.partidas_jugadas}</div>
                     </div>
                   </Link>
                 </Fragment>
@@ -275,7 +319,7 @@ export default function RankingContent() {
           {totalPages > 1 && (
             <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 20 }}>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-                <Link key={pg} href={buildUrl({ page: String(pg) })} style={{ width: 34, height: 34, borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-sans)', fontSize: 12, textDecoration: 'none', background: pg === page ? 'var(--gold-muted)' : 'var(--bg-card)', border: `1px solid ${pg === page ? 'var(--border-gold-strong)' : 'var(--border)'}`, color: pg === page ? 'var(--gold)' : 'var(--text-muted)' }}>{pg}</Link>
+                <Link key={pg} href={buildUrl({ page: String(pg) })} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, textDecoration: 'none', background: pg === page ? 'var(--gold)' : 'var(--bg-card)', border: `1px solid ${pg === page ? 'var(--gold)' : 'var(--border)'}`, color: pg === page ? '#050505' : 'var(--text-muted)' }}>{pg}</Link>
               ))}
             </div>
           )}
@@ -288,26 +332,31 @@ export default function RankingContent() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
             <Link
               href={buildUrl({ multiclase: multiclase ? undefined : '1' })}
-              className={`btn ${multiclase ? '' : 'btn-ghost'}`}
-              style={{ textDecoration: 'none', ...(multiclase ? { background: 'var(--gold-muted)', borderColor: 'var(--border-gold-strong)', color: 'var(--gold)' } : {}) }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 6, textDecoration: 'none',
+                fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+                padding: '7px 12px', border: `1px solid ${multiclase ? 'var(--gold)' : 'var(--border)'}`,
+                background: multiclase ? 'color-mix(in srgb, var(--gold) 12%, transparent)' : 'var(--bg-card)',
+                color: multiclase ? 'var(--gold)' : 'var(--text-muted)',
+              }}
               title="Jugadores que compitieron con 2 o más subclases distintas (aunque sea con personajes separados)"
             >
-              🎭 Solo multiclase
+              <IconLayers size={12} /> Solo multiclase
             </Link>
             {multiclase && (
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{cuentas.length} jugadores</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{cuentas.length} jugadores</span>
             )}
           </div>
 
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 80px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 100px', padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
             {['#', 'JUGADOR', 'MEJOR PERSONAJE', 'SUBCLASES', 'BEST MMR'].map(col => (
-              <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
+              <div key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{col}</div>
             ))}
           </div>
 
           {!cuentas.length ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display-v2)' }}>
               {multiclase ? 'Ningún jugador compitió con 2+ subclases todavía.' : 'No hay jugadores registrados.'}
             </div>
           ) : cuentas.map((c: any, i: number) => {
@@ -316,22 +365,22 @@ export default function RankingContent() {
             const tier = getTier(bp?.mmr ?? 0)
             return (
               <Link key={c.id} href={`/jugadores/${c.id}`} style={{ textDecoration: 'none' }}>
-                <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 80px', padding: '12px 20px', borderBottom: i < cuentas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center', cursor: 'pointer' }}>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 160px 110px 100px', padding: '12px 16px', borderBottom: i < cuentas.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center', cursor: 'pointer' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    <div style={{ width: 30, height: 30, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {avatarSrc(c)
                         ? <img src={avatarSrc(c)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                        : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{c.nombre_mostrado?.[0]?.toUpperCase()}</span>}
+                        : <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 12, color: 'var(--text-muted)' }}>{c.nombre_mostrado?.[0]?.toUpperCase()}</span>}
                     </div>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_mostrado ?? '—'}</span>
-                    {c.esMulticlase && <span title="Compitió con 2+ subclases distintas" style={{ fontSize: 12 }}>🎭</span>}
+                    <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{c.nombre_mostrado ?? '—'}</span>
+                    {c.esMulticlase && <IconLayers size={12} style={{ color: 'var(--text-muted)' }} />}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <KingdomShield reino={bp?.reino} size={14} />
                     <div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: rc, fontWeight: 600 }}>{bp?.nickname_juego}</div>
-                      <div style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{bp?.clase}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: rc, fontWeight: 600 }}>{bp?.nickname_juego}</div>
+                      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{bp?.clase}</div>
                     </div>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -340,11 +389,11 @@ export default function RankingContent() {
                         <span key={cl} title={cl} style={{ color: CLASE_COLOR[cl], display: 'flex' }}>{CLASE_SVG[cl]}</span>
                       ))}
                     </div>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: 'var(--text-muted)' }}>{c.personajes.length} personaje{c.personajes.length === 1 ? '' : 's'}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)' }}>{c.personajes.length} personaje{c.personajes.length === 1 ? '' : 's'}</span>
                   </div>
                   <div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{bp?.mmr ?? '—'}</div>
-                    <span className={`tier-pill ${tier.cssClass}`} style={{ display: 'inline-flex', marginTop: 2 }}>{tier.icon} {tier.name}</span>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 14, color: 'var(--gold)', fontWeight: 700 }}>{bp?.mmr ?? '—'}</div>
+                    <div style={{ marginTop: 2 }}><TierPill tier={tier} /></div>
                   </div>
                 </div>
               </Link>
@@ -356,49 +405,57 @@ export default function RankingContent() {
 
       {/* ── VISTA REINOS ─────────────────────────────────── */}
       {vista === 'reinos' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
           {porReino.map(({ reino, count, avgWr, topMmr, tiers, top5 }) => {
             const rc = REINO_COLOR[reino as Reino]
             const totalTiers = tiers.reduce((s: number, x: any) => s + x.n, 0) || 1
+            const share = Math.round((count / totalReinos) * 1000) / 10
             return (
-              <div key={reino} style={{ background: 'var(--bg-card)', border: `1px solid color-mix(in srgb, ${rc} 20%, transparent)`, borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-                <div style={{ padding: '16px 20px', borderBottom: `1px solid color-mix(in srgb, ${rc} 13%, transparent)`, background: `linear-gradient(135deg, color-mix(in srgb, ${rc} 8%, transparent), transparent)`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <KingdomShield reino={reino} size={28} />
+              <div key={reino} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderTop: `2px solid ${rc}`, overflow: 'hidden' }}>
+                <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <KingdomShield reino={reino} size={26} />
                   <div>
-                    <div style={{ fontFamily: 'var(--font-display)', fontSize: 16, fontWeight: 700, color: rc, letterSpacing: 0.5 }}>{reino}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>{count} personajes · {avgWr}% winrate prom.</div>
+                    <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 17, fontWeight: 600, color: rc }}>{reino}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>{count} combatientes · {share}% del total</div>
                   </div>
                 </div>
-                <div style={{ padding: '14px 20px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 20, fontWeight: 700, color: rc }}>{topMmr || '—'}</span>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 1 }}>MMR MÁS ALTO</span>
+                <div style={{ padding: '14px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, borderBottom: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: rc }}>{topMmr || '—'}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>MMR MÁS ALTO</div>
                   </div>
-                  {tiers.length > 0 && (
-                    <>
-                      <div style={{ display: 'flex', height: 6, borderRadius: 4, overflow: 'hidden', marginBottom: 6 }}>
-                        {tiers.map(({ tier, n }: any) => (
-                          <div key={tier.name} title={`${tier.name}: ${n}`} style={{ width: `${(n / totalTiers) * 100}%`, background: tier.color }} />
-                        ))}
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
-                        {tiers.map(({ tier, n }: any) => (
-                          <span key={tier.name} style={{ fontFamily: 'var(--font-sans)', fontSize: 10, color: tier.color }}>{tier.icon} {n}</span>
-                        ))}
-                      </div>
-                    </>
-                  )}
+                  <div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700, color: 'var(--text-primary)' }}>{avgWr}%</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>WR PROMEDIO</div>
+                  </div>
                 </div>
+                {tiers.length > 0 && (
+                  <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'flex', height: 5, marginBottom: 6 }}>
+                      {tiers.map(({ tier, n }: any) => (
+                        <div key={tier.name} title={`${tier.name}: ${n}`} style={{ width: `${(n / totalTiers) * 100}%`, background: tier.color }} />
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px 10px' }}>
+                      {tiers.map(({ tier, n }: any) => (
+                        <span key={tier.name} style={{ display: 'flex', alignItems: 'center', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 10, color: tier.color }}>
+                          <TierIcon tierName={tier.name} size={9} color={tier.color} /> {n}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {top5.length === 0 ? (
-                  <div style={{ padding: '24px 20px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)', fontSize: 12 }}>Sin personajes.</div>
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display-v2)', fontSize: 13 }}>Sin personajes.</div>
                 ) : top5.map((p: any, i: number) => {
                   const tier = getTier(p.mmr)
                   return (
                     <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
-                      <div className="row-hover" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px', borderBottom: i < top5.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                        <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', width: 14 }}>{i + 1}</span>
-                        <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nickname_juego}</span>
-                        <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {p.mmr}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: i < top5.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', width: 14 }}>{i + 1}</span>
+                        <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nickname_juego}</span>
+                        <TierPill tier={tier} />
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: tier.color, fontWeight: 700 }}>{p.mmr}</span>
                       </div>
                     </Link>
                   )
@@ -411,33 +468,35 @@ export default function RankingContent() {
 
       {/* ── VISTA RACHAS ─────────────────────────────────── */}
       {vista === 'rachas' && (
-        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 100px 90px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(212,175,55,0.03)' }}>
+        <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 110px 90px', padding: '10px 16px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)' }}>
             {['#', 'PERSONAJE', 'REINO', 'RACHA', 'MMR'].map(col => (
-              <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.8 }}>{col}</div>
+              <div key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{col}</div>
             ))}
           </div>
           {rachas.length === 0 ? (
-            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>Nadie tiene una racha activa ahora mismo.</div>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)', fontFamily: 'var(--font-display-v2)' }}>Nadie tiene una racha activa ahora mismo.</div>
           ) : rachas.map((p: any, i: number) => {
             const rc = REINO_COLOR[p.reino as Reino]
             const tier = getTier(p.mmr)
             return (
               <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none' }}>
-                <div className="row-hover" style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 100px 90px', padding: '12px 20px', borderBottom: i < rachas.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 110px 90px', padding: '12px 16px', borderBottom: i < rachas.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, borderRadius: '50%', background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: rc, flexShrink: 0 }}>
+                    <div style={{ width: 30, height: 30, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: 12, fontWeight: 600, color: rc, flexShrink: 0 }}>
                       {p.nickname_juego?.[0]?.toUpperCase()}
                     </div>
-                    <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
+                    <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <KingdomShield reino={p.reino} size={16} />
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: rc }}>{p.reino}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: rc }}>{p.reino}</span>
                   </div>
-                  <span style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--syrtis)' }}>🔥 {p.winstreak}</span>
-                  <span className={`tier-pill ${tier.cssClass}`}>{tier.icon} {p.mmr}</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 700, color: 'var(--syrtis)' }}>
+                    <IconFire size={13} /> {p.winstreak}
+                  </span>
+                  <TierPill tier={tier} />
                 </div>
               </Link>
             )
