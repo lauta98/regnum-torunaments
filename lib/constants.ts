@@ -28,20 +28,24 @@ export const FORMAT_LABEL: Record<TournamentFormat, string> = {
   '7v7': '7VS7',
 }
 
-// '1v1'/'3v3'/'7v7' no son reino/rareza/dorado/neutro — es una escala propia
-// (color por formato de torneo) que docs/design.md no contempla. '2v2'
-// coincide con dorado, se tokeniza; el resto queda literal a propósito.
+// Escala propia de formato — docs/design.md v2: los colores de reino quedan
+// exclusivos para identificar reino, nunca se reusan acá (antes '2v2' era
+// dorado y '3v3'/'7v7' coincidían exactamente con Alsius/Ignis — se sacó esa
+// reutilización). Valores del mockup de Stitch para Torneos.
 export const FORMAT_COLOR: Record<TournamentFormat, string> = {
-  '1v1': '#8a2be2',
-  '2v2': 'var(--gold)',
-  '3v3': '#2196F3',
-  '7v7': '#F44336',
+  '1v1': '#38bdf8',
+  '2v2': '#a855f7',
+  '3v3': '#f59e0b',
+  '7v7': '#ef4444',
 }
 
+// "live"/"inscripciones" antes reusaban --ignis/--syrtis (mismo problema:
+// un torneo de Syrtis en vivo mostraba un punto rojo que podía leerse como
+// "es de Ignis"). Colores propios de estado, independientes de reino.
 export const STATUS_STYLE: Record<TournamentStatus, { label: string; color: string; bg: string }> = {
   draft:        { label: 'Borrador',      color: '#8A8A8A', bg: 'rgba(138,138,138,0.15)' },
-  inscripciones:{ label: 'Inscripciones', color: 'var(--syrtis)', bg: 'color-mix(in srgb, var(--syrtis) 15%, transparent)' },
-  live:         { label: 'En Vivo',       color: 'var(--ignis)', bg: 'color-mix(in srgb, var(--ignis) 15%, transparent)' },
+  inscripciones:{ label: 'Inscripciones', color: '#10b981', bg: 'rgba(16,185,129,0.1)' },
+  live:         { label: 'En Vivo',       color: '#f59e0b', bg: 'rgba(245,158,11,0.1)' },
   finalizado:   { label: 'Finalizado',    color: '#8A8A8A', bg: 'rgba(138,138,138,0.1)' },
 }
 
