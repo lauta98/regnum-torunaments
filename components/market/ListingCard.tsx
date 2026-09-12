@@ -717,18 +717,21 @@ export default function ListingCard({
             </div>
           )}
 
-          {/* 4. Modificadores — TODOS visibles, wrap natural, clip por contenedor */}
+          {/* 4. Modificadores — columna vertical, texto claro; si no entran todos, scroll interno (el footer no se mueve) */}
           {mods.length > 0 && (
-            <div style={{ display:'flex', flexWrap:'wrap', gap:3, overflow:'hidden' }}>
+            <div className="listing-card-mods" style={{
+              flex:1, minHeight:0,
+              display:'flex', flexDirection:'column', gap:3,
+              overflowY:'auto', paddingRight:6,
+            }}>
               {mods.map((mod, i) => (
-                <span key={i} style={{
-                  fontSize:9.5, fontFamily:'var(--font-mono)',
-                  padding:'2px 7px',
-                  background:'rgba(91,201,139,0.10)',
-                  color:'var(--success)',
-                  border:'1px solid rgba(91,201,139,0.22)',
-                  overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', maxWidth:170,
-                }}>+ {formatSlot(mod)}</span>
+                <div key={i} style={{
+                  display:'flex', alignItems:'baseline', gap:5, flexShrink:0,
+                  fontSize:10.5, fontFamily:'var(--font-mono)', color:'var(--success)', lineHeight:1.35,
+                }}>
+                  <span style={{ color:'color-mix(in srgb, var(--success) 55%, transparent)', flexShrink:0 }}>+</span>
+                  <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{formatSlot(mod)}</span>
+                </div>
               ))}
             </div>
           )}
