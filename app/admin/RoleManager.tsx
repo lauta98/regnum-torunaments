@@ -3,6 +3,7 @@ import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { ROLE_LABEL, ROLE_COLOR } from '@/lib/roles'
 import type { UserRole } from '@/lib/types'
+import { IconLock, IconCheck } from './AdminIcons'
 
 const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
 
@@ -58,12 +59,13 @@ export default function RoleManager({
   if (isProtected) {
     return (
       <span style={{
-        fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5,
-        color: 'var(--gold)', background: 'rgba(212,175,55,0.08)',
-        border: '1px solid rgba(212,175,55,0.25)',
-        padding: '3px 8px', borderRadius: 4,
+        display: 'inline-flex', alignItems: 'center', gap: 5,
+        fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase',
+        color: 'var(--gold)', background: 'color-mix(in srgb, var(--gold) 8%, transparent)',
+        border: '1px solid color-mix(in srgb, var(--gold) 25%, transparent)',
+        padding: '3px 8px',
       }}>
-        🔒 Permanente
+        <IconLock size={10} /> Permanente
       </span>
     )
   }
@@ -77,16 +79,15 @@ export default function RoleManager({
         title={isSelf ? 'No podés cambiar tu propio rol' : undefined}
         style={{
           background: 'var(--bg-input)',
-          border: `1px solid ${selectColor}44`,
-          borderRadius: 6,
+          border: `1px solid color-mix(in srgb, ${selectColor} 40%, transparent)`,
           color: selectColor,
           padding: '4px 8px',
           fontSize: 11,
-          fontFamily: 'var(--font-display)',
+          fontFamily: 'var(--font-mono)',
           cursor: disabled ? 'not-allowed' : 'pointer',
           outline: 'none',
           opacity: disabled ? 0.4 : 1,
-          letterSpacing: 0.5,
+          letterSpacing: '0.05em',
         }}
       >
         {ALL_ROLES.map(r => (
@@ -95,13 +96,13 @@ export default function RoleManager({
       </select>
 
       {status === 'saved' && (
-        <span style={{ fontSize: 10, color: '#4CAF50', fontFamily: 'var(--font-display)' }}>✓</span>
+        <span style={{ color: 'var(--syrtis)', display: 'flex' }}><IconCheck size={11} /></span>
       )}
       {status === 'error' && (
-        <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)', maxWidth: 120 }}>{errorMsg}</span>
+        <span style={{ fontSize: 10, color: 'var(--ignis)', fontFamily: 'var(--font-mono)', maxWidth: 120 }}>{errorMsg}</span>
       )}
       {isPending && (
-        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>...</span>
+        <span style={{ fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>...</span>
       )}
     </div>
   )

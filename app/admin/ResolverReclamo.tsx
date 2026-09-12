@@ -1,6 +1,7 @@
 'use client'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import { IconCheckCircle, IconX } from './AdminIcons'
 
 export default function ResolverReclamo({ reclamoId }: { reclamoId: string }) {
   const router = useRouter()
@@ -31,15 +32,15 @@ export default function ResolverReclamo({ reclamoId }: { reclamoId: string }) {
 
   if (status === 'ok_transferir') return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ fontSize: 14 }}>✅</span>
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: '#4CAF50', letterSpacing: 0.5 }}>Transferido</span>
+      <span style={{ display: 'flex', color: 'var(--syrtis)' }}><IconCheckCircle size={13} /></span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--syrtis)', letterSpacing: '0.05em' }}>Transferido</span>
     </div>
   )
 
   if (status === 'ok_rechazar') return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <span style={{ fontSize: 14 }}>✗</span>
-      <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: '#909090', letterSpacing: 0.5 }}>Rechazado</span>
+      <span style={{ display: 'flex', color: 'var(--text-muted)' }}><IconX size={13} /></span>
+      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Rechazado</span>
     </div>
   )
 
@@ -48,19 +49,19 @@ export default function ResolverReclamo({ reclamoId }: { reclamoId: string }) {
       <button
         onClick={() => resolver('transferir')}
         disabled={isPending}
-        style={{ padding: '6px 10px', borderRadius: 6, cursor: isPending ? 'not-allowed' : 'pointer', background: 'rgba(76,175,80,0.12)', color: '#4CAF50', fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, border: '1px solid rgba(76,175,80,0.3)', whiteSpace: 'nowrap' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', cursor: isPending ? 'not-allowed' : 'pointer', background: 'rgba(76,175,80,0.1)', color: 'var(--syrtis)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', border: '1px solid rgba(76,175,80,0.3)', whiteSpace: 'nowrap' }}
       >
-        ✓ Transferir
+        <IconCheckCircle size={11} /> Transferir
       </button>
       <button
         onClick={() => resolver('rechazar')}
         disabled={isPending}
-        style={{ padding: '6px 10px', borderRadius: 6, cursor: isPending ? 'not-allowed' : 'pointer', background: 'rgba(244,67,54,0.08)', color: '#f87171', fontFamily: 'var(--font-display)', fontSize: 10, letterSpacing: 0.5, border: '1px solid rgba(244,67,54,0.25)', whiteSpace: 'nowrap' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', cursor: isPending ? 'not-allowed' : 'pointer', background: 'rgba(244,67,54,0.08)', color: '#f87171', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.05em', textTransform: 'uppercase', border: '1px solid rgba(244,67,54,0.25)', whiteSpace: 'nowrap' }}
       >
-        ✗ Rechazar
+        <IconX size={11} /> Rechazar
       </button>
       {status === 'error' && (
-        <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-display)' }}>Error</span>
+        <span style={{ fontSize: 10, color: '#f87171', fontFamily: 'var(--font-mono)' }}>Error</span>
       )}
     </div>
   )

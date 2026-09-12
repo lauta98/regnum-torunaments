@@ -2,10 +2,12 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ROLE_LABEL, ROLE_COLOR, ROLE_BG, isSuperAdmin } from '@/lib/roles'
-import type { UserRole } from '@/lib/types'
+import { REINO_COLOR } from '@/lib/constants'
+import type { UserRole, Reino } from '@/lib/types'
 import RoleManager from './RoleManager'
 import Pagination from '@/components/Pagination'
 import { avatarSrc } from '@/lib/avatar'
+import { IconLock } from './AdminIcons'
 
 type Player = {
   id: string; user_id: string | null; nickname_juego: string; reino: string; clase_principal: string
@@ -17,20 +19,13 @@ const ALL_ROLES: UserRole[] = ['player', 'organizer', 'admin']
 const PAGE_SIZE = 25
 
 type FiltroEstado = 'todos' | 'registrados' | 'no_registrados' | 'organizadores' | 'admins'
-const FILTROS: { value: FiltroEstado; label: string }[] = [
-  { value: 'todos', label: 'Todos' },
-  { value: 'registrados', label: 'Registrados' },
-  { value: 'no_registrados', label: 'No registrados' },
-  { value: 'organizadores', label: 'Organizadores' },
-  { value: 'admins', label: 'Admins' },
-]
 
 const filtroBtnStyle = (active: boolean) => ({
-  display: 'flex', alignItems: 'center', padding: '7px 14px', borderRadius: 20, cursor: 'pointer',
+  display: 'flex', alignItems: 'center', padding: '7px 14px', cursor: 'pointer',
   border: `1px solid ${active ? 'var(--gold)' : 'var(--border)'}`,
-  background: active ? 'rgba(212,175,55,0.12)' : 'transparent',
+  background: active ? 'color-mix(in srgb, var(--gold) 12%, transparent)' : 'transparent',
   color: active ? 'var(--gold)' : 'var(--text-secondary)',
-  fontFamily: 'var(--font-display)', fontSize: 11, fontWeight: 600, letterSpacing: 0.3,
+  fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase',
   whiteSpace: 'nowrap', transition: 'all 0.15s',
 } as const)
 
@@ -62,6 +57,17 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
 
   const cambiarQuery = (val: string) => { setQ(val); setPage(1) }
   const cambiarFiltro = (val: FiltroEstado) => { setFiltro(val); setPage(1) }
+
+  // Conteos reales sobre el total de players (no sobre `filtrados`, que ya
+  // aplicó el propio filtro) — cada pill muestra cuántos caen en su
+  // categoría independientemente de cuál esté activa ahora.
+  const FILTROS: { value: FiltroEstado; label: string; count: number }[] = [
+    { value: 'todos', label: 'Todos', count: players.length },
+    { value: 'registrados', label: 'Registrados', count: players.filter(p => p.user_id).length },
+    { value: 'no_registrados', label: 'No registrados', count: players.filter(p => !p.user_id).length },
+    { value: 'organizadores', label: 'Organizadores', count: players.filter(p => p.role === 'organizer').length },
+    { value: 'admins', label: 'Admins', count: players.filter(p => p.role === 'admin').length },
+  ]
 
   // Solo se pueden seleccionar los que un cambio en lote realmente podría
   // tocar — no tiene sentido ofrecer tildar a uno mismo o a un admin
@@ -118,24 +124,30 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
               onClick={() => cambiarFiltro(f.value)}
               style={filtroBtnStyle(filtro === f.value)}
             >
-              {f.label}
+              {f.label} ({f.count})
             </button>
           ))}
         </div>
         {selected.size > 0 && (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'rgba(212,175,55,0.06)', border: '1px solid rgba(212,175,55,0.25)', borderRadius: 'var(--radius-sm)', padding: '6px 10px' }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 10, color: 'var(--gold)', letterSpacing: 0.5 }}>{selected.size} seleccionados</span>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'color-mix(in srgb, var(--gold) 6%, transparent)', border: '1px solid color-mix(in srgb, var(--gold) 25%, transparent)', padding: '6px 10px' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--gold)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>{selected.size} seleccionados</span>
             <select
               value={bulkRole}
               onChange={e => setBulkRole(e.target.value as UserRole)}
-              style={{ background: 'var(--bg-input)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 6, color: 'var(--text-primary)', padding: '4px 6px', fontSize: 11, fontFamily: 'var(--font-display)' }}
+              style={{ background: 'var(--bg-input)', border: '1px solid var(--border-input)', color: 'var(--text-primary)', padding: '4px 6px', fontSize: 11, fontFamily: 'var(--font-mono)' }}
             >
               {ALL_ROLES.map(r => <option key={r} value={r}>{ROLE_LABEL[r]}</option>)}
             </select>
-            <button onClick={aplicarEnLote} disabled={applying} className="btn btn-primary" style={{ padding: '5px 12px', fontSize: 10 }}>
+            <button onClick={aplicarEnLote} disabled={applying} style={{
+              padding: '5px 12px', fontSize: 10, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', textTransform: 'uppercase',
+              cursor: applying ? 'default' : 'pointer', background: 'var(--gold)', color: '#050505', border: '1px solid var(--gold-light)', fontWeight: 700,
+            }}>
               {applying ? '...' : 'Aplicar'}
             </button>
-            <button onClick={() => setSelected(new Set())} className="btn btn-ghost" style={{ padding: '5px 10px', fontSize: 10 }}>
+            <button onClick={() => setSelected(new Set())} style={{
+              padding: '5px 10px', fontSize: 10, fontFamily: 'var(--font-mono)', letterSpacing: '0.05em', textTransform: 'uppercase',
+              cursor: 'pointer', background: 'transparent', color: 'var(--text-secondary)', border: '1px solid var(--border)',
+            }}>
               Cancelar
             </button>
           </div>
@@ -143,27 +155,29 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
       </div>
       {error && <p style={{ color: '#f87171', fontSize: 11, marginBottom: 10 }}>{error}</p>}
 
-      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 120px 140px', padding: '10px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'rgba(255,255,255,0.02)', alignItems: 'center' }}>
+      <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '28px 1fr 140px 120px 140px', padding: '10px 20px', borderBottom: '1px solid var(--border)', background: 'var(--bg-surface)', alignItems: 'center' }}>
           <input type="checkbox" checked={todosSeleccionados} onChange={toggleTodos} disabled={seleccionables.length === 0} style={{ cursor: seleccionables.length === 0 ? 'not-allowed' : 'pointer' }} />
-          {['JUGADOR', 'ROL ACTUAL', 'CAMBIAR ROL'].map(col => (
-            <div key={col} style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(212,175,55,0.5)', letterSpacing: 1.5 }}>{col}</div>
+          {['JUGADOR', 'REGISTRO', 'ROL ACTUAL', 'CAMBIAR ROL'].map(col => (
+            <div key={col} style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em' }}>{col}</div>
           ))}
         </div>
 
         {filtrados.length === 0 && (
-          <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, fontFamily: 'var(--font-display)' }}>
+          <div style={{ padding: '30px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: 13, fontFamily: 'var(--font-display-v2)' }}>
             {q ? `Sin resultados para "${q}".` : 'Sin resultados para este filtro.'}
           </div>
         )}
 
         {paginados.map((p, i) => {
           const puedeSeleccionar = p.id !== meId && !isSuperAdmin(p.nickname_juego)
+          const rc = REINO_COLOR[p.reino as Reino] ?? 'var(--border)'
           return (
             <div key={p.id} style={{
-              display: 'grid', gridTemplateColumns: '28px 1fr 120px 140px',
-              padding: '12px 20px',
-              borderBottom: i < paginados.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
+              display: 'grid', gridTemplateColumns: '28px 1fr 140px 120px 140px',
+              padding: '12px 20px 12px 17px',
+              borderBottom: i < paginados.length - 1 ? '1px solid var(--border)' : 'none',
+              borderLeft: `3px solid ${rc}`,
               alignItems: 'center',
             }}>
               <input
@@ -173,37 +187,38 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
               />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                <div style={{ width: 32, height: 32, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                   {avatarSrc(p)
                     ? <img src={avatarSrc(p)!} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
-                    : <span style={{ fontFamily: 'var(--font-display)', fontSize: 12, color: 'var(--text-muted)' }}>{p.nickname_juego?.[0]?.toUpperCase()}</span>}
+                    : <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 13, color: 'var(--text-muted)' }}>{p.nickname_juego?.[0]?.toUpperCase()}</span>}
                 </div>
                 <div style={{ minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: p.id === meId ? 'var(--gold)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: p.id === meId ? 'var(--gold)' : 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {p.nickname_juego}
                     </span>
-                    {p.id === meId && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)', flexShrink: 0 }}>(tú)</span>}
-                    {isSuperAdmin(p.nickname_juego) && <span style={{ fontSize: 9, color: 'var(--gold)', fontFamily: 'var(--font-display)', letterSpacing: 0.5, flexShrink: 0 }}>🔒</span>}
-                    {!p.user_id && (
-                      <span style={{ fontSize: 9, color: '#8A8A8A', background: 'rgba(138,138,138,0.12)', border: '1px solid rgba(138,138,138,0.3)', padding: '1px 6px', borderRadius: 4, fontFamily: 'var(--font-display)', letterSpacing: 0.5, flexShrink: 0 }}>
-                        SIN REGISTRAR
-                      </span>
-                    )}
+                    {p.id === meId && <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)', flexShrink: 0 }}>(tú)</span>}
+                    {isSuperAdmin(p.nickname_juego) && <span style={{ color: 'var(--gold)', display: 'flex', flexShrink: 0 }}><IconLock size={11} /></span>}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: rc }}>
                     {p.reino} · {p.clase_principal}
                   </div>
                 </div>
               </div>
 
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11 }}>
+                {p.user_id
+                  ? <span style={{ color: 'var(--text-secondary)' }}>@{p.discord_username ?? '—'}</span>
+                  : <span style={{ color: 'var(--text-muted)', letterSpacing: '0.05em', textTransform: 'uppercase', fontSize: 9 }}>Sin registrar</span>}
+              </div>
+
               <span style={{
                 display: 'inline-flex', alignItems: 'center',
-                background: ROLE_BG[p.role] ?? 'rgba(255,255,255,0.05)',
+                background: ROLE_BG[p.role] ?? 'var(--bg-surface)',
                 color: ROLE_COLOR[p.role] ?? 'var(--text-muted)',
-                border: `1px solid ${ROLE_COLOR[p.role] ?? 'transparent'}44`,
-                padding: '3px 9px', borderRadius: 4,
-                fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 0.5,
+                border: `1px solid color-mix(in srgb, ${ROLE_COLOR[p.role] ?? 'var(--text-muted)'} 35%, transparent)`,
+                padding: '3px 9px',
+                fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase',
                 width: 'fit-content',
               }}>
                 {ROLE_LABEL[p.role] ?? p.role}
@@ -222,7 +237,7 @@ export default function UsuariosTable({ players, meId }: { players: Player[]; me
 
       {filtrados.length > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: 12, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
             {(paginaActual - 1) * PAGE_SIZE + 1}–{Math.min(paginaActual * PAGE_SIZE, filtrados.length)} de {filtrados.length}
           </span>
           <Pagination page={paginaActual} totalPages={totalPaginas} onChange={setPage} />
