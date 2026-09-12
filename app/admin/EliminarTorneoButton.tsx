@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { IconTrash } from './AdminIcons'
 
 export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: string; nombre: string }) {
   const router = useRouter()
@@ -21,14 +22,15 @@ export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: s
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'stretch', width: '100%' }}>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={eliminar} disabled={loading} style={{
-            flex: 1, fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: loading ? 'not-allowed' : 'pointer',
-            background: 'rgba(244,67,54,0.22)', border: '1px solid rgba(244,67,54,0.6)', color: '#ff6b6b',
-            fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: 0.3,
+            flex: 1, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+            padding: '7px 10px', cursor: loading ? 'not-allowed' : 'pointer',
+            background: 'rgba(244,67,54,0.2)', border: '1px solid rgba(244,67,54,0.6)', color: '#ff6b6b', fontWeight: 700,
           }}>
             {loading ? '...' : 'Confirmar'}
           </button>
-          <button onClick={() => setConfirmando(false)} disabled={loading} className="btn btn-ghost" style={{
-            flex: 1, fontSize: 11, padding: '7px 10px',
+          <button onClick={() => setConfirmando(false)} disabled={loading} style={{
+            flex: 1, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+            padding: '7px 10px', cursor: 'pointer', background: 'var(--bg-surface)', border: '1px solid var(--border)', color: 'var(--text-secondary)',
           }}>
             Cancelar
           </button>
@@ -43,13 +45,13 @@ export default function EliminarTorneoButton({ torneoId, nombre }: { torneoId: s
       title={`Eliminar "${nombre}"`}
       onClick={() => setConfirmando(true)}
       style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
-        fontSize: 11, padding: '7px 10px', borderRadius: 6, cursor: 'pointer', width: '100%',
-        background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.35)', color: '#ff8a8a',
-        fontFamily: 'var(--font-display)', fontWeight: 600, letterSpacing: 0.3,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+        padding: '7px 10px', cursor: 'pointer', width: '100%',
+        background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.35)', color: '#ff8a8a', fontWeight: 600,
       }}
     >
-      🗑 Eliminar
+      <IconTrash size={11} /> Eliminar
     </button>
   )
 }

@@ -11,6 +11,18 @@ import ResolverAvatar from './ResolverAvatar'
 import ResolverHighlight from './ResolverHighlight'
 import TorneosRecientes from './TorneosRecientes'
 
+function hace(fecha: string) {
+  const diffMs = Date.now() - new Date(fecha).getTime()
+  const mins = Math.floor(diffMs / 60000)
+  const hours = Math.floor(mins / 60)
+  const days = Math.floor(hours / 24)
+  if (mins < 1) return 'hace un momento'
+  if (mins < 60) return `hace ${mins} min`
+  if (hours < 24) return `hace ${hours}h`
+  if (days < 21) return `hace ${days}d`
+  return new Date(fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
 export const dynamic = 'force-dynamic'
 export const metadata: Metadata = { title: 'Panel Administrador' }
 
@@ -72,6 +84,7 @@ export default async function AdminPage() {
     organizers: players?.filter((p: any) => p.role === 'organizer').length ?? 0,
     jugadores:  players?.filter((p: any) => p.role === 'player').length ?? 0,
   }
+  const pendingTotal = (reports?.length ?? 0) + (reclamos?.length ?? 0) + (avataresReportados?.length ?? 0) + (highlightsReportados?.length ?? 0)
 
   return (
     <>
@@ -79,20 +92,23 @@ export default async function AdminPage() {
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Título */}
-        <div style={{ marginBottom: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, letterSpacing: 2, color: 'var(--gold)', background: 'rgba(212,175,55,0.12)', border: '1px solid rgba(212,175,55,0.3)', borderRadius: 4, padding: '2px 8px' }}>
-              ADMINISTRADOR
+        <div style={{ marginBottom: 28, borderBottom: '1px solid var(--border)', paddingBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ width: 6, height: 6, background: 'var(--gold)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, letterSpacing: '0.25em', color: 'var(--gold)', textTransform: 'uppercase' }}>
+              Administrador
             </span>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 900, color: 'var(--gold)', letterSpacing: 2, marginBottom: 4 }}>
-            PANEL ADMINISTRADOR
+          <h1 style={{ fontFamily: 'var(--font-display-v2)', fontSize: 30, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+            Panel Administrador
           </h1>
-          <p style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+          <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, color: 'var(--text-secondary)', marginTop: 6 }}>
             Bienvenido, <span style={{ color: 'var(--gold)' }}>{me.nickname_juego}</span> — control total del sistema
           </p>
-          <Link href="/admin/personajes" className="btn btn-ghost-gold" style={{
-            display: 'inline-block', marginTop: 12, padding: '7px 16px', fontSize: 11, textDecoration: 'none',
+          <Link href="/admin/personajes" style={{
+            display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 14, padding: '9px 16px',
+            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase',
+            background: 'var(--bg-surface)', border: '1px solid var(--dark-border-gold)', color: 'var(--gold)', textDecoration: 'none',
           }}>
             Gestionar personajes →
           </Link>
@@ -101,32 +117,44 @@ export default async function AdminPage() {
         {/* KPIs */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 32 }}>
           {[
-            { label: 'USUARIOS TOTALES', value: counts.total,      color: 'var(--text-primary)' },
-            { label: 'ADMINISTRADORES',  value: counts.admins,     color: 'var(--gold)' },
-            { label: 'ORGANIZADORES',    value: counts.organizers, color: '#2196F3' },
-            { label: 'JUGADORES',        value: counts.jugadores,  color: '#909090' },
+            { label: 'Usuarios Totales', value: counts.total,      color: 'var(--text-primary)' },
+            { label: 'Administradores',  value: counts.admins,     color: 'var(--gold)' },
+            { label: 'Organizadores',    value: counts.organizers, color: 'var(--purple)' },
+            { label: 'Jugadores',        value: counts.jugadores,  color: 'var(--text-secondary)' },
           ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-gold)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', padding: '20px 24px', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 8 }}>{label}</div>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 32, fontWeight: 900, color }}>{value}</div>
+            <div key={label} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '18px 20px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 8 }}>{label}</div>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 28, fontWeight: 700, color }}>{value}</div>
             </div>
           ))}
         </div>
+
+        {/* Aviso agregado de colas pendientes */}
+        {pendingTotal > 0 && (
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20, padding: '10px 16px',
+            background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.25)',
+            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#f87171',
+          }}>
+            <span style={{ width: 6, height: 6, background: '#F44336', flexShrink: 0 }} />
+            Colas de moderación activas — {pendingTotal} caso{pendingTotal !== 1 ? 's' : ''} pendiente{pendingTotal !== 1 ? 's' : ''} de resolución
+          </div>
+        )}
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, alignItems: 'start' }}>
 
           {/* ── Gestión de usuarios ─────────────────────────────── */}
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
-              GESTIÓN DE USUARIOS
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 14 }}>
+              Gestión de Usuarios
             </div>
             <UsuariosTable players={(players ?? []) as any} meId={me.id} />
           </div>
 
           {/* ── Últimos torneos ─────────────────────────────────── */}
           <div>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2, marginBottom: 14 }}>
-              ÚLTIMOS TORNEOS
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginBottom: 14 }}>
+              Últimos Torneos
             </div>
             <TorneosRecientes torneos={(allTournaments ?? []) as any} />
           </div>
@@ -136,27 +164,27 @@ export default async function AdminPage() {
         {(reports?.length ?? 0) > 0 && (
           <div style={{ marginTop: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>REPORTES DE NICKNAME</div>
-              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Reportes de Nickname</div>
+              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', padding: '1px 7px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {reports!.length} pendiente{reports!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', overflow: 'hidden' }}>
               {reports!.map((r: any, i: number) => (
-                <div key={r.id} style={{ padding: '14px 20px', borderBottom: i < reports!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'grid', gridTemplateColumns: '1fr 160px 160px', alignItems: 'center', gap: 16 }}>
+                <div key={r.id} style={{ padding: '14px 20px', borderBottom: i < reports!.length - 1 ? '1px solid var(--border)' : 'none', display: 'grid', gridTemplateColumns: '1fr 160px 160px', alignItems: 'center', gap: 16 }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <span style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>{r.personaje?.nickname_juego}</span>
-                      <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>reportado por {r.reporter?.discord_username ?? 'anónimo'}</span>
+                      <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>{r.personaje?.nickname_juego}</span>
+                      <span style={{ fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>reportado por {r.reporter?.discord_username ?? 'anónimo'}</span>
                     </div>
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{r.motivo}</p>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4 }}>{r.motivo}</p>
                   </div>
                   <VerificarPersonaje
                     personajeId={r.personaje?.id}
                     verificado={r.personaje?.verificado ?? false}
                     reportId={r.id}
                   />
-                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
                     Dueño: <span style={{ color: 'var(--text-secondary)' }}>{r.personaje?.player?.discord_username ?? '—'}</span>
                   </div>
                 </div>
@@ -169,21 +197,21 @@ export default async function AdminPage() {
         {(avataresReportados?.length ?? 0) > 0 && (
           <div style={{ marginTop: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>FOTOS DE PERFIL REPORTADAS</div>
-              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Fotos de Perfil Reportadas</div>
+              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', padding: '1px 7px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {avataresReportados!.length} pendiente{avataresReportados!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', overflow: 'hidden' }}>
               {avataresReportados!.map((p: any, i: number) => (
-                <div key={p.id} style={{ padding: '14px 20px', borderBottom: i < avataresReportados!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div key={p.id} style={{ padding: '14px 20px', borderBottom: i < avataresReportados!.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
                   {p.avatar_url
-                    ? <img src={p.avatar_url} alt="" style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
-                    : <div style={{ width: 56, height: 56, borderRadius: '50%', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>sin foto</div>}
+                    ? <img src={p.avatar_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
+                    : <div style={{ width: 56, height: 56, border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>sin foto</div>}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{p.nickname_juego ?? p.discord_username ?? '—'}</div>
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{p.avatar_reporte_motivo}</p>
-                    <Link href={`/jugadores/${p.id}`} style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver perfil →</Link>
+                    <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{p.nickname_juego ?? p.discord_username ?? '—'}</div>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{p.avatar_reporte_motivo}</p>
+                    <Link href={`/jugadores/${p.id}`} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver perfil →</Link>
                   </div>
                   <ResolverAvatar targetId={p.id} />
                 </div>
@@ -196,24 +224,24 @@ export default async function AdminPage() {
         {(highlightsReportados?.length ?? 0) > 0 && (
           <div style={{ marginTop: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>CONTENIDO REPORTADO</div>
-              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Contenido de Multimedia Reportado</div>
+              <span style={{ background: 'rgba(244,67,54,0.15)', color: '#F44336', border: '1px solid rgba(244,67,54,0.3)', padding: '1px 7px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {highlightsReportados!.length} pendiente{highlightsReportados!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(244,67,54,0.2)', overflow: 'hidden' }}>
               {highlightsReportados!.map((h: any, i: number) => (
-                <div key={h.id} style={{ padding: '14px 20px', borderBottom: i < highlightsReportados!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div key={h.id} style={{ padding: '14px 20px', borderBottom: i < highlightsReportados!.length - 1 ? '1px solid var(--border)' : 'none', display: 'flex', alignItems: 'center', gap: 16 }}>
                   {h.thumbnail_url
-                    ? <img src={h.thumbnail_url} alt="" style={{ width: 80, height: 45, borderRadius: 6, objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
-                    : <div style={{ width: 80, height: 45, borderRadius: 6, border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-display)' }}>sin miniatura</div>}
+                    ? <img src={h.thumbnail_url} alt="" style={{ width: 80, height: 45, objectFit: 'cover', border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0 }} />
+                    : <div style={{ width: 80, height: 45, border: '2px solid rgba(244,67,54,0.4)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>sin miniatura</div>}
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>{h.titulo}</div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', margin: '2px 0' }}>
-                      Compartido por {h.jugador?.discord_username ?? h.jugador?.nickname_juego ?? '—'}
+                    <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>{h.titulo}</div>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', margin: '3px 0' }}>
+                      Compartido por {h.jugador?.discord_username ?? h.jugador?.nickname_juego ?? '—'} · {hace(h.created_at)}
                     </div>
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{h.reporte_motivo}</p>
-                    <a href={h.video_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver contenido →</a>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: '3px 0' }}>{h.reporte_motivo}</p>
+                    <a href={h.video_url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', textDecoration: 'none' }}>Ver contenido →</a>
                   </div>
                   <ResolverHighlight highlightId={h.id} />
                 </div>
@@ -226,24 +254,24 @@ export default async function AdminPage() {
         {(reclamos?.length ?? 0) > 0 && (
           <div style={{ marginTop: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 2 }}>RECLAMOS DE PERSONAJE</div>
-              <span style={{ background: 'rgba(255,165,0,0.15)', color: '#FFA500', border: '1px solid rgba(255,165,0,0.35)', borderRadius: 4, padding: '1px 7px', fontFamily: 'var(--font-display)', fontSize: 9 }}>
+              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>Reclamos de Personaje</div>
+              <span style={{ background: 'rgba(255,165,0,0.15)', color: '#FFA500', border: '1px solid rgba(255,165,0,0.35)', padding: '1px 7px', fontFamily: 'var(--font-mono)', fontSize: 9, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                 {reclamos!.length} pendiente{reclamos!.length !== 1 ? 's' : ''}
               </span>
             </div>
-            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.2)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-card)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--bg-card)', border: '1px solid rgba(255,165,0,0.2)', overflow: 'hidden' }}>
               {reclamos!.map((r: any, i: number) => (
-                <div key={r.id} style={{ padding: '16px 20px', borderBottom: i < reclamos!.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none', display: 'grid', gridTemplateColumns: '1fr 1fr 120px', alignItems: 'start', gap: 16 }}>
+                <div key={r.id} style={{ padding: '16px 20px', borderBottom: i < reclamos!.length - 1 ? '1px solid var(--border)' : 'none', display: 'grid', gridTemplateColumns: '1fr 1fr 120px', alignItems: 'start', gap: 16 }}>
 
                   {/* Info del personaje reclamado */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(255,165,0,0.6)', letterSpacing: 1 }}>PERSONAJE RECLAMADO</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(255,165,0,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Personaje Reclamado</span>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 14, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 3 }}>
+                    <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 3 }}>
                       {r.personaje?.nickname_juego}
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 11, color: 'var(--text-muted)' }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)' }}>
                       Dueño actual: <span style={{ color: 'var(--text-secondary)' }}>{r.personaje?.player?.discord_username ?? '—'}</span>
                     </div>
                   </div>
@@ -251,12 +279,12 @@ export default async function AdminPage() {
                   {/* Info del reclamante y motivo */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ fontFamily: 'var(--font-display)', fontSize: 9, color: 'rgba(255,165,0,0.6)', letterSpacing: 1 }}>RECLAMANTE</span>
+                      <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'rgba(255,165,0,0.7)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Reclamante</span>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: '#FFA500', marginBottom: 6 }}>
+                    <div style={{ fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 600, color: '#FFA500', marginBottom: 6 }}>
                       {r.claimer?.discord_username ?? '—'}
                     </div>
-                    <p style={{ fontFamily: 'var(--font-sans)', fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
+                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, margin: 0 }}>
                       {r.motivo}
                     </p>
                   </div>
@@ -270,8 +298,8 @@ export default async function AdminPage() {
         )}
 
       </main>
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1, marginTop: 40 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 40 }}>
+        CoR Tournament Stats © 2026 — Champions of Regnum Community
       </footer>
     </>
   )
