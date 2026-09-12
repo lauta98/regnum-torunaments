@@ -65,6 +65,9 @@ export const IconPickaxe = ({ size = 13, style, className }: IconProps) => (
 export const IconChest = ({ size = 40, style, className }: IconProps) => (
   <svg {...base(size)} style={style} className={className}><rect x="3" y="10" width="18" height="10.5" rx="0" /><path d="M3 10a9 5.25 0 0 1 18 0" /><path d="M9 13.5h6M12 13.5v3" strokeLinecap="round" /></svg>
 )
+export const IconCamera = ({ size = 13, style, className }: IconProps) => (
+  <svg {...base(size)} style={style} className={className}><path d="M6.827 6.175A2.31 2.31 0 0 1 8.216 5.4l.55-.412c.573-.43 1.298-.663 2.043-.663h2.382c.745 0 1.47.233 2.043.663l.55.412a2.31 2.31 0 0 0 1.389.775c1.171.163 2.077 1.101 2.077 2.286V17.25a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 17.25V8.461c0-1.185.906-2.123 2.077-2.286.288-.04.556-.158.75-.363Z" strokeLinecap="round" strokeLinejoin="round" /><circle cx="12" cy="13" r="3.25" /></svg>
+)
 export const IconCoin = ({ size = 13, style, className }: IconProps) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} style={style} className={className}><circle cx="12" cy="12" r="9" /><path d="M9.5 15.5c.5.6 1.3 1 2.3 1 1.7 0 2.7-.9 2.7-2 0-1.3-1.2-1.7-2.7-2.1-1.5-.4-2.7-.9-2.7-2.2 0-1.1 1-2 2.6-2 1 0 1.8.4 2.3 1M12 7.5v9" strokeLinecap="round" strokeLinejoin="round" /></svg>
 )
