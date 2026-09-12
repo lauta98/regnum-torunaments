@@ -2,10 +2,14 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
+import Link from 'next/link'
 import { FORMATS, FORMAT_LABEL, BRACKET_TYPES, BRACKET_TYPE_LABEL } from '@/lib/constants'
 import type { TournamentFormat, BracketType } from '@/lib/types'
 import Header from '@/components/Header'
 import dynamic from 'next/dynamic'
+
+const sectionStyle: React.CSSProperties = { background: 'var(--bg-card)', border: '1px solid var(--border)', padding: '20px 22px' }
+const sectionTitleStyle: React.CSSProperties = { fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, color: 'var(--gold)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 16 }
 
 function NuevoTorneoPage() {
   const router = useRouter()
@@ -71,30 +75,43 @@ function NuevoTorneoPage() {
     <>
       <Header />
       <main style={{ maxWidth: 640, margin: '0 auto', padding: '40px 24px', flex: 1 }}>
+        <Link href="/torneos" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)', textDecoration: 'none', marginBottom: 20 }}>
+          ← Volver a Torneos
+        </Link>
+
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 900, color: 'var(--gold)', letterSpacing: 2 }}>
-            CREAR TORNEO
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <span style={{ width: 6, height: 6, background: 'var(--gold)', flexShrink: 0 }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 600, letterSpacing: '0.2em', color: 'var(--gold)', textTransform: 'uppercase' }}>
+              Estado inicial: Borrador
+            </span>
+          </div>
+          <h1 style={{ fontFamily: 'var(--font-display-v2)', fontSize: 30, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>
+            Crear Torneo
           </h1>
-          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 4 }}>
-            Con esto alcanza para publicarlo — descripción, cupo, premio y reglamento se completan después.
+          <p style={{ fontFamily: 'var(--font-display-v2)', fontSize: 15, color: 'var(--text-secondary)', marginTop: 8, lineHeight: 1.5 }}>
+            Con esto alcanza para publicarlo — descripción, cupo, premio y reglamento se completan después, en la pantalla de gestión del torneo.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
-          <div className="card-section">
-            <div className="card-section__title">Identidad</div>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>Identidad</div>
             <div>
               <label className="field-label">NOMBRE DEL TORNEO</label>
               <input
                 className="field" value={form.nombre} maxLength={80} placeholder="Ej: GRAN TORNEO DE PRIMAVERA"
                 onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))}
               />
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', margin: '6px 0 0', letterSpacing: '0.03em' }}>
+                Se guarda automáticamente en mayúsculas.
+              </p>
             </div>
           </div>
 
-          <div className="card-section">
-            <div className="card-section__title">Formato y tipo de cuadro</div>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>Formato y tipo de cuadro</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label className="field-label">FORMATO</label>
@@ -157,8 +174,8 @@ function NuevoTorneoPage() {
             </div>
           </div>
 
-          <div className="card-section">
-            <div className="card-section__title">Fecha</div>
+          <div style={sectionStyle}>
+            <div style={sectionTitleStyle}>Fecha</div>
             <div>
               <label className="field-label">FECHA DE INICIO</label>
               <input
@@ -170,18 +187,23 @@ function NuevoTorneoPage() {
 
           {error && <p style={{ color: '#f87171', fontSize: 13, textAlign: 'center' }}>{error}</p>}
 
-          <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-            <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={() => router.back()}>
-              Cancelar
-            </button>
-            <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 2, letterSpacing: 1 }}>
-              {loading ? 'Creando...' : 'CREAR Y CONTINUAR'}
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button type="button" className="btn btn-ghost" style={{ flex: 1 }} onClick={() => router.back()}>
+                Cancelar
+              </button>
+              <button type="submit" disabled={loading} className="btn btn-primary" style={{ flex: 2, letterSpacing: 1 }}>
+                {loading ? 'Creando...' : 'CREAR Y CONTINUAR →'}
+              </button>
+            </div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--text-muted)', textAlign: 'center', margin: 0 }}>
+              Se guardará como borrador y serás redirigido al editor avanzado.
+            </p>
           </div>
         </form>
       </main>
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-display)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: 1 }}>
-        CoR TOURNAMENT STATS © 2026 — Champions of Regnum Community
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '20px 24px', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-muted)', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+        CoR Tournament Stats © 2026 — Champions of Regnum Community
       </footer>
     </>
   )
