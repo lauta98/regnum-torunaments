@@ -23,7 +23,7 @@ import {
 import { getItemIconColored } from '@/lib/market/icons'
 import { useLanguage } from '@/lib/market/i18n'
 import { useCurrency } from '@/lib/market/CurrencyContext'
-import { IconHeart, IconStar, IconSword, IconShield as IconShieldLine } from './LineIcons'
+import { IconHeart, IconStar, IconSword, IconShield as IconShieldLine, IconCamera } from './LineIcons'
 
 // ─── Constantes ─────────────────────────────────────────────────
 const GREY_CATS  = new Set(['joyeria', 'crafting', 'minerales'])
@@ -228,11 +228,7 @@ function TooltipPanel({ listing, rc, ac }:{ listing:any; rc:string|null; ac:stri
             {RAREZA_LABEL[listing.rareza]}
           </span>
         )}
-        {listing.item_image_url ? (
-          <img src={listing.item_image_url} alt={listing.item_name} style={{ maxHeight: 72, maxWidth: '80%', objectFit: 'contain', position: 'relative' }} />
-        ) : (
-          <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={36} />
-        )}
+        <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={36} />
       </div>
       {/* Body */}
       <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:8 }}>
@@ -337,17 +333,15 @@ export default function ListingCard({
   const [tooltip,     setTooltip]     = useState<{x:number;y:number}|null>(null)
   const [fav,         setFav]         = useState(initFav)
   const [favLoad,     setFavLoad]     = useState(false)
-  const [imgErr,      setImgErr]      = useState(false)
   const [hovered,     setHovered]     = useState(false)
-  const [carouselIdx, setCarouselIdx] = useState(0)
 
-  // Carrusel: todas las imágenes del listing (principal + adicionales)
-  const allImages = [
+  // Fotos reales subidas por el vendedor — ya no se usan como preview de la
+  // card (ver abajo), pero se cuentan para el badge "N fotos" que indica que
+  // hay evidencia real disponible en el detalle del ítem.
+  const photoCount = [
     listing.item_image_url,
     ...((listing.image_urls as string[] | null) || []),
-  ].filter(Boolean) as string[]
-  const isCarousel = allImages.length > 1
-
+  ].filter(Boolean).length
 
   const ac = GREY_CATS.has(listing.item_category) ? 'var(--category-grey)' : (rc || 'var(--category-grey-alt)')
 
@@ -355,8 +349,6 @@ export default function ListingCard({
   for (let i=1;i<=5;i++) { if (listing[`slot_${i}`]) mods.push(listing[`slot_${i}`]) }
 
   const tier     = (rareza && RARITY[rareza]) ? RARITY[rareza] : RARITY.normal
-  const activeImgUrl = isCarousel ? allImages[carouselIdx] : (listing.item_image_url || null)
-  const hasPhoto = !!activeImgUrl && !imgErr
   const hasStats = listing.dano_min_1 || listing.armadura_base
   const featured = listing.featured
 
@@ -413,7 +405,7 @@ export default function ListingCard({
         ref={cardRef}
         className="listing-card"
         onMouseEnter={(e)=>{ setHovered(true); onEnter(e) }}
-        onMouseLeave={()=>{ setHovered(false); onLeave(); setCarouselIdx(0) }}
+        onMouseLeave={()=>{ setHovered(false); onLeave() }}
         style={{
           textDecoration: 'none', color: 'inherit',
           background: tier.cardBg,
@@ -506,104 +498,47 @@ export default function ListingCard({
             <IconHeart size={13} filled={fav} />
           </button>
 
-          {/* ── IMAGEN o ICONO CENTRAL ── */}
-          {hasPhoto ? (
-            <>
-              <img
-                src={activeImgUrl!}
-                alt={listing.item_name}
-                onError={()=>setImgErr(true)}
-                style={{
-                  position:'absolute', inset:0,
-                  width:'100%', height:'100%',
-                  objectFit:'contain',
-                  padding: 14,
-                  transition:'transform 0.45s ease, opacity 0.3s ease',
-                  transform: hovered ? 'scale(1.06)' : 'scale(1)',
-                }}
-              />
-              {/* Carrusel manual: flechas + dots clicables + contador */}
-              {isCarousel && (<>
-                {/* Flechas ← → visibles en hover */}
-                {hovered && (<>
-                  <button onClick={e=>{e.preventDefault();e.stopPropagation();setCarouselIdx(i=>(i-1+allImages.length)%allImages.length)}} style={{
-                    position:'absolute',left:6,top:'50%',transform:'translateY(-50%)',zIndex:16,
-                    background:'rgba(0,0,0,0.55)',border:'1px solid rgba(255,255,255,0.18)',
-                    borderRadius:'50%',width:26,height:26,cursor:'pointer',
-                    color:'rgba(255,255,255,0.85)',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',
-                    transition:'background 0.15s',
-                  }}>‹</button>
-                  <button onClick={e=>{e.preventDefault();e.stopPropagation();setCarouselIdx(i=>(i+1)%allImages.length)}} style={{
-                    position:'absolute',right:6,top:'50%',transform:'translateY(-50%)',zIndex:16,
-                    background:'rgba(0,0,0,0.55)',border:'1px solid rgba(255,255,255,0.18)',
-                    borderRadius:'50%',width:26,height:26,cursor:'pointer',
-                    color:'rgba(255,255,255,0.85)',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center',
-                    transition:'background 0.15s',
-                  }}>›</button>
-                </>)}
-                {/* Dots clicables — siempre visibles */}
-                <div style={{
-                  position:'absolute',bottom:34,left:0,right:0,zIndex:15,
-                  display:'flex',justifyContent:'center',gap:5,
-                }}>
-                  {allImages.map((_,i)=>(
-                    <div key={i} onClick={e=>{e.preventDefault();e.stopPropagation();setCarouselIdx(i)}} style={{
-                      width:i===carouselIdx?14:6,height:6,borderRadius:99,cursor:'pointer',
-                      background:i===carouselIdx?'rgba(255,255,255,0.92)':'rgba(255,255,255,0.32)',
-                      border:'1px solid rgba(0,0,0,0.3)',
-                      transition:'all 0.2s ease',
-                    }}/>
-                  ))}
-                </div>
-                {/* Contador foto X/N — siempre visible */}
-                <div style={{
-                  position:'absolute',bottom:9,left:'50%',transform:'translateX(-50%)',zIndex:15,
-                  fontSize:9,padding:'2px 7px',borderRadius:99,
-                  background:'rgba(0,0,0,0.62)',color:'rgba(255,255,255,0.65)',
-                  border:'1px solid rgba(255,255,255,0.12)',fontFamily:'monospace',whiteSpace:'nowrap',
-                  pointerEvents:'none',
-                }}>
-                  {carouselIdx+1}/{allImages.length}
-                </div>
-              </>)}
-            </>
-          ) : (
-            // SIN FOTO: el icono toma protagonismo con halo difuso
+          {/* ── ICONO DE CATEGORÍA — siempre, sin importar si hay foto subida ──
+              Las capturas del juego que suben los vendedores no son legibles
+              como thumbnail (texto minúsculo, tooltip completo del juego).
+              La preview usa el mismo ícono vectorial consistente para todos
+              los ítems de una categoría; las fotos reales del vendedor se
+              ven en el detalle del ítem, no acá. */}
+          <div style={{
+            position:'absolute', inset:0,
+            display:'flex', alignItems:'center', justifyContent:'center',
+          }}>
             <div style={{
-              position:'absolute', inset:0,
-              display:'flex', alignItems:'center', justifyContent:'center',
+              position:'absolute',
+              width:'50%', height:'50%', borderRadius:'50%',
+              background: tier.imgGrad!=='transparent' ? `${tier.imgGrad}1a` : `${ac}14`,
+              filter:'blur(22px)',
+            }} />
+            <div style={{
+              position:'relative',
+              transition:'transform 0.45s ease',
+              transform: hovered ? 'scale(1.08)' : 'scale(1)',
             }}>
-              <div style={{
-                position:'absolute',
-                width:'50%', height:'50%', borderRadius:'50%',
-                background: tier.imgGrad!=='transparent' ? `${tier.imgGrad}1a` : `${ac}14`,
-                filter:'blur(22px)',
-              }} />
-              <div style={{
-                position:'relative',
-                transition:'transform 0.45s ease',
-                transform: hovered ? 'scale(1.08)' : 'scale(1)',
-              }}>
-                <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={62} />
-              </div>
+              <SvgIcon sub={listing.subcategoria} cat={listing.item_category} color={ac} material={listing.material} itemText={`${listing.item_name} ${listing.description||''}`} px={62} />
+            </div>
+          </div>
+
+          {/* Badge "N fotos" — esquina inferior izquierda, solo informativo:
+              avisa que hay fotos reales del vendedor para ver en el detalle. */}
+          {photoCount>0 && (
+            <div style={{
+              position:'absolute', bottom:9, left:9, zIndex:10,
+              display:'flex', alignItems:'center', gap:4,
+              padding:'4px 8px',
+              background:'rgba(13,11,9,0.65)', border:'1px solid rgba(255,255,255,0.14)',
+              color:'rgba(255,255,255,0.75)', fontSize:10, fontFamily:'var(--font-mono)',
+            }}>
+              <IconCamera size={11} /> {photoCount}
             </div>
           )}
 
-          {/* Sello de clase (solo con foto, esquina inferior izquierda) */}
-          {hasPhoto && listing.clase_requerida && listing.clase_requerida!=='todas' && (
-            <div style={{ position:'absolute', bottom:9, left:9, zIndex:10 }}>
-              <span style={{
-                width:26, height:26, color:'#fff',
-                background:'rgba(13,11,9,0.65)', border:'1px solid rgba(255,255,255,0.14)',
-                display:'flex', alignItems:'center', justifyContent:'center',
-              }}>
-                <ClaseIcon clase={listing.clase_requerida} size={13} />
-              </span>
-            </div>
-          )}
-
-          {/* SET mini-tags en base de imagen (sin foto) */}
-          {listing.is_set && !hasPhoto && setItems.length>0 && (
+          {/* SET mini-tags en base de imagen */}
+          {listing.is_set && setItems.length>0 && (
             <div style={{
               position:'absolute', bottom:0, left:0, right:0, zIndex:10,
               padding:'32px 10px 10px',
