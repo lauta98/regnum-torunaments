@@ -77,19 +77,18 @@ function WinrateBar({ value, partidas }: { value: number; partidas?: number }) {
 
 const MEDAL_COLOR: Record<number, string> = { 1: 'var(--gold)', 2: 'var(--medal-silver)', 3: 'var(--medal-bronze)' }
 const MEDAL_BG: Record<number, string> = { 1: 'var(--gold-glow-bg)', 2: 'var(--medal-silver-bg)', 3: 'var(--medal-bronze-bg)' }
-const RANK_LABEL: Record<number, string> = { 1: 'Campeón', 2: 'Segundo Puesto', 3: 'Tercer Puesto' }
+// "Primer/Segundo/Tercer Puesto": el MMR es un rating que se recalcula con
+// cada partida, no un torneo — nada acá puede sugerir "campeón"/título
+// ganado de una vez (ver docs/design.md, dorado = campeón/ganador es la
+// otra escala, la de trofeos reales de torneo en TrofeoRow, no esta).
+const RANK_LABEL: Record<number, string> = { 1: 'Primer Puesto', 2: 'Segundo Puesto', 3: 'Tercer Puesto' }
 
-/** Ícono de puesto en el podio — corona para el campeón, laurel para 2do/3ro.
- *  Reemplaza el numeral romano (I/II/III) plano, que se confundía con la
- *  numeración de fila que usa la tabla de abajo para ese mismo top 3. */
-function PodiumRankIcon({ rank, size = 16, color }: { rank: number; size?: number; color: string }) {
-  if (rank === 1) {
-    return (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 4l3 12h14l3-12-5 6-5-6-5 6-5-6z" /><path d="M5 20h14" />
-      </svg>
-    )
-  }
+/** Ícono de puesto en el podio — mismo laurel para los 3 puestos (solo
+ *  cambia color/tamaño), reemplaza el numeral romano (I/II/III) plano que
+ *  se confundía con la numeración de fila de la tabla de abajo. Antes el
+ *  1er puesto tenía una corona — se sacó por la misma razón que el label:
+ *  sugiere título/realeza, y esto es una posición de ranking, no un logro. */
+function PodiumRankIcon({ size = 16, color }: { size?: number; color: string }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
@@ -236,7 +235,7 @@ export default function RankingContent() {
                       <div style={{ padding: isChampion ? '18px 18px 0' : '16px 16px 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottom: '1px solid var(--border)', marginBottom: 14 }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: mc }}>
-                            <PodiumRankIcon rank={rank} size={isChampion ? 17 : 14} color={mc} /> {RANK_LABEL[rank]}
+                            <PodiumRankIcon size={isChampion ? 17 : 14} color={mc} /> {RANK_LABEL[rank]}
                           </span>
                           <span style={{
                             display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10,
