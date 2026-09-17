@@ -78,7 +78,7 @@ const obtenerDatos = unstable_cache(
     if (vista === 'reinos' || vista === 'rachas') {
       const { data } = await supabase
         .from('personajes')
-        .select('*, player:players!personajes_player_id_fkey(id, discord_username)')
+        .select('*, player:players!personajes_player_id_fkey(id, discord_username, discord_avatar, avatar_url)')
         .order('mmr', { ascending: false })
         .limit(1000)
       todosPersonajes = data ?? []
