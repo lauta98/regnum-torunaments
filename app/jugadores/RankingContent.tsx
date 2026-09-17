@@ -219,8 +219,10 @@ export default function RankingContent() {
                         </span>
                       </div>
 
-                      <div style={{ width: isChampion ? 56 : 44, height: isChampion ? 56 : 44, background: `color-mix(in srgb, ${rc} 12%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 17, fontWeight: 600, color: rc, marginBottom: 10 }}>
-                        {p.nickname_juego?.[0]?.toUpperCase()}
+                      <div style={{ width: isChampion ? 56 : 44, height: isChampion ? 56 : 44, background: `color-mix(in srgb, ${rc} 12%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 17, fontWeight: 600, color: rc, marginBottom: 10 }}>
+                        {avatarSrc(p.player)
+                          ? <img src={avatarSrc(p.player)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          : p.nickname_juego?.[0]?.toUpperCase()}
                       </div>
 
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -277,8 +279,10 @@ export default function RankingContent() {
                       </div>
                       {/* Nombre */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <div style={{ width: 32, height: 32, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} ${isTop ? '73%' : '27%'}, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: 13, fontWeight: 600, color: rc, flexShrink: 0 }}>
-                          {p.nickname_juego?.[0]?.toUpperCase()}
+                        <div style={{ width: 32, height: 32, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} ${isTop ? '73%' : '27%'}, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: 'var(--font-display-v2)', fontSize: 13, fontWeight: 600, color: rc, flexShrink: 0 }}>
+                          {avatarSrc(p.player)
+                            ? <img src={avatarSrc(p.player)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : p.nickname_juego?.[0]?.toUpperCase()}
                         </div>
                         <div style={{ minWidth: 0 }}>
                           <div style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: p.player?.es_premium ? estiloPremium(p.player.premium_color, p.player.premium_bg).color : 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -484,8 +488,10 @@ export default function RankingContent() {
                 <div style={{ display: 'grid', gridTemplateColumns: '52px 1fr 110px 110px 90px', padding: '12px 16px', borderBottom: i < rachas.length - 1 ? '1px solid var(--border)' : 'none', alignItems: 'center' }}>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--text-muted)' }}>{i + 1}</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 30, height: 30, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-display-v2)', fontSize: 12, fontWeight: 600, color: rc, flexShrink: 0 }}>
-                      {p.nickname_juego?.[0]?.toUpperCase()}
+                    <div style={{ width: 30, height: 30, background: `color-mix(in srgb, ${rc} 9%, transparent)`, border: `2px solid color-mix(in srgb, ${rc} 27%, transparent)`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: 'var(--font-display-v2)', fontSize: 12, fontWeight: 600, color: rc, flexShrink: 0 }}>
+                      {avatarSrc(p.player)
+                        ? <img src={avatarSrc(p.player)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : p.nickname_juego?.[0]?.toUpperCase()}
                     </div>
                     <span style={{ fontFamily: 'var(--font-display-v2)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>{p.nickname_juego}</span>
                   </div>
