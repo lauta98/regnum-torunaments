@@ -312,6 +312,18 @@ main { width: 100%; }
 @media (max-width: 1024px) { .bento-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 640px)  { .bento-grid { grid-template-columns: 1fr; } }
 
+/* Podio top 3 del Ranking (Jugadores/Personajes) — orden 2do/1ro/3ro en
+   pantallas anchas (campeón al centro); al apilarse en mobile el campeón
+   pasa a ir primero, que es el orden que importa leer primero. */
+.ranking-podium-card[data-rank="2"] { order: 1; }
+.ranking-podium-card[data-rank="1"] { order: 2; }
+.ranking-podium-card[data-rank="3"] { order: 3; }
+@media (max-width: 640px) {
+  .ranking-podium-card[data-rank="1"] { order: 1; }
+  .ranking-podium-card[data-rank="2"] { order: 2; }
+  .ranking-podium-card[data-rank="3"] { order: 3; }
+}
+
 /* ─── Medieval / Lore utilities ─────────────────────────────── */
 
 /* Separador ornamental dorado */

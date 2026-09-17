@@ -76,6 +76,26 @@ function WinrateBar({ value, partidas }: { value: number; partidas?: number }) {
 }
 
 const MEDAL_COLOR: Record<number, string> = { 1: 'var(--gold)', 2: 'var(--medal-silver)', 3: 'var(--medal-bronze)' }
+const MEDAL_BG: Record<number, string> = { 1: 'var(--gold-glow-bg)', 2: 'var(--medal-silver-bg)', 3: 'var(--medal-bronze-bg)' }
+const RANK_LABEL: Record<number, string> = { 1: 'Campeón', 2: 'Segundo Puesto', 3: 'Tercer Puesto' }
+
+/** Ícono de puesto en el podio — corona para el campeón, laurel para 2do/3ro.
+ *  Reemplaza el numeral romano (I/II/III) plano, que se confundía con la
+ *  numeración de fila que usa la tabla de abajo para ese mismo top 3. */
+function PodiumRankIcon({ rank, size = 16, color }: { rank: number; size?: number; color: string }) {
+  if (rank === 1) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 4l3 12h14l3-12-5 6-5-6-5 6-5-6z" /><path d="M5 20h14" />
+      </svg>
+    )
+  }
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s-8-4.5-8-11.8A8 8 0 0 1 12 2a8 8 0 0 1 8 8.2c0 7.3-8 11.8-8 11.8z" />
+    </svg>
+  )
+}
 
 function TrofeoRow({ grupos, size = 'xs' }: { grupos: import('@/lib/campeonatos').TrofeoGrupo[]; size?: 'xs' | 'sm' }) {
   if (!grupos || grupos.length === 0) return null
@@ -194,9 +214,13 @@ export default function RankingContent() {
       {/* ── VISTA PERSONAJES ─────────────────────────────── */}
       {vista === 'personajes' && (
         <>
-          {/* Podio top 3 */}
+          {/* Podio top 3 — 1ro al centro y destacado (borde/fondo dorado,
+              reservado para estado de campeón por docs/design.md), 2do/3ro
+              a los costados. El puesto se identifica con ícono (corona/laurel)
+              en vez del numeral romano plano que usaba antes — ese numeral
+              se confundía con la numeración de fila de la tabla de abajo. */}
           {!isFiltered && page === 1 && personajes && personajes.length >= 3 && (
-            <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap', alignItems: 'flex-end' }}>
               {[personajes[1], personajes[0], personajes[2]].map((p: any, idx) => {
                 const rank = idx === 0 ? 2 : idx === 1 ? 1 : 3
                 const tier = getTier(p.mmr)
@@ -204,38 +228,52 @@ export default function RankingContent() {
                 const rc = REINO_COLOR[p.reino as Reino]
                 const isChampion = rank === 1
                 return (
-                  <Link key={p.id} href={`/jugadores/${p.player_id}`} style={{ textDecoration: 'none', flex: '1 1 220px', minWidth: 220, order: rank === 1 ? 0 : rank }}>
+                  <Link key={p.id} href={`/jugadores/${p.player_id}`} className="ranking-podium-card" data-rank={rank} style={{ textDecoration: 'none', flex: '1 1 220px', minWidth: 220 }}>
                     <div style={{
-                      background: 'var(--bg-card)', border: `1px solid ${isChampion ? 'var(--gold)' : 'var(--border)'}`,
-                      borderTop: `2px solid ${rc}`, padding: '18px 16px', height: '100%',
+                      background: 'var(--bg-card)', border: `${isChampion ? 2 : 1}px solid ${isChampion ? 'var(--gold)' : 'var(--border)'}`,
+                      borderTop: `2px solid ${rc}`, display: 'flex', flexDirection: 'column',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                        <RankNumeral rank={rank} size={isChampion ? 26 : 20} color={mc} />
-                        <span style={{
-                          display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10,
-                          letterSpacing: '0.08em', textTransform: 'uppercase', color: rc, border: `1px solid ${rc}`, padding: '2px 7px',
-                        }}>
-                          <span style={{ width: 5, height: 5, background: rc }} /> {p.reino}
-                        </span>
+                      <div style={{ padding: isChampion ? '18px 18px 0' : '16px 16px 0' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 10, borderBottom: '1px solid var(--border)', marginBottom: 14 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: mc }}>
+                            <PodiumRankIcon rank={rank} size={isChampion ? 17 : 14} color={mc} /> {RANK_LABEL[rank]}
+                          </span>
+                          <span style={{
+                            display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-mono)', fontSize: 10,
+                            letterSpacing: '0.08em', textTransform: 'uppercase', color: rc, border: `1px solid ${rc}`, padding: '2px 7px',
+                          }}>
+                            <span style={{ width: 5, height: 5, background: rc }} /> {p.reino}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                          <div style={{ width: isChampion ? 60 : 46, height: isChampion ? 60 : 46, background: `color-mix(in srgb, ${rc} 12%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 24 : 18, fontWeight: 600, color: rc, marginBottom: 10 }}>
+                            {avatarSrc(p.player)
+                              ? <img src={avatarSrc(p.player)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              : p.nickname_juego?.[0]?.toUpperCase()}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                            <h3 style={{ fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{p.nickname_juego}</h3>
+                            {p.verificado && <IconCheck size={14} style={{ color: mc, flexShrink: 0 }} />}
+                            <PremiumBadge esPremium={p.player?.es_premium} color={p.player?.premium_color} size={11} />
+                          </div>
+                          <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>{p.reino} · {p.clase}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                            <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
+                            <TierPill tier={tier} size={isChampion ? 'md' : 'sm'} />
+                          </div>
+                        </div>
                       </div>
 
-                      <div style={{ width: isChampion ? 56 : 44, height: isChampion ? 56 : 44, background: `color-mix(in srgb, ${rc} 12%, transparent)`, border: `2px solid ${rc}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 17, fontWeight: 600, color: rc, marginBottom: 10 }}>
-                        {avatarSrc(p.player)
-                          ? <img src={avatarSrc(p.player)!} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          : p.nickname_juego?.[0]?.toUpperCase()}
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                        <h3 style={{ fontFamily: 'var(--font-display-v2)', fontSize: isChampion ? 22 : 18, fontWeight: 600, color: 'var(--text-primary)', margin: 0 }}>{p.nickname_juego}</h3>
-                        {p.verificado && <IconCheck size={14} style={{ color: mc, flexShrink: 0 }} />}
-                        <PremiumBadge esPremium={p.player?.es_premium} color={p.player?.premium_color} size={11} />
-                      </div>
-                      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', margin: '0 0 8px' }}>{p.reino} · {p.clase}</p>
-                      <TrofeoRow grupos={trofeosPorPersonaje[p.id] ?? []} />
-
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 12, paddingTop: 10, borderTop: '1px solid var(--border)' }}>
-                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: isChampion ? 24 : 19, fontWeight: 700, color: mc }}>{p.mmr}</span>
-                        <TierPill tier={tier} />
+                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 10, marginTop: 14, padding: isChampion ? '12px 18px 16px' : '10px 16px 14px', background: MEDAL_BG[rank] }}>
+                        <div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>MMR</div>
+                          <div style={{ fontFamily: 'var(--font-mono)', fontSize: isChampion ? 26 : 19, fontWeight: 700, color: mc }}>{p.mmr}</div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <WinrateBar value={p.winrate ?? 0} partidas={p.partidas_jugadas} />
+                        </div>
                       </div>
                     </div>
                   </Link>
